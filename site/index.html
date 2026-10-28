@@ -1,0 +1,600 @@
+<title>Orderpagina Spéciale45</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<style>
+  /* Layout: wie-ben-je als eerste scherm, daarna één kolom: kop met voortgang, opdracht, de eigen stappen, opmerkingen. */
+  :root{
+    --bg:#f4eee3; --paper:#fffdf9; --ink:#2b221b; --muted:#7a6c5d; --line:#e0d4c2; --line-strong:#c9b89f;
+    --accent:#4a352b; --accent-ink:#fff8ee; --accent-soft:#eadfcf;
+    --ok:#2e7437; --ok-bg:#e2efdf; --warn:#a85e18; --warn-bg:#fae8d3; --bad:#a9322a; --bad-bg:#f8e1dd;
+    --shadow:0 1px 2px rgba(43,34,27,.06),0 6px 18px rgba(43,34,27,.07);
+    --prog-track:rgba(255,255,255,.22); --prog-done:#9ed59c; --prog-cur:#f3c97a;
+    --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --bg:#1b1612; --paper:#241e18; --ink:#f0e8db; --muted:#a89a89; --line:#3a3027; --line-strong:#56483b;
+      --accent:#dcbf98; --accent-ink:#1b1612; --accent-soft:#3a3027;
+      --ok:#8fd297; --ok-bg:#1e3322; --warn:#f0b273; --warn-bg:#3d2a15; --bad:#f29a90; --bad-bg:#3f1f1b;
+      --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 18px rgba(0,0,0,.35);
+      --prog-track:rgba(0,0,0,.22); --prog-done:#5fae6b; --prog-cur:#d9a24a;
+      color-scheme:dark;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#1b1612; --paper:#241e18; --ink:#f0e8db; --muted:#a89a89; --line:#3a3027; --line-strong:#56483b;
+    --accent:#dcbf98; --accent-ink:#1b1612; --accent-soft:#3a3027;
+    --ok:#8fd297; --ok-bg:#1e3322; --warn:#f0b273; --warn-bg:#3d2a15; --bad:#f29a90; --bad-bg:#3f1f1b;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 18px rgba(0,0,0,.35);
+    --prog-track:rgba(0,0,0,.22); --prog-done:#5fae6b; --prog-cur:#d9a24a;
+    color-scheme:dark;
+  }
+  *{box-sizing:border-box}
+  body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:16px;line-height:1.45;-webkit-font-smoothing:antialiased}
+  body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--accent)}
+  .wrap{max-width:720px;margin:0 auto;padding-block:0 56px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+  a{color:inherit}
+  button{font:inherit;cursor:pointer}
+  button:focus-visible,input:focus-visible,textarea:focus-visible,label:focus-within{outline:2px solid var(--accent);outline-offset:2px}
+
+  .top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--accent);color:var(--accent-ink);margin:0 calc(-1 * max(16px,env(safe-area-inset-left,0px))) 0 calc(-1 * max(16px,env(safe-area-inset-right,0px)));padding-block:12px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+  .top-inner{max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:6px}
+  .top-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .brand{font-family:Georgia,"Times New Roman",serif;font-size:15px;opacity:.85;text-decoration:none}
+  .rol{font-size:13px;opacity:.85;border:1px solid rgba(255,255,255,.35);border-radius:999px;padding:4px 12px}
+  .top h1{margin:0;font-size:22px;line-height:1.2;font-weight:700;text-wrap:balance}
+  .top .sub{font-size:14px;opacity:.9;display:flex;gap:12px;flex-wrap:wrap}
+  .kent{font-family:"SF Mono",Menlo,Consolas,monospace;font-weight:700;letter-spacing:.04em}
+  .prog{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:4px;margin-top:4px}
+  .prog span{height:7px;border-radius:4px;background:var(--prog-track)}
+  .prog span.done{background:var(--prog-done)}
+  .prog span.cur{background:var(--prog-cur)}
+  .prog-label{font-size:13px;opacity:.9;display:flex;justify-content:space-between;gap:8px}
+
+  .banner{margin:14px 0 0;padding:10px 14px;border-radius:10px;font-size:14px;background:var(--warn-bg)}
+
+  .back{display:inline-flex;align-items:center;gap:6px;color:inherit;text-decoration:none;font-size:14px;opacity:.9;border:1px solid rgba(255,255,255,.35);border-radius:999px;padding:4px 12px;background:transparent}
+  .toegang table{width:100%;border-collapse:collapse;font-size:14.5px}
+  .toegang td{padding:9px 16px;border-top:1px solid var(--line);vertical-align:middle}
+  .toegang tr:first-child td{border-top:0}
+  .toegang select{font:inherit;font-size:14px;padding:6px 10px;border:1px solid var(--line-strong);border-radius:8px;background:var(--paper);color:var(--ink)}
+  .toegang .naam{font-weight:600}
+  .toegang .sub{color:var(--muted);font-size:12.5px}
+
+  .card{background:var(--paper);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);margin-top:16px;overflow:hidden}
+  .card .hd{padding:12px 16px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+  .card .hd h2{margin:0;font-size:15px;font-weight:700}
+  .card .bd{padding:12px 16px 14px}
+  .big{font-size:26px;font-weight:700;letter-spacing:.03em;font-family:"SF Mono",Menlo,Consolas,monospace}
+  .big.naam{font-family:var(--font);letter-spacing:0}
+  .meta-row{display:flex;gap:14px;flex-wrap:wrap;color:var(--muted);font-size:14px;margin-top:2px}
+  ul.lines{margin:10px 0 0;padding:0;list-style:none}
+  ul.lines li{padding:8px 0;border-top:1px solid var(--line);font-size:16px}
+  ul.lines li:first-child{border-top:0}
+  ul.lines li b{display:block;font-size:12.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:700;margin-bottom:1px}
+  .req{display:block;margin-top:10px;padding:8px 12px;border-radius:8px;background:var(--warn-bg);color:var(--warn);font-weight:600;font-size:14px}
+
+  .step .hd .num{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--accent-soft);color:var(--ink);font-weight:700;font-size:13px;margin-right:8px}
+  .step.done .hd .num{background:var(--ok);color:#fff}
+  .step.cur .hd .num{background:var(--warn);color:#fff}
+  .step .hd .title{display:flex;align-items:center;font-size:16px;font-weight:700}
+  .step .hd[data-toggle]{cursor:pointer;user-select:none}
+  .step .hd .chev{color:var(--muted);font-size:13px;margin-left:8px}
+  .step.cur{border-color:var(--warn);box-shadow:0 0 0 2px var(--warn-bg),var(--shadow)}
+  .step.dicht .hd{border-bottom:0}
+  .step .teller{font-size:12.5px;color:var(--muted);margin-right:6px}
+  .nudoen[data-scroll]{cursor:pointer}
+  .tagnr{display:inline-grid;place-items:center;min-width:44px;height:36px;padding:0 8px;border-radius:9px;background:var(--ink);color:var(--bg);font-weight:800;font-size:19px;letter-spacing:.02em;margin-right:10px;vertical-align:middle}
+  .top .tagnr{background:var(--accent-ink);color:var(--accent);height:30px;min-width:38px;font-size:17px}
+  .snel{display:flex;gap:8px;align-items:center;margin-top:16px;padding:12px 16px;background:var(--paper);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow)}
+  .snel label{font-weight:700;font-size:15px;flex:1;min-width:120px}
+  .snel input{width:92px;height:46px;text-align:center;font:inherit;font-size:22px;font-weight:800;border:1px solid var(--line-strong);border-radius:10px;background:var(--paper);color:var(--ink)}
+  .koppel select{width:100%;font:inherit;font-size:16px;padding:12px;border:1px solid var(--line-strong);border-radius:10px;background:var(--paper);color:var(--ink);margin:10px 0}
+  .login .rollen{display:grid;gap:10px;margin:4px 0 14px}
+  .login .rollen button{min-height:56px;font:inherit;font-size:17px;font-weight:700;border:2px solid var(--line-strong);border-radius:12px;background:var(--paper);color:var(--ink);cursor:pointer}
+  .login .rollen button.aan{border-color:var(--accent);background:var(--accent-soft)}
+  .login .pin{display:flex;gap:10px;align-items:center;margin-top:6px}
+  .login .pin input{width:140px;height:54px;text-align:center;font:inherit;font-size:28px;font-weight:800;letter-spacing:.3em;border:1px solid var(--line-strong);border-radius:12px;background:var(--paper);color:var(--ink)}
+  .top button.rol{font:inherit;background:transparent;color:inherit;cursor:pointer}
+  .klaarblok{margin-top:16px;border:2px solid var(--ok);border-radius:14px;background:var(--paper);box-shadow:var(--shadow);overflow:hidden}
+  .klaarblok .hd{background:var(--ok-bg);color:var(--ok);font-weight:700;padding:12px 16px;font-size:16px}
+  .klaarblok .bd{padding:12px 16px 14px}
+  .klaarblok .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;margin:8px 0 12px}
+  .klaarblok .grid img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px;border:1px solid var(--line);display:block}
+  .klaarblok .grid span{display:block;font-size:11.5px;color:var(--muted);margin-top:2px}
+  .btn.ok{background:var(--ok);color:#fff;border-color:var(--ok)}
+  .tel{display:flex;align-items:center;gap:6px}
+  .tel button{width:44px;height:44px;border-radius:10px;border:1px solid var(--line-strong);background:var(--paper);color:var(--ink);font-size:22px;font-weight:700;cursor:pointer}
+  .tel input{width:64px;height:44px;text-align:center;font:inherit;font-size:20px;font-weight:700;border:1px solid var(--line-strong);border-radius:10px;background:var(--paper);color:var(--ink)}
+  .voorraad table{width:100%;border-collapse:collapse}
+  .voorraad td{padding:10px 16px;border-top:1px solid var(--line);vertical-align:middle}
+  .voorraad tr:first-child td{border-top:0}
+  .voorraad .naam{font-weight:600;font-size:16px}
+  .voorraad .sub{color:var(--muted);font-size:12.5px}
+  .voorraad .laag{color:var(--bad);font-weight:700;font-size:12.5px}
+  .telvraag{margin:0 16px 12px 58px;padding:10px 12px;border-radius:10px;background:var(--warn-bg);font-size:14px}
+  .telvraag .rij{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:6px;flex-wrap:wrap}
+  .telvraag .acties{display:flex;gap:8px;margin-top:8px;align-items:center}
+  .telvraag .later{font-size:13px;color:var(--muted);background:none;border:0;cursor:pointer;text-decoration:underline}
+  .nudoen{margin-top:16px;padding:12px 16px;border-radius:14px;background:var(--warn-bg);color:var(--warn);font-weight:700;font-size:16px;display:flex;align-items:center;gap:10px}
+  .nudoen small{display:block;font-weight:500;font-size:13px;opacity:.9}
+  .pill{display:inline-block;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:700;white-space:nowrap}
+  .pill.ok{background:var(--ok-bg);color:var(--ok)}
+  .pill.cur{background:var(--warn-bg);color:var(--warn)}
+  .pill.todo{background:var(--bg);color:var(--muted);border:1px solid var(--line)}
+  .pill.wie{background:var(--accent-soft);color:var(--ink);margin-right:4px}
+  .items{list-style:none;margin:0;padding:0}
+  .items li{border-top:1px solid var(--line)}
+  .items li:first-child{border-top:0}
+  .items label{display:grid;grid-template-columns:30px 1fr;gap:12px;align-items:start;padding:14px 16px;cursor:pointer;min-height:56px}
+  .items label.ro{cursor:default}
+  .items input{width:26px;height:26px;margin:1px 0 0;accent-color:var(--ok);cursor:pointer}
+  .items .t{font-size:17px}
+  .items .meta{display:block;font-size:12.5px;color:var(--muted);margin-top:2px}
+  .items li.done .t{color:var(--muted)}
+  .items li.done .meta{color:var(--ok)}
+
+  .photos{padding:12px 16px 14px;border-top:1px solid var(--line);display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .photos .ph{width:84px;height:84px;border-radius:8px;overflow:hidden;border:1px solid var(--line);background:var(--bg);position:relative}
+  .photos .ph img{width:100%;height:100%;object-fit:cover;display:block}
+  .photos .ph span{position:absolute;left:0;right:0;bottom:0;font-size:10.5px;padding:2px 5px;background:rgba(0,0,0,.55);color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .btn{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line-strong);background:var(--paper);color:var(--ink);border-radius:10px;padding:10px 14px;font-size:15px;font-weight:600;min-height:46px}
+  .btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+  .btn.photo{border-style:dashed}
+  .hint{font-size:13px;color:var(--muted)}
+
+  .log .logform{padding:12px 16px 4px}
+  .log .logbtns{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+  .btn.danger{background:var(--bad-bg);color:var(--bad);border-color:transparent}
+  .log textarea{width:100%;min-height:64px;border:1px solid var(--line-strong);border-radius:10px;padding:9px 12px;font:inherit;font-size:15px;background:var(--paper);color:var(--ink);resize:vertical}
+  .entries{list-style:none;margin:0;padding:4px 16px 12px}
+  .entries li{padding:9px 0;border-top:1px solid var(--line);font-size:15px}
+  .entries li:first-child{border-top:0}
+  .entries .meta{font-size:12.5px;color:var(--muted);margin-bottom:2px}
+
+  .orders{list-style:none;margin:16px 0 0;padding:0;display:grid;gap:10px}
+  .orders a{display:block;text-decoration:none;background:var(--paper);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:14px 16px}
+  .orders .row{display:flex;justify-content:space-between;gap:10px;align-items:baseline;flex-wrap:wrap}
+  .orders .klant{font-weight:700;font-size:17px}
+  .orders .sub{font-size:14px;color:var(--muted);margin-top:4px}
+  .orders .mini{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:3px;margin-top:10px}
+  .orders .mini span{height:5px;border-radius:3px;background:var(--line)}
+  .orders .mini span.done{background:var(--ok)}
+  .orders .mini span.cur{background:var(--warn)}
+
+  .tools{display:flex;gap:8px;flex-wrap:wrap;padding:12px 16px;border-top:1px solid var(--line)}
+  .qr{display:none;padding:14px 16px;border-top:1px solid var(--line);text-align:center}
+  .qr.open{display:block}
+  .qr .box{display:inline-block;background:#fff;padding:12px;border-radius:10px}
+  .qr .url{font-size:12px;color:var(--muted);word-break:break-all;margin-top:8px}
+
+  .alarm{margin-top:14px;padding:10px 14px;border-radius:10px;background:var(--bad-bg);color:var(--bad);font-weight:600;font-size:14.5px;display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}
+  .alarm .btn{min-height:36px;padding:6px 12px;font-size:13.5px}
+  .alarm.wijziging{background:var(--warn-bg);color:var(--warn)}
+  .wijz{margin-top:10px;padding:8px 12px;border-radius:8px;border:1px dashed var(--line-strong);font-size:13.5px}
+  .wijz .meta{color:var(--muted);font-size:12.5px}
+  .wijz .ok{color:var(--ok)}
+  .wijz .nee{color:var(--bad);font-weight:600}
+  .pill.bad{background:var(--bad-bg);color:var(--bad)}
+  .pill.wacht{background:var(--accent-soft);color:var(--ink)}
+  .orders .flags{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+  .items label.locked{opacity:.55}
+  .log .soort{display:flex;gap:14px;font-size:14px;padding:0 16px 8px;color:var(--muted)}
+  .log .soort label{display:inline-flex;align-items:center;gap:6px;cursor:pointer}
+  .entries li.probleem{background:var(--bad-bg);margin:0 -16px;padding-left:16px;padding-right:16px}
+  .entries li.probleem.opgelost{background:transparent;opacity:.7}
+  .entries .acties{margin-top:6px}
+  .ref{font-size:13.5px;color:var(--muted);margin-top:4px}
+  .empty{margin-top:24px;padding:24px 16px;text-align:center;color:var(--muted);background:var(--paper);border:1px dashed var(--line-strong);border-radius:14px}
+  .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:14px;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:opacity .2s;max-width:92vw}
+  .toast.show{opacity:1}
+  @media (prefers-reduced-motion:reduce){.toast{transition:none}}
+  @media (max-width:420px){.top h1{font-size:19px}.items label{padding:12px 12px}.card .bd,.card .hd{padding-left:12px;padding-right:12px}}
+</style>
+
+<div class="wrap">
+  <header class="top" id="top">
+    <div class="top-inner" id="topInner">
+      <div class="top-row"><a class="brand" href="#" id="home">Spéciale45</a><button type="button" id="rolTag" class="rol" hidden title="Twee keer tikken om uit te loggen"></button></div>
+      <h1 id="title">Orders</h1>
+      <div class="sub" id="subtitle"></div>
+    </div>
+  </header>
+  <div id="banners"></div>
+  <main id="main"><div class="empty">Laden…</div></main>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+  'use strict';
+  const ROLES=['1stop','Interieurspecialist','Spéciale45'];
+  const EMAILS={'1stop':'1stop@orders.speciale45.nl','Interieurspecialist':'interieur@orders.speciale45.nl','Spéciale45':'beheer@orders.speciale45.nl'};
+  const rolVanEmail=e=>{ for(const r in EMAILS){ if(EMAILS[r]===e) return r; } return ''; };
+  const S={ db:null,authReady:false,canWrite:true,readOnly:false,loginRol:'',
+            role:'',name:'',uid:null,
+            orders:[],order:null,orderId:null, checks:{},photos:[],log:[], unsub:[], qrOpen:false,
+            aanmeldingen:[], rollen:{}, toggled:{}, voorraad:{}, tel:{}, route:null, routeKey:'', tags:{}, voertuigen:{}, tagDoc:undefined, view:'' };
+  const kKey=k=>String(k||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
+  const tagVan=kenteken=>{ const key=kKey(kenteken); for(const nn in S.tags){ if(kKey(S.tags[nn].kenteken)===key) return nn; } return ''; };
+  const PARTS=[{id:'marshall',naam:'Marshall speakers',min:2},{id:'speakerband',naam:'Speakerbanden',min:2},{id:'oplader',naam:'Opladers (oplaadstuk laadpaal)',min:2}];
+  const partNaam=id=>{ const x=PARTS.find(p=>p.id===id); return x?x.naam:id; };
+  const $=id=>document.getElementById(id);
+  const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const MND=['jan','feb','mrt','apr','mei','jun','jul','aug','sept','okt','nov','dec'];
+  const fmt=iso=>{ if(!iso) return ''; const d=new Date(iso); if(isNaN(d)) return ''; const p=n=>String(n).padStart(2,'0'); return `${d.getDate()} ${MND[d.getMonth()]} ${p(d.getHours())}:${p(d.getMinutes())}`; };
+  const fmtD=iso=>{ if(!iso) return ''; const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(iso); if(!m) return iso; return `${+m[3]} ${MND[+m[2]-1]} ${m[1]}`; };
+  const daysAgo=iso=>{ if(!iso) return null; const d=new Date(iso); if(isNaN(d)) return null; return Math.floor((Date.now()-d.getTime())/864e5); };
+  const daysUntil=iso=>{ const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(iso||''); if(!m) return null; const t=new Date(+m[1],+m[2]-1,+m[3]); const n=new Date(); n.setHours(0,0,0,0); return Math.round((t-n)/864e5); };
+  function toast(m){ const t=$('toast'); t.textContent=m; t.classList.add('show'); clearTimeout(toast._t); toast._t=setTimeout(()=>t.classList.remove('show'),2600); }
+  const who=()=>S.name?`${S.role} (${S.name})`:S.role;
+  const isS45=()=>S.role==='Spéciale45';
+  const isInt=()=>S.role==='Interieurspecialist';
+
+  function parseHash(){ const h=(location.hash||'').replace(/^#/,'').trim(); if(!h) return null;
+    let m=/^t(\d{1,3})$/i.exec(h); if(m) return {tag:m[1].padStart(2,'0')};
+    if(/^\d{4,6}$/.test(h)) return {order:h};
+    if(/^[A-Za-z0-9-]{4,12}$/.test(h)) return {kenteken:kKey(h)};
+    return null; }
+  function resetOrderState(){ S.order=null; S.checks={}; S.photos=[]; S.log=[]; S.qrOpen=false; S.toggled={}; S.tagDoc=undefined; S.view=''; }
+  function goHome(){ if(location.hash){ location.hash=''; } S.route=null; S.routeKey=''; S.orderId=null; resetOrderState(); subscribe(); render(); }
+  $('home').addEventListener('click',e=>{ e.preventDefault(); goHome(); });
+  function route(){
+    const r=parseHash(), key=JSON.stringify(r);
+    if(key!==S.routeKey){ S.route=r; S.routeKey=key; S.orderId=r&&r.order?r.order:null; resetOrderState(); subscribe(); }
+    render();
+  }
+  window.addEventListener('hashchange',route);
+
+  // ── afgeleide status ──
+  const mySteps=o=>(o.stappen||[]).filter(st=>isS45()||st.wie===S.role);
+  function stepDone(st,checks){ const it=st.items||[]; return it.length>0 && it.every(i=>checks[i.id]&&checks[i.id].done); }
+  function progress(steps,checks){
+    const states=steps.map(st=>stepDone(st,checks));
+    return {states, cur:states.findIndex(x=>!x), done:states.filter(Boolean).length, total:steps.length, steps};
+  }
+  function fotosOk(o,st,photos){ const need=st.vereistFotoVan||[]; return need.every(id=>photos.some(f=>f.stap===id)); }
+  function stappenOk(o,st,checks){ const need=st.vereistStappen||[]; return need.every(id=>{ const x=(o.stappen||[]).find(y=>y.id===id); return x&&stepDone(x,checks); }); }
+  const WIJZ_VOOR=['1stop','Interieurspecialist'];
+  const wijzId=(w,rol)=>'w-'+w.id+'-'+rol;
+  const wijzGezien=(checks,w,rol)=>{ const c=checks[wijzId(w,rol)]; return !!(c&&c.done); };
+  function wijzVoorMij(o){ return (o.wijzigingen||[]).filter(w=>isS45()||(w.voor||WIJZ_VOOR).includes(S.role)); }
+  function ongezienDoor(o,checks){ const r=new Set(); (o.wijzigingen||[]).forEach(w=>(w.voor||WIJZ_VOOR).forEach(rol=>{ if(!wijzGezien(checks,w,rol)) r.add(rol); })); return [...r]; }
+  function stapNaam(o,id){ const x=(o.stappen||[]).find(y=>y.id===id); return x?x.titel.toLowerCase():id; }
+  function stapWie(o,id){ const x=(o.stappen||[]).find(y=>y.id===id); return x?x.wie:''; }
+  function curVoor(o,checks,photos,wie){ // eerste open stap van deze partij, en of die nog geblokkeerd is
+    const st=(o.stappen||[]).filter(x=>x.wie===wie).find(x=>!stepDone(x,checks)); if(!st) return null;
+    return {wie, id:st.id, titel:st.titel, locked:!fotosOk(o,st,photos)||!stappenOk(o,st,checks)};
+  }
+  function statusVan(o){ // voor het overzicht van Spéciale45
+    const all=o.stappen||[], checks=o._checks||{}, photos=o._photos||[], p=progress(all,checks);
+    const open=(o._log||[]).filter(e=>e.probleem&&!e.opgelost).length;
+    const acts=[...Object.values(checks).map(c=>c.at),...(o._log||[]).map(e=>e.at)].filter(Boolean).sort();
+    const last=acts.length?acts[acts.length-1]:null;
+    const isDone=id=>{ const x=all.find(y=>y.id===id); return !!x&&stepDone(x,checks); };
+    const bezig=ROLES.map(w=>curVoor(o,checks,photos,w)).filter(Boolean);
+    const klaar=isDone('klaar'), regelen=all.find(x=>x.id==='aflevering-regelen');
+    return {p, open, last, klaar, controle:klaar&&!!regelen&&!stepDone(regelen,checks), afgeleverd:isDone('afleveren'), bezig, ongezien:ongezienDoor(o,checks), dagen:daysAgo(last)};
+  }
+
+  function setTop(title,sub,prog){
+    $('title').textContent=title; $('subtitle').innerHTML=sub;
+    const tag=$('rolTag'); tag.hidden=!S.role; tag.textContent=S.role;
+    const old=$('progWrap'); if(old) old.remove();
+    if(prog&&prog.total){
+      const w=document.createElement('div'); w.id='progWrap';
+      w.innerHTML=`<div class="prog">${prog.states.map((d,i)=>`<span class="${d?'done':(i===prog.cur?'cur':'')}"></span>`).join('')}</div>
+        <div class="prog-label"><span>${prog.done} van ${prog.total} klaar</span><span>${prog.cur<0?'Alles klaar':esc(prog.label||prog.steps[prog.cur].titel)}</span></div>`;
+      $('topInner').appendChild(w);
+    }
+  }
+  function renderBanners(){
+    const b=$('banners'); b.innerHTML=(S.readOnly||S.canWrite===false)?`<div class="banner"><b>Je kunt meekijken maar niet afvinken.</b> Log opnieuw in.</div>`:'';
+  }
+  function renderLogin(main){
+    setTop('Orderpagina','Spéciale45 · werkplaats',null);
+    main.innerHTML=`<section class="card login"><div class="hd"><h2>Wie ben je?</h2></div><div class="bd">
+      <div class="rollen">${ROLES.map(r=>`<button type="button" data-rol="${esc(r)}" class="${S.loginRol===r?'aan':''}">${esc(r)}</button>`).join('')}</div>
+      <label for="pin"><b>Pincode</b> <span class="hint">(4 cijfers)</span></label>
+      <div class="pin"><input id="pin" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="one-time-code" aria-label="Pincode"><button type="button" class="btn primary" id="loginBtn">Inloggen</button></div>
+      <div id="loginMsg" class="hint" style="margin-top:10px;min-height:18px"></div>
+      <div class="hint" style="margin-top:14px">Eén keer inloggen is genoeg; deze telefoon blijft daarna ingelogd. Zet de pagina op je beginscherm via "Delen" → "Zet op beginscherm".</div>
+    </div></section>`;
+    if(S.loginRol){ const p=$('pin'); if(p) p.focus(); }
+  }
+  async function login(){
+    const pin=($('pin').value||'').replace(/\D/g,''); const msg=$('loginMsg');
+    if(!S.loginRol){ msg.textContent='Kies eerst wie je bent.'; return; }
+    if(pin.length!==4){ msg.textContent='Typ de 4 cijfers van je pincode.'; return; }
+    msg.textContent='Even geduld…';
+    try{ await firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL); await firebase.auth().signInWithEmailAndPassword(EMAILS[S.loginRol],'pin-'+pin+'-s45'); }
+    catch(err){ msg.textContent=(err&&/password|credential|user-not-found|invalid/i.test(err.code||''))?'Pincode klopt niet. Probeer opnieuw.':'Inloggen lukt niet: '+(err&&err.code||'onbekend'); }
+  }
+
+  function render(){
+    renderBanners();
+    const main=$('main');
+    if(!S.authReady){ setTop('Laden…','',null); main.innerHTML='<div class="empty">Laden…</div>'; return; }
+    if(!S.role){ renderLogin(main); return; }
+    if(!S.route){ renderList(main); return; }
+    if(!S.orderId){ renderResolve(main); return; }
+    if(!S.order){ setTop('Order '+S.orderId,'<a class="back" href="#" id="back">← Alle orders</a>',null); main.innerHTML='<div class="empty">Order wordt geladen…</div>'; return; }
+    renderOrder(main);
+  }
+
+  function renderList(main){
+    setTop('Orders', isS45()?'Alle auto\'s in bewerking':'Auto\'s met werk voor jou', null);
+    let list=S.orders.filter(o=>mySteps(o).length).map(o=>Object.assign({_st:statusVan(o)},o));
+    list.sort((a,b)=>(b._st.open-a._st.open)||((b._st.controle?1:0)-(a._st.controle?1:0))||((daysUntil(a.deadline)??9999)-(daysUntil(b.deadline)??9999)));
+    let h = isInt()?'':`<form class="snel" id="snelForm"><label for="snelTag">Stickernummer op de auto</label><input id="snelTag" inputmode="numeric" pattern="[0-9]*" placeholder="07" aria-label="Stickernummer"><button type="submit" class="btn primary">Open</button></form>`;
+    h += !list.length ? '<div class="empty">Geen orders voor jou op dit moment.</div>' :
+      `<ul class="orders">${list.map(o=>{ const st=mySteps(o), p=progress(st,o._checks||{}), x=o._st, du=daysUntil(o.deadline);
+      const pills=[];
+      if(x.open) pills.push(`<span class="pill bad">⚠ ${x.open} probleem${x.open>1?'en':''}</span>`);
+      if(isS45()&&x.ongezien.length) pills.push(`<span class="pill bad">✎ wijziging niet gezien: ${esc(x.ongezien.join(', '))}</span>`);
+      if(!isS45()&&wijzVoorMij(o).some(w=>!wijzGezien(o._checks||{},w,S.role))) pills.push('<span class="pill bad">✎ gewijzigd, bekijk</span>');
+      if(isS45()){
+        if(p.cur<0||x.afgeleverd) pills.push('<span class="pill ok">Afgeleverd</span>');
+        else {
+          if(x.controle) pills.push('<span class="pill cur">✓ Klaar bij 1stop · jouw akkoord nodig</span>'); else if(x.klaar) pills.push('<span class="pill ok">Klaar bij 1stop</span>');
+          const lopend=x.bezig.filter(b=>!b.locked);
+          lopend.forEach(b=>pills.push(`<span class="pill ${b.wie==='Spéciale45'?'cur':'wacht'}">${b.wie==='Spéciale45'?'Jij':esc(b.wie)} · ${esc(b.titel)}</span>`));
+          if(!lopend.length&&!x.klaar) pills.push('<span class="pill todo">Wacht</span>');
+        }
+      } else if(p.cur<0) pills.push('<span class="pill ok">Jouw werk klaar</span>'); else { const mijn=curVoor(o,o._checks||{},o._photos||[],S.role); if(mijn&&mijn.locked){ const stp=(o.stappen||[]).find(y=>y.id===mijn.id); const wie=(stp.vereistStappen||[]).map(id=>stapWie(o,id)).filter(Boolean)[0]; pills.push(`<span class="pill todo">${wie?'Wacht op '+esc(wie):'Eerst foto\'s'} · ${esc(mijn.titel)}</span>`); } else pills.push(`<span class="pill cur">${esc(st[p.cur].titel)}</span>`); }
+      if(o.deadline) pills.push(`<span class="pill ${du!==null&&du<=3?'bad':'todo'}">klaar vóór ${esc(fmtD(o.deadline))}${du!==null?(du<0?' · te laat':` · ${du} dg`):''}</span>`);
+      if(isS45()&&x.dagen!==null&&x.dagen>=3) pills.push(`<span class="pill todo">${x.dagen} dagen stil</span>`);
+      const nn=isInt()?'':tagVan(o.kenteken);
+      return `<li><a href="#${esc(o.nummer)}"><div class="row"><span class="klant">${nn?`<span class="tagnr">${esc(nn)}</span>`:''}${isInt()?esc(o.klant):esc(o.kenteken||'—')+' · '+esc(o.model||'')}</span></div>
+        <div class="sub">${isInt()?'order '+esc(o.nummer):esc(o.klant)+' · meldcode '+esc(o.meldcode||'—')+' · order '+esc(o.nummer)}</div>
+        <div class="flags">${pills.join('')}</div>
+        <div class="mini">${p.states.map((d,i)=>`<span class="${d?'done':(i===p.cur?'cur':'')}"></span>`).join('')}</div></a></li>`; }).join('')}</ul>`;
+    if(S.role==='1stop'||isS45()) h+=voorraadKaart();
+    if(false){
+      const rows=[];
+      h+=`<section class="card toegang"><div class="hd"><h2>Toegang</h2><span class="hint">Wie de link opent, verschijnt hier. Geef een rol.</span></div>
+        ${rows.length?`<table>${rows.map(a=>{ const r=(S.rollen[a.uid]||{}).rol||''; return `<tr><td><div class="naam">${esc(a.name||'Onbekende naam')}</div><div class="sub">aangemeld ${esc(fmt(a.at))}</div></td><td style="text-align:right"><select data-uid="${esc(a.uid)}" aria-label="Rol"><option value="" ${r?'':'selected'}>Geen toegang</option>${ROLES.map(x=>`<option value="${x}" ${r===x?'selected':''}>${x}</option>`).join('')}</select></td></tr>`; }).join('')}</table>`
+        : `<div class="bd hint">Nog niemand anders heeft de link geopend.</div>`}</section>`;
+    }
+    main.innerHTML=h;
+  }
+
+  function renderResolve(main){
+    const r=S.route, back='<a class="back" href="#" id="back">← Alle orders</a>';
+    if(r.tag&&S.tagDoc===undefined){ setTop('Sticker '+r.tag,back,null); main.innerHTML='<div class="empty">Even kijken welke auto dit is…</div>'; return; }
+    if(r.tag&&!S.tagDoc){ // nieuwe sticker: koppelen aan een auto
+      const vrij=Object.values(S.voertuigen).filter(v=>!v.tag).sort((a,b)=>String(a.kenteken).localeCompare(String(b.kenteken)));
+      setTop('Sticker '+r.tag,back,null);
+      if(isInt()){ main.innerHTML='<div class="empty">Deze sticker is nog niet aan een auto gekoppeld. Dat doet 1stop of Spéciale45.</div>'; return; }
+      main.innerHTML=`<section class="card koppel"><div class="hd"><h2>Nieuwe sticker — welke auto is dit?</h2></div><div class="bd">
+        <p style="margin:0 0 4px">Plak sticker <b>${esc(r.tag)}</b> links onder in de voorruit en kies hieronder de auto. Kijk naar de <b>meldcode</b> (laatste 4 cijfers van het chassisnummer, op de sticker in de deurstijl).</p>
+        ${vrij.length?`<div class="tel" style="margin-top:8px"><input id="koppelMc" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="meldcode" aria-label="Meldcode, 4 cijfers" style="width:120px;font-size:22px;letter-spacing:.08em"><span class="hint">4 cijfers, bv. 0240</span></div>
+        <div id="koppelMatch" class="hint" style="margin-top:8px;min-height:20px"></div>
+        <details style="margin-top:6px"><summary class="hint" style="cursor:pointer">Of kies uit de lijst</summary><select id="koppelSel"><option value="">— kies de auto —</option>${vrij.map(v=>`<option value="${esc(v.key)}">${esc(v.kenteken||'zonder kenteken')} · meldcode ${esc(v.meldcode||'?')} · ${esc(v.model||'')}</option>`).join('')}</select></details>
+        <button type="button" class="btn primary" id="koppelBtn" style="margin-top:6px">Koppelen aan sticker ${esc(r.tag)}</button>`:'<div class="hint">Er staan geen ongekoppelde auto\'s in de lijst. Vraag Spéciale45 om de auto toe te voegen.</div>'}
+        <div class="hint" style="margin-top:10px">Staat de auto er niet bij? Stuur Spéciale45 een berichtje met de meldcode.</div></div></section>`;
+      return; }
+    const key=r.kenteken||kKey(S.tagDoc&&S.tagDoc.kenteken); const v=Object.values(S.voertuigen).find(x=>x.key===key);
+    const titel=v?(v.kenteken||('meldcode '+v.meldcode)):key;
+    setTop(titel, back+(r.tag?`<span class="tagnr">${esc(r.tag)}</span>`:'')+(v?`<span>${esc(v.model||'')}</span><span>meldcode ${esc(v.meldcode||'—')}</span>`:''), null);
+    if(!S.ordersGeladen){ main.innerHTML='<div class="empty">Opdracht wordt gezocht…</div>'; return; }
+    main.innerHTML=`<div class="empty"><b>${esc(titel)}</b>${v&&v.model?' · '+esc(v.model):''}<br>${v?'Voorraadauto — nog geen opdracht.':'Deze auto staat nog niet in het systeem.'}<br><span class="hint">Zodra Spéciale45 deze auto aan een klant koppelt, verschijnt de opdracht hier op dezelfde sticker.</span>${isS45()&&v&&v.klant?`<br><span class="hint">Voorraadbestand: ${esc(v.klant)}</span>`:''}</div>`;
+  }
+  function koppelZoek(){ // meldcode → auto
+    const mc=($('koppelMc')&&$('koppelMc').value||'').replace(/\D/g,''); const out=$('koppelMatch'), sel=$('koppelSel'); if(!out) return null;
+    if(mc.length<4){ out.textContent=''; return null; }
+    const v=Object.values(S.voertuigen).find(x=>!x.tag&&x.meldcode===mc);
+    if(v){ out.innerHTML=`✓ Dat is <b>${esc(v.kenteken||'auto zonder kenteken')}</b> · ${esc(v.model||'')}`; if(sel) sel.value=v.key; return v.key; }
+    const al=Object.values(S.voertuigen).find(x=>x.meldcode===mc&&x.tag);
+    out.innerHTML=al?`Deze auto heeft al sticker <b>${esc(al.tag)}</b>.`:'Geen auto met deze meldcode gevonden. Kies uit de lijst of stuur Spéciale45 een berichtje.'; return null;
+  }
+  async function koppelTag(){
+    const key=koppelZoek()||($('koppelSel')&&$('koppelSel').value); if(!key){ toast('Typ de meldcode of kies de auto.'); return; }
+    const v=Object.values(S.voertuigen).find(x=>x.key===key); if(!v) return;
+    try{ await S.db.doc('tags/'+S.route.tag).set({kenteken:v.kenteken||'',key,meldcode:v.meldcode||'',by:who(),uid:S.uid,at:new Date().toISOString()});
+      await S.db.doc('voertuigen/'+key).update({tag:S.route.tag}); toast('Sticker '+S.route.tag+' gekoppeld aan '+(v.kenteken||'meldcode '+v.meldcode)); }
+    catch(err){ fail(err); }
+  }
+  function voorraadKaart(){
+    const kan=!!S.db&&!S.readOnly&&S.canWrite!==false;
+    return `<section class="card voorraad"><div class="hd"><h2>${isS45()?'Onderdelen bij 1stop':'Voorraad bij jou'}</h2><span class="hint">${isS45()?'Geteld door 1stop':'Klopt het aantal niet meer? Pas het hier aan.'}</span></div>
+      <table>${PARTS.map(pt=>{ const v=S.voorraad[pt.id]||{}; const n=(typeof v.aantal==='number')?v.aantal:null; const laag=n!==null&&n<=pt.min;
+        return `<tr><td><div class="naam">${esc(pt.naam)}</div><div class="sub">${n===null?'nog niet geteld':'geteld '+esc(fmt(v.at))+(v.by?' · '+esc(v.by):'')}</div>${laag?`<div class="laag">⚠ Bijna op${isS45()?' — bestellen':''}</div>`:''}</td>
+          <td style="text-align:right">${kan?`<div class="tel" style="justify-content:flex-end"><button type="button" data-tel-min="${pt.id}" aria-label="Eén minder">−</button><input type="number" inputmode="numeric" min="0" data-tel="${pt.id}" value="${n===null?'':n}" placeholder="?"><button type="button" data-tel-plus="${pt.id}" aria-label="Eén meer">+</button></div>`:`<div class="naam">${n===null?'?':n}</div>`}</td></tr>`; }).join('')}</table></section>`;
+  }
+  async function zetVoorraad(id,aantal){
+    if(!S.db) return; aantal=Math.max(0,Math.round(Number(aantal)||0));
+    try{ await S.db.doc('voorraad/'+id).set({aantal,by:who(),uid:S.uid,at:new Date().toISOString()}); toast(partNaam(id)+': '+aantal+' opgeslagen'); }catch(err){ fail(err); }
+  }
+  function renderOrder(main){
+    const o=S.order, steps=mySteps(o), p=progress(steps,S.checks);
+    const du=daysUntil(o.deadline);
+    const bezig=ROLES.map(w=>curVoor(o,S.checks,S.photos,w)).filter(Boolean), nuIds=new Set(bezig.filter(b=>!b.locked).map(b=>b.id));
+    if(isS45()&&p.cur>=0){ const l=bezig.filter(b=>!b.locked).map(b=>b.titel); if(l.length) p.label=l.join(' + '); }
+    const nn=isInt()?'':tagVan(o.kenteken);
+    setTop(isInt()?o.klant:(o.kenteken||o.klant), `<a class="back" href="#" id="back">← Alle orders</a>${nn?`<span class="tagnr" title="Stickernummer op de auto">${esc(nn)}</span>`:''}${isInt()?`<span>order ${esc(o.nummer)}</span>`:`<span>${esc(o.model||'')}</span><span>meldcode ${esc(o.meldcode||'—')}</span>`}${o.deadline?`<span><b>klaar vóór ${esc(fmtD(o.deadline))}</b></span>`:''}`, p);
+    const canTick=!!S.db&&!S.readOnly&&S.canWrite!==false, canPhoto=canTick;
+    const specKeys = isS45() ? ['spuitwerk','montage','interieur'] : (S.role==='1stop'?['spuitwerk','montage']:['interieur']);
+    const spec=(o.opdracht||{});
+    const log=zichtbaarLog();
+    const openProb=log.filter(e=>e.probleem&&!e.opgelost);
+    let h='';
+    if(openProb.length) h+=`<div class="alarm"><span>⚠ Probleem gemeld: ${esc(openProb[0].tekst)}</span>${isS45()&&canTick?`<button type="button" class="btn" data-opgelost="${esc(openProb[0].id)}">Opgelost</button>`:''}</div>`;
+    const wijz=wijzVoorMij(o).slice().sort((a,b)=>String(b.at).localeCompare(String(a.at)));
+    if(!isS45()) wijz.filter(w=>!wijzGezien(S.checks,w,S.role)).forEach(w=>{ h+=`<div class="alarm wijziging"><span>✎ Gewijzigd ${esc(fmt(w.at))}: ${esc(w.tekst)}</span>${canTick?`<button type="button" class="btn" data-gezien="${esc(wijzId(w,S.role))}">Gezien</button>`:''}</div>`; });
+    if(!isS45()){ const mijn=bezig.find(b=>b.wie===S.role); if(p.cur<0) h+=`<div class="nudoen">✓ Jouw werk aan deze auto is klaar</div>`; else if(mijn&&!mijn.locked){ const st=steps.find(x=>x.id===mijn.id), n=(st.items||[]).filter(i=>S.checks[i.id]&&S.checks[i.id].done).length; h+=`<div class="nudoen" data-scroll="${esc(mijn.id)}" role="button"><span>▶</span><span>Nu doen: ${esc(mijn.titel)}<small>${n} van ${(st.items||[]).length} punten afgevinkt — tik hier om ernaartoe te gaan</small></span></div>`; } else if(mijn&&mijn.locked) h+=`<div class="nudoen"><span>⏸</span><span>Even wachten<small>${esc(mijn.titel)} kan pas na ${esc((steps.find(x=>x.id===mijn.id).vereistFotoVan||[]).length?'de foto\'s':'de vorige stap van een ander')}</small></span></div>`; }
+    if(isS45()){ const kl=(o.stappen||[]).find(x=>x.id==='klaar'), rg=(o.stappen||[]).find(x=>x.id==='aflevering-regelen');
+      if(kl&&rg&&stepDone(kl,S.checks)&&!stepDone(rg,S.checks)){ const ak=rg.items&&rg.items[0], c=ak&&S.checks[ak.id], gegeven=!!(c&&c.done);
+        h+=`<div class="klaarblok"><div class="hd">✓ 1stop meldt deze auto klaar — controleer de foto's</div><div class="bd">
+          ${S.photos.length?`<div class="grid">${S.photos.map(f=>`<div><img src="${esc(f.data||f.url||'')}" alt="Foto" loading="lazy"><span>${esc(stapNaam(o,f.stap))} · ${esc(fmt(f.at))}</span></div>`).join('')}</div>`:'<div class="hint">Geen foto\'s gevonden.</div>'}
+          ${gegeven?`<span class="pill ok">Akkoord gegeven · ${esc(fmt(c.at))}</span> <span class="hint">Nu nog: tenaamstelling, restbetaling en afleverdag (stap hieronder).</span>`:(ak&&canTick?`<button type="button" class="btn ok" data-akkoord="${esc(ak.id)}">Akkoord — foto's kloppen met de opdracht</button> <span class="hint">Klopt er iets niet? Stuur onderaan een opmerking of meld een probleem; 1stop kan pas afleveren na jouw akkoord.</span>`:'')}
+        </div></div>`; } }
+    h+=`<section class="card"><div class="hd"><h2>${isS45()?'Opdracht':(isInt()?'Deze bestelling':'Deze auto')}</h2><span class="hint">${isInt()?'order '+esc(o.nummer):esc(o.klant)+' · order '+esc(o.nummer)}</span></div><div class="bd">
+      <div class="big ${isInt()?'naam':''}">${isInt()?esc(o.klant):esc(o.kenteken||'—')}</div>
+      <div class="meta-row">${isInt()?`<span>order ${esc(o.nummer)}</span>`:`<span>${esc(o.model||'')}</span><span>basis ${esc(o.basis||'')}</span>`}${o.deadline?`<span><b>klaar vóór ${esc(fmtD(o.deadline))}</b>${du!==null?' ('+(du<0?'te laat':du+' dagen')+')':''}</span>`:''}</div>
+      ${isS45()?`<ul class="lines">${specKeys.filter(k=>spec[k]&&spec[k].length).map(k=>`<li><b>${k==='spuitwerk'?'Spuitwerk':(k==='montage'?'Montage':'Interieur')}</b>${spec[k].map(esc).join('<br>')}</li>`).join('')}</ul>`:''}
+      ${o.referentie&&specKeys.includes('spuitwerk')?`<div class="ref">${esc(o.referentie)}</div>`:''}
+      ${o.letop&&!isInt()?`<span class="req">${esc(o.letop)}</span>`:''}${o.letopInterieur&&(isInt()||isS45())?`<span class="req">${esc(o.letopInterieur)}</span>`:''}
+      ${wijz.length?`<div class="wijz"><b>Wijzigingen</b>${wijz.map(w=>`<div><span class="meta">✎ ${esc(fmt(w.at))} · </span>${esc(w.tekst)}${isS45()?' <span class="meta">— '+(w.voor||WIJZ_VOOR).map(r=>{ const c=S.checks[wijzId(w,r)]; return c&&c.done?`<span class="ok">${esc(r)} gezien ${esc(fmt(c.at))}</span>`:`<span class="nee">${esc(r)} nog niet gezien</span>`; }).join(', ')+'</span>':(wijzGezien(S.checks,w,S.role)?' <span class="meta ok">gezien</span>':'')}</div>`).join('')}</div>`:''}
+    </div>${isS45()?`<div class="tools"><button type="button" class="btn" id="qrBtn">QR / link van deze auto</button></div><div class="qr ${S.qrOpen?'open':''}" id="qrBox"></div>`:''}</section>`;
+    if(!steps.length) h+=`<div class="empty">Geen stappen voor jou in deze order.</div>`;
+    steps.forEach((st,i)=>{
+      const items=st.items||[], done=p.states[i], photos=S.photos.filter(f=>f.stap===st.id);
+      const nDone=items.filter(it=>S.checks[it.id]&&S.checks[it.id].done).length;
+      const fotoLock=!fotosOk(o,st,S.photos), stapLock=!stappenOk(o,st,S.checks), locked=fotoLock||stapLock, cur=!done&&!locked&&(nuIds.has(st.id)||nDone>0);
+      const open=(st.id in S.toggled)?S.toggled[st.id]:cur;
+      h+=`<section class="card step ${done?'done':(cur?'cur':'')} ${open?'':'dicht'}" id="stap-${esc(st.id)}"><div class="hd" data-toggle="${esc(st.id)}"><span class="title"><span class="num">${done?'✓':i+1}</span>${esc(st.titel)}</span>
+        <span>${isS45()?`<span class="pill wie">${esc(st.wie)}</span>`:''}${!done&&nDone?`<span class="teller">${nDone}/${items.length}</span>`:''}<span class="pill ${done?'ok':(cur?'cur':'todo')}">${done?'Klaar':(cur?'Nu':(locked?'Wacht':'Later'))}</span><span class="chev">${open?'▲':'▼'}</span></span></div><div class="stepbody" ${open?'':'hidden'}>
+        ${fotoLock?`<div class="bd hint" style="padding-bottom:0">Eerst foto's toevoegen bij ${esc((st.vereistFotoVan||[]).map(id=>stapNaam(o,id)).join(' en '))}.</div>`:''}
+        ${stapLock?`<div class="bd hint" style="padding-bottom:0">Wacht op ${esc((st.vereistStappen||[]).filter(id=>{ const x=(o.stappen||[]).find(y=>y.id===id); return !(x&&stepDone(x,S.checks)); }).map(id=>stapWie(o,id)+': '+stapNaam(o,id)).join(' en '))}.</div>`:''}
+        <ul class="items">${items.map(it=>{ const c=S.checks[it.id], d=!!(c&&c.done), ok=canTick&&(!locked||d);
+          const vraag=d&&S.tel[it.id]&&(it.telt||[]).length?`<div class="telvraag"><b>Even tellen: hoeveel liggen er nu nog?</b>${(it.telt||[]).map(pid=>{ const v=S.voorraad[pid]||{}; const n=(typeof v.aantal==='number')?Math.max(0,v.aantal-1):''; return `<div class="rij"><span>${esc(partNaam(pid))}</span><input type="number" inputmode="numeric" min="0" data-telvraag="${esc(pid)}" value="${n}" placeholder="?" style="width:72px;height:40px;text-align:center;font:inherit;font-size:18px;font-weight:700;border:1px solid var(--line-strong);border-radius:8px;background:var(--paper);color:var(--ink)"></div>`; }).join('')}<div class="acties"><button type="button" class="btn primary" data-telsave="${esc(it.id)}">Opslaan</button><button type="button" class="later" data-tellater="${esc(it.id)}">Later</button></div></div>`:'';
+          return `<li class="${d?'done':''}"><label class="${ok?'':'ro'} ${locked&&!d?'locked':''}"><input type="checkbox" id="chk-${esc(it.id)}" data-item="${esc(it.id)}" ${d?'checked':''} ${ok?'':'disabled'}><span><span class="t">${esc(it.tekst)}</span>${d?`<span class="meta">${esc(c.by||'')} · ${esc(fmt(c.at))}</span>`:''}</span></label>${vraag}</li>`; }).join('')}</ul>
+        ${st.foto?`<div class="photos">${photos.map(f=>`<div class="ph"><img src="${esc(f.data||f.url||'')}" alt="Foto" loading="lazy"><span>${esc(f.by||'')} · ${esc(fmt(f.at))}</span></div>`).join('')}
+          ${canPhoto?`<label class="btn photo" for="foto-${esc(st.id)}">📷 Foto maken<input type="file" id="foto-${esc(st.id)}" data-step="${esc(st.id)}" accept="image/*" capture="environment" hidden></label>`:''}
+          ${!photos.length?`<span class="hint">Minimaal één foto als dit klaar is.</span>`:''}</div>`:''}
+      </div></section>`;
+    });
+    h+=`<section class="card log"><div class="hd"><h2>Opmerkingen en problemen</h2><span class="hint">Alles wat afwijkt, staat hier</span></div>
+      ${canTick?`<div class="logform"><textarea id="logText" placeholder="Typ hier wat je wilt doorgeven…"></textarea><div class="logbtns"><button type="button" class="btn" data-log="opmerking">Opmerking sturen</button><button type="button" class="btn danger" data-log="probleem">⚠ Probleem melden</button></div></div>`:''}
+      <ul class="entries">${log.length?log.map(e=>`<li class="${e.probleem?'probleem':''} ${e.opgelost?'opgelost':''}"><div class="meta">${e.probleem?'⚠ PROBLEEM · ':''}${esc(e.by||'')} · ${esc(fmt(e.at))}${e.opgelost?' · opgelost door '+esc(e.opgelostDoor||'')+' '+esc(fmt(e.opgelostAt)):''}</div>${esc(e.tekst)}${e.probleem&&!e.opgelost&&isS45()&&canTick?`<div class="acties"><button type="button" class="btn" data-opgelost="${esc(e.id)}">Opgelost</button></div>`:''}</li>`).join(''):'<li class="hint">Nog niets genoteerd.</li>'}</ul></section>`;
+    main.innerHTML=h;
+    if(S.qrOpen) drawQR();
+  }
+
+  function rolVan(e){ if(e.rol) return e.rol; const m=/^(1stop|Interieurspecialist|Spéciale45|Spuiter|Interieurman)/.exec(e.by||''); return m?({Spuiter:'1stop',Interieurman:'Interieurspecialist'}[m[1]]||m[1]):''; }
+  function zichtbaarLog(){ return isS45()?S.log:S.log.filter(e=>{ const r=rolVan(e); return !r||r===S.role||r==='Spéciale45'; }); }
+
+  function drawQR(){
+    const box=$('qrBox'); if(!box) return; box.innerHTML='';
+    const nn=S.order?tagVan(S.order.kenteken):''; const url=location.href.split('#')[0]+'#'+(nn?'t'+nn:(S.order&&S.order.kenteken?kKey(S.order.kenteken):S.orderId));
+    const d=document.createElement('div'); d.className='box'; box.appendChild(d);
+    try{ if(window.QRCode) new QRCode(d,{text:url,width:200,height:200,correctLevel:QRCode.CorrectLevel.M}); else d.textContent='QR niet beschikbaar'; }catch(e){ d.textContent='QR kon niet worden gemaakt'; }
+    const u=document.createElement('div'); u.className='url'; u.textContent=url; box.appendChild(u);
+  }
+
+  // ── events ──
+  document.addEventListener('click',async e=>{
+    if(e.target.closest('#back')){ e.preventDefault(); goHome(); return; }
+    if(e.target.closest('#qrBtn')){ S.qrOpen=!S.qrOpen; $('qrBox').classList.toggle('open',S.qrOpen); if(S.qrOpen) drawQR(); return; }
+    if(e.target.closest('#koppelBtn')){ await koppelTag(); return; }
+    const tm=e.target.closest('button[data-tel-min],button[data-tel-plus]');
+    if(tm){ const id=tm.dataset.telMin||tm.dataset.telPlus; const inp=document.querySelector('input[data-tel="'+id+'"]'); if(!inp) return; const cur=inp.value===''?0:Number(inp.value); const n=Math.max(0,cur+(tm.dataset.telMin?-1:1)); inp.value=n; await zetVoorraad(id,n); return; }
+    const ts=e.target.closest('button[data-telsave]');
+    if(ts){ const box=ts.closest('.telvraag'); const inputs=[...box.querySelectorAll('input[data-telvraag]')]; for(const inp of inputs){ if(inp.value!=='') await zetVoorraad(inp.dataset.telvraag,inp.value); } delete S.tel[ts.dataset.telsave]; render(); return; }
+    const tl=e.target.closest('button[data-tellater]');
+    if(tl){ delete S.tel[tl.dataset.tellater]; render(); return; }
+    const ak=e.target.closest('button[data-akkoord]');
+    if(ak){ try{ await S.db.doc('orders/'+S.orderId+'/checks/'+ak.dataset.akkoord).set({done:true,by:who(),uid:S.uid,at:new Date().toISOString()}); toast('Akkoord gegeven'); }catch(err){ fail(err); } return; }
+    const sc=e.target.closest('.nudoen[data-scroll]');
+    if(sc){ const el=$('stap-'+sc.dataset.scroll); if(el){ el.scrollIntoView({behavior:'smooth',block:'start'}); } return; }
+    const tg=e.target.closest('.hd[data-toggle]');
+    if(tg){ const id=tg.dataset.toggle; const sec=tg.closest('.step'); const nu=sec.classList.contains('dicht'); S.toggled[id]=nu; sec.classList.toggle('dicht',!nu); const body=sec.querySelector('.stepbody'); if(body) body.hidden=!nu; const ch=tg.querySelector('.chev'); if(ch) ch.textContent=nu?'▲':'▼'; return; }
+    const lg=e.target.closest('button[data-log]');
+    if(lg){ await stuurLog(lg.dataset.log==='probleem'); return; }
+    const gz=e.target.closest('button[data-gezien]');
+    if(gz){ try{ await S.db.doc('orders/'+S.orderId+'/checks/'+gz.dataset.gezien).set({done:true,by:who(),uid:S.uid,at:new Date().toISOString()}); toast('Bedankt, wijziging gezien'); }catch(err){ fail(err); } return; }
+    const op=e.target.closest('button[data-opgelost]');
+    if(op){ try{ await S.db.doc('orders/'+S.orderId+'/log/'+op.dataset.opgelost).update({opgelost:true,opgelostDoor:who(),opgelostAt:new Date().toISOString()}); toast('Gemarkeerd als opgelost'); }catch(err){ fail(err); } }
+  });
+  document.addEventListener('change',async e=>{
+    const sel=e.target.closest('select[data-uid]'); if(sel){ await setRolFor(sel.dataset.uid, sel.value); return; }
+    const tv=e.target.closest('input[data-tel]'); if(tv){ if(tv.value!=='') await zetVoorraad(tv.dataset.tel,tv.value); return; }
+    const chk=e.target.closest('input[type=checkbox][data-item]'); if(chk){ await toggle(chk.dataset.item,chk.checked,chk); return; }
+    const f=e.target.closest('input[type=file][data-step]'); if(f&&f.files&&f.files[0]){ await addPhoto(f.dataset.step,f.files[0]); f.value=''; }
+  });
+  document.addEventListener('input',e=>{ if(e.target.id==='koppelMc') koppelZoek(); });
+  document.addEventListener('submit',e=>{ if(e.target.id!=='snelForm') return; e.preventDefault(); const v=($('snelTag').value||'').replace(/\D/g,''); if(!v){ toast('Typ het nummer van de sticker.'); return; } location.hash='#t'+v.padStart(2,'0'); });
+  async function stuurLog(probleem){
+    const t=$('logText'), txt=(t&&t.value||'').trim(); if(!txt){ toast('Typ eerst wat je wilt doorgeven.'); return; }
+    try{ await S.db.collection('orders/'+S.orderId+'/log').add({tekst:txt,by:who(),rol:S.role,uid:S.uid,at:new Date().toISOString(),probleem,opgelost:false}); t.value=''; toast(probleem?'Probleem gemeld aan Spéciale45':'Verstuurd'); }catch(err){ fail(err); }
+  }
+  async function setRolFor(uid,rol){
+    try{ if(rol) await S.db.doc('rollen/'+uid).set({rol, door:S.uid, at:new Date().toISOString()}); else await S.db.doc('rollen/'+uid).delete(); toast(rol?'Rol gegeven: '+rol:'Toegang ingetrokken'); }
+    catch(err){ fail(err); }
+  }
+  async function toggle(id,checked,el){
+    if(!S.db) return;
+    const ref=S.db.doc('orders/'+S.orderId+'/checks/'+id);
+    try{ if(checked) await ref.set({done:true,by:who(),uid:S.uid,at:new Date().toISOString()}); else await ref.delete();
+      const it=S.order&&(S.order.stappen||[]).flatMap(st=>st.items||[]).find(x=>x.id===id); if(checked&&it&&(it.telt||[]).length) S.tel[id]=true; else delete S.tel[id]; render(); }
+    catch(err){ el.checked=!checked; fail(err); }
+  }
+  function verklein(file){ // foto verkleinen tot een compacte jpeg (data-URL), zodat hij in de database past
+    return new Promise(res=>{ const img=new Image(); const u=URL.createObjectURL(file);
+      img.onload=()=>{ URL.revokeObjectURL(u); let max=1280, q=0.78, out='';
+        for(let i=0;i<6;i++){ const r=Math.min(1,max/Math.max(img.width,img.height)); const c=document.createElement('canvas'); c.width=Math.round(img.width*r); c.height=Math.round(img.height*r); c.getContext('2d').drawImage(img,0,0,c.width,c.height); out=c.toDataURL('image/jpeg',q); if(out.length<650000) break; max=Math.round(max*0.8); q=Math.max(0.55,q-0.08); }
+        res(out); };
+      img.onerror=()=>{ URL.revokeObjectURL(u); res(''); }; img.src=u; });
+  }
+  async function addPhoto(stepId,file){
+    if(!S.db) return;
+    toast('Foto wordt opgeslagen…');
+    try{ const data=await verklein(file); if(!data){ toast('Kon de foto niet lezen.'); return; }
+      await S.db.collection('orders/'+S.orderId+'/photos').add({stap:stepId,data,by:who(),uid:S.uid,at:new Date().toISOString()}); toast('Foto toegevoegd'); }
+    catch(err){ fail(err); }
+  }
+  function fail(err){
+    const c=err&&err.code;
+    if(c==='permission-denied'||c==='storage/unauthorized'){ toast('Geen rechten. Log opnieuw in.'); }
+    else if(c==='unavailable'||c==='storage/retry-limit-exceeded') toast('Geen verbinding, probeer zo nog eens.');
+    else toast('Opslaan mislukt, probeer opnieuw.');
+  }
+
+  // ── data ──
+  function clearSubs(){ S.unsub.forEach(u=>{ try{u();}catch(e){} }); S.unsub=[]; }
+  function subscribe(){
+    clearSubs(); if(!S.db||!S.role) return;
+    S.unsub.push(S.db.collection('voorraad').onSnapshot(snap=>{ const m={}; snap.docs.forEach(d=>{ if(d.exists) m[d.id]=d.data(); }); S.voorraad=m; render(); },()=>{}));
+    S.unsub.push(S.db.collection('tags').onSnapshot(snap=>{ const m={}; snap.docs.forEach(d=>{ if(d.exists) m[d.id]=d.data(); }); S.tags=m; if(S.route&&S.route.tag){ S.tagDoc=m[S.route.tag]||null; resolveRoute(); } render(); },()=>{}));
+    if(S.route&&!S.route.order&&!S.orderId){ // sticker of kenteken: auto opzoeken
+      S.unsub.push(S.db.collection('voertuigen').onSnapshot(snap=>{ const m={}; snap.docs.forEach(d=>{ if(d.exists) m[d.id]=Object.assign({key:d.id},d.data()); }); S.voertuigen=m; render(); },()=>{}));
+      S.unsub.push(S.db.collection('orders').onSnapshot(snap=>{ S.alle=snap.docs.filter(d=>d.exists).map(d=>Object.assign({id:d.id},d.data())); S.ordersGeladen=true; resolveRoute(); render(); },()=>{ S.ordersGeladen=true; render(); }));
+      return;
+    }
+    if(!S.orderId){
+      S.unsub.push(S.db.collection('orders').onSnapshot(snap=>{
+        const seen=new Set(S.orders.map(o=>o.id));
+        S.orders=snap.docs.filter(d=>d.exists).map(d=>{ const prev=S.orders.find(x=>x.id===d.id)||{}; return Object.assign({id:d.id,_checks:prev._checks||{},_log:prev._log||[],_photos:prev._photos||[],_sub:prev._sub},d.data()); });
+        S.orders.forEach(o=>{ if(o._sub) return; o._sub=true;
+          S.unsub.push(S.db.collection('orders/'+o.id+'/checks').onSnapshot(cs=>{ const m={}; cs.docs.forEach(c=>{ if(c.exists) m[c.id]=c.data(); }); const t=S.orders.find(x=>x.id===o.id); if(t){ t._checks=m; if(!S.orderId) render(); } },()=>{}));
+          S.unsub.push(S.db.collection('orders/'+o.id+'/log').onSnapshot(ls=>{ const t=S.orders.find(x=>x.id===o.id); if(t){ t._log=ls.docs.filter(d=>d.exists).map(d=>d.data()); if(!S.orderId) render(); } },()=>{}));
+          S.unsub.push(S.db.collection('orders/'+o.id+'/photos').onSnapshot(ps=>{ const t=S.orders.find(x=>x.id===o.id); if(t){ t._photos=ps.docs.filter(d=>d.exists).map(d=>d.data()); if(!S.orderId) render(); } },()=>{})); });
+        render(); },()=>render()));
+      return;
+    }
+    const base='orders/'+S.orderId;
+    S.unsub.push(S.db.doc(base).onSnapshot(snap=>{ S.order=snap.exists?snap.data():null; if(!snap.exists){ setTop('Order '+S.orderId,'<a class="back" href="#" id="back">← Alle orders</a>',null); $('main').innerHTML=`<div class="empty">Deze order bestaat niet of je hebt er geen toegang toe.</div>`; return; } render(); },()=>render()));
+    S.unsub.push(S.db.collection(base+'/checks').onSnapshot(snap=>{ const m={}; snap.docs.forEach(d=>{ if(d.exists) m[d.id]=d.data(); }); S.checks=m; if(S.order) render(); },()=>{}));
+    S.unsub.push(S.db.collection(base+'/photos').orderBy('at','asc').onSnapshot(snap=>{ S.photos=snap.docs.filter(d=>d.exists).map(d=>d.data()); if(S.order) render(); },()=>{}));
+    S.unsub.push(S.db.collection(base+'/log').orderBy('at','desc').limit(100).onSnapshot(snap=>{ S.log=snap.docs.filter(d=>d.exists).map(d=>Object.assign({id:d.id},d.data())); if(S.order) render(); },()=>{}));
+  }
+  function resolveRoute(){ // sticker/kenteken → lopende order
+    const r=S.route; if(!r||r.order||!S.alle) return;
+    const key=r.kenteken||(S.tagDoc?kKey(S.tagDoc.kenteken||S.tagDoc.key):''); if(!key) return;
+    const kand=S.alle.filter(o=>kKey(o.kenteken)===key).sort((a,b)=>String(b.nummer).localeCompare(String(a.nummer)));
+    if(kand.length&&S.orderId!==kand[0].nummer){ S.orderId=kand[0].nummer; resetOrderState(); subscribe(); render(); }
+  }
+  S.route=parseHash(); S.routeKey=JSON.stringify(S.route); S.orderId=S.route&&S.route.order?S.route.order:null;
+  render();
+  // ── Firebase ──
+  try{ firebase.initializeApp(window.FIREBASE_CONFIG); }catch(e){}
+  S.db=firebase.firestore();
+  try{ S.db.enablePersistence({synchronizeTabs:true}).catch(()=>{}); }catch(e){}
+  firebase.auth().onAuthStateChanged(u=>{
+    S.authReady=true; S.uid=u?u.uid:null; const rol=u?rolVanEmail(u.email||''):'';
+    const changed=rol!==S.role; S.role=rol; if(!rol) clearSubs();
+    if(changed) subscribe(); render();
+  });
+  document.addEventListener('click',async e=>{
+    const rb=e.target.closest('.login button[data-rol]'); if(rb){ S.loginRol=rb.dataset.rol; render(); return; }
+    if(e.target.closest('#loginBtn')){ await login(); return; }
+    if(e.target.closest('#rolTag')){ const now=Date.now(); if(S._uit&&now-S._uit<3000){ S._uit=0; try{ await firebase.auth().signOut(); toast('Uitgelogd'); }catch(err){} } else { S._uit=now; toast('Nog een keer tikken om uit te loggen'); } return; }
+  });
+  document.addEventListener('keydown',e=>{ if(e.key==='Enter'&&e.target&&e.target.id==='pin') login(); });
+})();
+</script>

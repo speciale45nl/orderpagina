@@ -1,0 +1,39 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function ingelogd() { return request.auth != null && request.auth.token.email != null; }
+    function rol() { return request.auth.token.email.split('@')[0]; } // 1stop | interieur | beheer
+    function beheer() { return ingelogd() && rol() == 'beheer'; }
+
+    // Orders worden alleen door de synchronisatie (admin) geschreven
+    match /orders/{nr} {
+      allow read: if ingelogd();
+      allow write: if false;
+      match /checks/{id} { allow read, write: if ingelogd(); }
+      match /photos/{id} {
+        allow read: if ingelogd();
+        allow create: if ingelogd() && request.resource.data.data is string && request.resource.data.data.size() < 900000;
+        allow delete: if beheer();
+        allow update: if false;
+      }
+      match /log/{id} {
+        allow read, create: if ingelogd();
+        allow update: if beheer();
+        allow delete: if false;
+      }
+    }
+    // Auto's: alleen het stickernummer mag door de werkplaats gezet worden
+    match /voertuigen/{key} {
+      allow read: if ingelogd();
+      allow update: if ingelogd() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['tag']);
+      allow create, delete: if false;
+    }
+    match /tags/{nn} {
+      allow read: if ingelogd();
+      allow create: if ingelogd();
+      allow update, delete: if beheer();
+    }
+    match /voorraad/{id} { allow read, write: if ingelogd(); }
+    match /{document=**} { allow read, write: if false; }
+  }
+}
