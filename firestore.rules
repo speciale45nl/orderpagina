@@ -5,10 +5,10 @@ service cloud.firestore {
     function rol() { return request.auth.token.email.split('@')[0]; } // 1stop | interieur | beheer
     function beheer() { return ingelogd() && rol() == 'beheer'; }
 
-    // Orders worden alleen door de synchronisatie (admin) geschreven
+    // Orders worden alleen door Spéciale45 (beheer) aangemaakt of gewijzigd
     match /orders/{nr} {
       allow read: if ingelogd();
-      allow write: if false;
+      allow write: if beheer();
       match /checks/{id} { allow read, write: if ingelogd(); }
       match /photos/{id} {
         allow read: if ingelogd();
@@ -25,8 +25,8 @@ service cloud.firestore {
     // Auto's: alleen het stickernummer mag door de werkplaats gezet worden
     match /voertuigen/{key} {
       allow read: if ingelogd();
-      allow update: if ingelogd() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['tag']);
-      allow create, delete: if false;
+      allow update: if beheer() || (ingelogd() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['tag']));
+      allow create, delete: if beheer();
     }
     match /tags/{nn} {
       allow read: if ingelogd();

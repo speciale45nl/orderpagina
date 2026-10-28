@@ -354,6 +354,9 @@
         <div class="flags">${pills.join('')}</div>
         <div class="mini">${p.states.map((d,i)=>`<span class="${d?'done':(i===p.cur?'cur':'')}"></span>`).join('')}</div></a></li>`; }).join('')}</ul>`;
     if(S.role==='1stop'||isS45()) h+=voorraadKaart();
+    if(isS45()) h+=`<section class="card"><div class="hd"><h2>Beheer</h2><span class="hint">Orders en auto's uit de chat inlezen</span></div><div class="bd">
+      <textarea id="importJson" placeholder='Plak hier de tekst die Claude je geeft (begint met { "orders": … )' style="width:100%;min-height:90px;border:1px solid var(--line-strong);border-radius:10px;padding:9px 12px;font:inherit;font-size:13px;background:var(--paper);color:var(--ink)"></textarea>
+      <div class="logbtns"><button type="button" class="btn primary" id="importBtn">Inlezen</button><span id="importMsg" class="hint"></span></div></div></section>`;
     if(false){
       const rows=[];
       h+=`<section class="card toegang"><div class="hd"><h2>Toegang</h2><span class="hint">Wie de link opent, verschijnt hier. Geef een rol.</span></div>
@@ -482,6 +485,7 @@
     if(e.target.closest('#back')){ e.preventDefault(); goHome(); return; }
     if(e.target.closest('#qrBtn')){ S.qrOpen=!S.qrOpen; $('qrBox').classList.toggle('open',S.qrOpen); if(S.qrOpen) drawQR(); return; }
     if(e.target.closest('#koppelBtn')){ await koppelTag(); return; }
+    if(e.target.closest('#importBtn')){ await importeer(); return; }
     const tm=e.target.closest('button[data-tel-min],button[data-tel-plus]');
     if(tm){ const id=tm.dataset.telMin||tm.dataset.telPlus; const inp=document.querySelector('input[data-tel="'+id+'"]'); if(!inp) return; const cur=inp.value===''?0:Number(inp.value); const n=Math.max(0,cur+(tm.dataset.telMin?-1:1)); inp.value=n; await zetVoorraad(id,n); return; }
     const ts=e.target.closest('button[data-telsave]');
@@ -509,6 +513,18 @@
   });
   document.addEventListener('input',e=>{ if(e.target.id==='koppelMc') koppelZoek(); });
   document.addEventListener('submit',e=>{ if(e.target.id!=='snelForm') return; e.preventDefault(); const v=($('snelTag').value||'').replace(/\D/g,''); if(!v){ toast('Typ het nummer van de sticker.'); return; } location.hash='#t'+v.padStart(2,'0'); });
+  async function importeer(){
+    const t=$('importJson'), msg=$('importMsg'); let d;
+    try{ d=JSON.parse((t.value||'').trim()); }catch(e){ msg.textContent='Dit is geen geldige tekst. Plak precies wat Claude je gaf.'; return; }
+    msg.textContent='Bezig…'; let n=0;
+    try{
+      for(const o of (d.orders||[])){ if(!o.nummer) continue; await S.db.doc('orders/'+String(o.nummer)).set(o); n++; }
+      for(const v of (d.voertuigen||[])){ if(!v.key) continue; const ref=S.db.doc('voertuigen/'+v.key); const cur=await ref.get(); const {tag,...rest}=v; await ref.set(cur.exists?rest:{...rest,tag:tag||''},{merge:true}); n++; }
+      for(const [id,aantal] of Object.entries(d.voorraad||{})){ const ref=S.db.doc('voorraad/'+id); if(!(await ref.get()).exists){ await ref.set({aantal,by:'Spéciale45 (startwaarde)',at:new Date().toISOString()}); n++; } }
+      for(const [nr,w] of Object.entries(d.wijzigingen||{})){ await S.db.doc('orders/'+nr).update({wijzigingen:firebase.firestore.FieldValue.arrayUnion(...[].concat(w))}); n++; }
+      t.value=''; msg.textContent='Klaar: '+n+' onderdelen ingelezen.'; toast('Ingelezen');
+    }catch(err){ msg.textContent='Mislukt: '+(err&&err.message||err); }
+  }
   async function stuurLog(probleem){
     const t=$('logText'), txt=(t&&t.value||'').trim(); if(!txt){ toast('Typ eerst wat je wilt doorgeven.'); return; }
     try{ await S.db.collection('orders/'+S.orderId+'/log').add({tekst:txt,by:who(),rol:S.role,uid:S.uid,at:new Date().toISOString(),probleem,opgelost:false}); t.value=''; toast(probleem?'Probleem gemeld aan Spéciale45':'Verstuurd'); }catch(err){ fail(err); }
