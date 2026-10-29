@@ -313,7 +313,8 @@
 
   function parseHash(){ const h=(location.hash||'').replace(/^#/,'').trim(); if(!h) return null;
     let m=/^t(\d{1,3})$/i.exec(h); if(m) return {tag:m[1].padStart(2,'0')};
-    if(/^\d{4,8}$/.test(h)) return {order:h};
+    if(/^\d{4}$/.test(h)) return {meldcode:h};
+    if(/^\d{5,8}$/.test(h)) return {order:h};
     if(/^[A-Za-z0-9-]{4,12}$/.test(h)) return {kenteken:kKey(h)};
     return null; }
   function resetOrderState(){ S.order=null; S.checks={}; S.photos=[]; S.log=[]; S.qrOpen=false; S.fotoWeg=null; S.toggled={}; S.tagDoc=undefined; S.view=''; }
@@ -414,7 +415,7 @@
     let list=S.orders.filter(o=>mySteps(o).length).map(o=>Object.assign({_st:statusVan(o)},o));
     list.sort((a,b)=>(b._st.open-a._st.open)||((b._st.controle?1:0)-(a._st.controle?1:0))||((daysUntil(a.deadline)??9999)-(daysUntil(b.deadline)??9999)));
     let h = isS45()?tabsHtml():'';
-    h += isInt()?'':`<form class="snel" id="snelForm"><label for="snelTag">Stickernummer op de auto</label><input id="snelTag" inputmode="numeric" pattern="[0-9]*" placeholder="07" aria-label="Stickernummer"><button type="submit" class="btn primary">Open</button></form>`;
+    h += isInt()?'':`<form class="snel" id="snelForm"><label for="snelTag">Stickernummer of meldcode <span class="hint" style="font-weight:500">(sticker: 2 cijfers · meldcode: 4 cijfers)</span></label><input id="snelTag" inputmode="numeric" placeholder="07" aria-label="Stickernummer, meldcode of kenteken"><button type="submit" class="btn primary">Open</button></form>`;
     h += !list.length ? '<div class="empty">Geen orders voor jou op dit moment.</div>' :
       `<ul class="orders">${list.map(o=>{ const st=mySteps(o), p=progress(st,o._checks||{}), x=o._st, du=daysUntil(o.deadline);
       const pills=[];
@@ -465,11 +466,12 @@
         <button type="button" class="btn primary" id="koppelBtn" style="margin-top:6px">Koppelen aan sticker ${esc(r.tag)}</button>`:'<div class="hint">Er staan geen ongekoppelde auto\'s in de lijst. Vraag Spéciale45 om de auto toe te voegen.</div>'}
         <div class="hint" style="margin-top:10px">Staat de auto er niet bij? Stuur Spéciale45 een berichtje met de meldcode.</div></div></section>`;
       return; }
-    const key=r.kenteken||kKey(S.tagDoc&&S.tagDoc.kenteken); const v=Object.values(S.voertuigen).find(x=>x.key===key);
-    const titel=v?(v.kenteken||('meldcode '+v.meldcode)):key;
+    const v=r.meldcode?Object.values(S.voertuigen).find(x=>x.meldcode===r.meldcode):Object.values(S.voertuigen).find(x=>x.key===(r.kenteken||kKey(S.tagDoc&&S.tagDoc.kenteken)));
+    const key=v?v.key:(r.kenteken||(r.meldcode?'meldcode '+r.meldcode:kKey(S.tagDoc&&S.tagDoc.kenteken)));
+    const titel=v?(v.kenteken||('Meldcode '+v.meldcode)):key;
     setTop(titel, back+(r.tag?`<span class="tagnr">${esc(r.tag)}</span>`:'')+(v?`<span>${esc(v.model||'')}</span><span>meldcode ${esc(v.meldcode||'—')}</span>`:''), null);
     if(!S.ordersGeladen){ main.innerHTML='<div class="empty">Opdracht wordt gezocht…</div>'; return; }
-    main.innerHTML=`<div class="empty"><b>${esc(titel)}</b>${v&&v.model?' · '+esc(v.model):''}<br>${v?'Voorraadauto — nog geen opdracht.':'Deze auto staat nog niet in het systeem.'}<br><span class="hint">Zodra Spéciale45 deze auto aan een klant koppelt, verschijnt de opdracht hier op dezelfde sticker.</span>${isS45()&&v&&v.klant?`<br><span class="hint">Voorraadbestand: ${esc(v.klant)}</span>`:''}</div>`;
+    main.innerHTML=`<div class="empty"><b>${esc(titel)}</b>${v&&v.model?' · '+esc(v.model):''}<br>${v?'Voorraadauto — nog geen opdracht.':(r.meldcode?'Geen auto met meldcode '+esc(r.meldcode)+' gevonden. Controleer de 4 cijfers (sticker in de deurstijl).':'Deze auto staat nog niet in het systeem.')}<br><span class="hint">Zodra Spéciale45 deze auto aan een klant koppelt, verschijnt de opdracht hier op dezelfde sticker.</span>${isS45()&&v&&v.klant?`<br><span class="hint">Voorraadbestand: ${esc(v.klant)}</span>`:''}</div>`;
   }
   function koppelZoek(){ // meldcode → auto
     const mc=($('koppelMc')&&$('koppelMc').value||'').replace(/\D/g,''); const out=$('koppelMatch'), sel=$('koppelSel'); if(!out) return null;
@@ -704,7 +706,8 @@
   });
   document.addEventListener('input',e=>{ if(e.target.id==='koppelMc') koppelZoek(); if(e.target.id==='zoekV'){ S.zoekV=e.target.value; clearTimeout(S._zt); S._zt=setTimeout(()=>{ const el=$('zoekV'); const pos=el?el.selectionStart:0; render(); const n=$('zoekV'); if(n){ n.focus(); try{ n.setSelectionRange(pos,pos); }catch(err){} } },250); } });
   document.addEventListener('submit',async e=>{
-    if(e.target.id==='snelForm'){ e.preventDefault(); const v=($('snelTag').value||'').replace(/\D/g,''); if(!v){ toast('Typ het nummer van de sticker.'); return; } location.hash='#t'+v.padStart(2,'0'); return; }
+    if(e.target.id==='snelForm'){ e.preventDefault(); const raw=($('snelTag').value||'').trim(); const d=raw.replace(/\D/g,''); if(!raw){ toast('Typ het stickernummer of de meldcode.'); return; }
+      if(/[A-Za-z]/.test(raw)){ location.hash='#'+kKey(raw); return; } if(d.length<=3){ location.hash='#t'+d.padStart(2,'0'); return; } if(d.length===4){ location.hash='#'+d; return; } location.hash='#'+d; return; }
     if(e.target.id==='nieuwAutoForm'){ e.preventDefault(); await nieuweAuto(e.target); return; }
     if(e.target.classList.contains('bewerk')&&e.target.dataset.key){ e.preventDefault(); await slaAutoOp(e.target); }
   });
@@ -764,7 +767,7 @@
     S.unsub.push(S.db.collection('voorraad').onSnapshot(snap=>{ const m={}; snap.docs.forEach(d=>{ if(d.exists) m[d.id]=d.data(); }); S.voorraad=m; render(); },()=>{}));
     S.unsub.push(S.db.collection('tags').onSnapshot(snap=>{ const m={}; snap.docs.forEach(d=>{ if(d.exists) m[d.id]=d.data(); }); S.tags=m; if(S.route&&S.route.tag){ S.tagDoc=m[S.route.tag]||null; resolveRoute(); } render(); },()=>{}));
     if(S.route&&!S.route.order&&!S.orderId){ // sticker of kenteken: auto opzoeken
-      S.unsub.push(S.db.collection('voertuigen').onSnapshot(snap=>{ const m={}; snap.docs.forEach(d=>{ if(d.exists) m[d.id]=Object.assign({key:d.id},d.data()); }); S.voertuigen=m; render(); },()=>{}));
+      S.unsub.push(S.db.collection('voertuigen').onSnapshot(snap=>{ const m={}; snap.docs.forEach(d=>{ if(d.exists) m[d.id]=Object.assign({key:d.id},d.data()); }); S.voertuigen=m; resolveRoute(); render(); },()=>{}));
       S.unsub.push(S.db.collection('orders').onSnapshot(snap=>{ S.alle=snap.docs.filter(d=>d.exists).map(d=>Object.assign({id:d.id},d.data())); S.ordersGeladen=true; resolveRoute(); render(); },()=>{ S.ordersGeladen=true; render(); }));
       return;
     }
@@ -788,8 +791,10 @@
   }
   function resolveRoute(){ // sticker/kenteken → lopende order
     const r=S.route; if(!r||r.order||!S.alle) return;
-    const key=r.kenteken||(S.tagDoc?kKey(S.tagDoc.kenteken||S.tagDoc.key):''); if(!key) return;
-    const mc=S.tagDoc&&S.tagDoc.meldcode; const kand=S.alle.filter(o=>kKey(o.kenteken)===key||(!kKey(o.kenteken)&&mc&&o.meldcode===mc&&key==='MC'+mc)).sort((a,b)=>String(b.nummer).localeCompare(String(a.nummer)));
+    let key=r.kenteken||(S.tagDoc?kKey(S.tagDoc.kenteken||S.tagDoc.key):''); let mc=r.meldcode||(S.tagDoc&&S.tagDoc.meldcode)||(/^MC\d{4}$/.test(key)?key.slice(2):'');
+    if(r.meldcode){ const v=Object.values(S.voertuigen).find(x=>x.meldcode===mc); if(v) key=v.key; }
+    if(!key&&!mc) return;
+    const kand=S.alle.filter(o=>(key&&kKey(o.kenteken)===key)||(mc&&o.meldcode===mc)).sort((a,b)=>String(b.nummer).localeCompare(String(a.nummer)));
     if(kand.length&&S.orderId!==kand[0].nummer){ S.orderId=kand[0].nummer; resetOrderState(); subscribe(); render(); }
   }
   S.route=parseHash(); S.routeKey=JSON.stringify(S.route); S.orderId=S.route&&S.route.order?S.route.order:null;
