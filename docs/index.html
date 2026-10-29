@@ -152,6 +152,10 @@
   .vz .logbtns{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
   .vz select[data-koppelsel]{flex:1;min-width:160px;min-height:40px;border:1px solid var(--line-strong);border-radius:9px;padding:6px 10px;font:inherit;font-size:16px;background:var(--paper);color:var(--ink)}
   .pill.st-nazorg{background:var(--warn-bg);color:var(--warn)}
+  .vz .tiles.vier{grid-template-columns:repeat(4,1fr)} .vz .tile.let-bad{border-color:var(--bad)} .vz .tile.let-bad .n{color:var(--bad)}
+  .vz .auto.let{border-color:var(--bad);box-shadow:0 0 0 2px var(--bad-bg),var(--shadow)}
+  .vz form.losregel{display:flex;gap:8px;margin-top:8px} .vz form.losregel input{flex:1;min-width:0;min-height:38px;border:1px solid var(--line-strong);border-radius:9px;padding:6px 10px;font:inherit;font-size:16px;background:var(--paper);color:var(--ink)}
+  @media (max-width:420px){ .vz .tiles.vier{grid-template-columns:repeat(2,1fr)} }
   @media (max-width:420px){ .vz form.bewerk .rij3{grid-template-columns:1fr 1fr} .vz .tile .l{font-size:11px} }
   .vz .auto{background:var(--paper);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:12px 14px;margin-top:8px}
   .vz .auto .r1{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
@@ -293,7 +297,7 @@
   const S={ db:null,authReady:false,canWrite:true,readOnly:false,loginRol:'',
             role:'',name:'',uid:null,
             orders:[],order:null,orderId:null, checks:{},photos:[],log:[], unsub:[], qrOpen:false,
-            aanmeldingen:[], rollen:{}, toggled:{}, voorraad:{}, tel:{}, route:null, routeKey:'', tags:{}, voertuigen:{}, tagDoc:undefined, view:'', tab:(function(){ try{ return localStorage.getItem('s45tab')||'orders'; }catch(e){ return 'orders'; } })(), lijst:null, zoekV:'', open:{}, fotoWeg:null, bewerk:null, vzFilter:'', nieuwAuto:false, voertuigenGeladen:false };
+            aanmeldingen:[], rollen:{}, toggled:{}, voorraad:{}, tel:{}, route:null, routeKey:'', tags:{}, voertuigen:{}, tagDoc:undefined, view:'', tab:(function(){ try{ return localStorage.getItem('s45tab')||'orders'; }catch(e){ return 'orders'; } })(), lijst:null, zoekV:'', open:{}, fotoWeg:null, bewerk:null, intFilter:'', nieuwLos:false, vzFilter:'', nieuwAuto:false, voertuigenGeladen:false };
   const kKey=k=>String(k||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
   const tagVan=(kenteken,meldcode)=>{ const key=kKey(kenteken); for(const nn in S.tags){ const t=S.tags[nn]; if(key&&kKey(t.kenteken)===key) return nn; if(!key&&meldcode&&!kKey(t.kenteken)&&t.meldcode===meldcode) return nn; } return ''; };
   const autoLabel=o=>o.kenteken||(o.meldcode?'Meldcode '+o.meldcode:(o.klant||'—'));
@@ -411,8 +415,9 @@
 
   function renderList(main){
     if(isS45()&&S.tab==='voorraad'){ renderVoorraad(main); return; }
+    if(isS45()&&S.tab==='interieur'){ renderInterieur(main); return; }
     setTop('Orders', isS45()?'Alle auto\'s in bewerking':'Auto\'s met werk voor jou', null);
-    let list=S.orders.filter(o=>mySteps(o).length).map(o=>Object.assign({_st:statusVan(o)},o));
+    let list=S.orders.filter(o=>mySteps(o).length&&!(isS45()&&o.type==='los')).map(o=>Object.assign({_st:statusVan(o)},o));
     list.sort((a,b)=>(b._st.open-a._st.open)||((b._st.controle?1:0)-(a._st.controle?1:0))||((daysUntil(a.deadline)??9999)-(daysUntil(b.deadline)??9999)));
     let h = isS45()?tabsHtml():'';
     h += isInt()?'':`<form class="snel" id="snelForm"><label for="snelTag">Stickernummer of meldcode <span class="hint" style="font-weight:500">(sticker: 2 cijfers · meldcode: 4 cijfers)</span></label><input id="snelTag" inputmode="numeric" placeholder="07" aria-label="Stickernummer, meldcode of kenteken"><button type="submit" class="btn primary">Open</button></form>`;
@@ -501,7 +506,65 @@
   function faseVan(v,o){ if(v.fase==='archief') return 'archief'; if(v.soort==='jvk') return 'jvk'; if(o){ if(stapAf(o,'afleveren')) return (v.todo||[]).some(t=>!t.done)?'nazorg':'afgeleverd'; if(stapAf(o,'klaar')) return 'klaar'; if(v.fase==='nazorg'||v.fase==='afgeleverd') return v.fase; return 'ingepland'; } return v.fase||'voorraad'; }
   function autoVanOrder(o){ const key=kKey(o.kenteken); return Object.values(S.voertuigen).find(v=>String(v.order||'')===String(o.nummer)||(key&&v.key===key))||null; }
   function betalingChip(v){ if(v.betaald) return '<span class="chip ok">Volledig betaald</span>'; if(v.aanbetaald) return '<span class="chip ok">Aanbetaald'+(v.aanbetaling?' '+esc(euro(v.aanbetaling)):'')+'</span>'; return ''; }
-  function tabsHtml(){ return `<div class="tabs" role="tablist"><button type="button" data-tab="orders" class="${S.tab==='orders'?'aan':''}">Orders</button><button type="button" data-tab="voorraad" class="${S.tab==='voorraad'?'aan':''}">Voorraad</button></div>`; }
+  function tabsHtml(){ return `<div class="tabs" role="tablist"><button type="button" data-tab="orders" class="${S.tab==='orders'?'aan':''}">Orders</button><button type="button" data-tab="voorraad" class="${S.tab==='voorraad'?'aan':''}">Voorraad</button><button type="button" data-tab="interieur" class="${S.tab==='interieur'?'aan':''}">Interieur</button></div>`; }
+  // ── Interieur: alles wat bij de interieurspecialist loopt (sets per order + losse bestellingen) ──
+  const INT_FASEN={bestellen:'Nog te bestellen — wacht op jou',voorkap:'Wacht op de voorkap',bezig:'Bij de interieurspecialist',los:'Losse bestellingen',verstuurd:'Verstuurd naar 1stop',ontvangen:'Ontvangen bij 1stop',klaar:'Afgerond'};
+  const INT_CLS={bestellen:'st-betaal',voorkap:'st-inplannen',bezig:'st-inplannen',los:'st-default',verstuurd:'st-klaar',ontvangen:'st-klaar',klaar:'st-klaar'};
+  function interieurStatus(o){
+    const st=(o.stappen||[]).find(x=>x.wie==='Interieurspecialist'); if(!st) return null;
+    const c=o._checks||{}, items=st.items||[], n=items.filter(i=>c[i.id]&&c[i.id].done).length, done=stepDone(st,c);
+    const chk=id=>!!(c[id]&&c[id].done); const vz=(o.stappen||[]).find(x=>x.id==='voorkap-verzenden');
+    const voorkapWacht=items.some(i=>i.id==='i-voorkap')&&!chk('i-voorkap')&&!!vz&&!stepDone(vz,c);
+    const blocked=!stappenOk(o,st,c); let fase;
+    if(o.type==='los') fase=(done&&chk('o-ontvangen'))?'klaar':'los'; else if(done&&chk('m-doos')) fase='ontvangen'; else if(done||chk('i-doos')) fase='verstuurd'; else if(blocked) fase='bestellen'; else if(voorkapWacht) fase='voorkap'; else fase='bezig';
+    const acts=items.map(i=>c[i.id]&&c[i.id].at).filter(Boolean).sort();
+    return {st,items,n,done,blocked,voorkapWacht,fase,last:acts[acts.length-1]||null};
+  }
+  function volgendLosNummer(){ let m=80000; S.orders.forEach(o=>{ const n=parseInt(o.nummer,10); if(n>=80000&&n<89999&&n>m) m=n; }); return String(m+1); }
+  function renderInterieur(main){
+    setTop('Interieur','Wat er bij de interieurspecialist loopt',null);
+    const c=o=>o._checks||{};
+    const rows=S.orders.map(o=>({o,i:interieurStatus(o)})).filter(x=>x.i);
+    const tel=f=>rows.filter(x=>x.i.fase===f).length;
+    const tiles=[['bestellen',tel('bestellen')],['bezig',tel('bezig')+tel('voorkap')],['los',tel('los')],['verstuurd',tel('verstuurd')]];
+    let h=tabsHtml()+`<div class="vz"><div class="tiles vier">${tiles.map(t=>`<button type="button" class="tile ${S.intFilter===t[0]?'aan':''} ${t[0]==='bestellen'&&t[1]?'let-bad':''}" data-intfilter="${t[0]}"><span class="n">${t[1]}</span><span class="l">${esc({bestellen:'Nog te bestellen',bezig:'In de maak',los:'Losse bestellingen',verstuurd:'Verstuurd'}[t[0]])}</span></button>`).join('')}</div>`;
+    h+=`<div class="zoekrij"><span class="hint" style="flex:1">Sets per order én losse onderdelen. Vinkjes zet de interieurspecialist; jij kunt ze ook zetten.</span><button type="button" class="btn" id="nieuwLosBtn">+ Losse bestelling</button></div>`;
+    if(S.nieuwLos) h+=`<form class="bewerk nieuw" id="nieuwLosForm"><b>Losse bestelling bij de interieurspecialist</b>
+      <label>Voor wie <input name="voor" placeholder="bv. Beary Bears B.V. of Voorraad Spéciale45" value="Voorraad Spéciale45"></label>
+      <label>Onderdelen, één per regel <textarea name="items" rows="4" placeholder="2× trektouwen Porsche bruin leer&#10;1× tapijtset"></textarea></label>
+      <label>Opmerking voor de interieurspecialist (optioneel) <input name="letop" placeholder="bv. graag vóór 6 november"></label>
+      <div class="logbtns"><button type="submit" class="btn primary">Bestelling aanmaken</button><button type="button" class="btn" id="nieuwLosWeg">Annuleren</button></div></form>`;
+    const kaart=x=>{ const o=x.o, i=x.i, ch=c(o); const kan=!!S.db&&!S.readOnly&&S.canWrite!==false; const los=o.type==='los';
+      return `<div class="auto ${i.fase==='bestellen'?'let':''}" id="int-${esc(o.nummer)}"><div class="r1"><span class="merk">${esc(o.klant||'')}</span><span class="pill ${INT_CLS[i.fase]}">${esc(los?(i.fase==='klaar'?'Afgerond':'Los'):INT_FASEN[i.fase])}</span>${los?'':`<span class="hint">${esc(o.kenteken||(o.meldcode?'MC '+o.meldcode:''))}</span>`}</div>
+        <div class="r2"><span>order ${esc(o.nummer)}</span><span>${i.n}/${i.items.length} af</span>${i.last?`<span>laatste vinkje ${esc(fmt(i.last))}</span>`:'<span class="hint">nog niets afgevinkt</span>'}${o.deadline?`<span>klaar vóór <b>${esc(fmtD(o.deadline))}</b></span>`:''}</div>
+        ${o.letopInterieur?`<div class="uitv" style="color:var(--warn)">${esc(o.letopInterieur)}</div>`:''}
+        <ul class="todo">${i.items.map(it=>{ const d=!!(ch[it.id]&&ch[it.id].done); return `<li class="${d?'af':''}"><label><input type="checkbox" data-intitem="${esc(it.id)}" data-order="${esc(o.nummer)}" ${d?'checked':''} ${kan?'':'disabled'}><span>${esc(it.tekst)}${d?` <span class="hint">· ${esc(ch[it.id].by||'')}</span>`:''}</span></label></li>`; }).join('')}
+        ${los&&(o.stappen||[]).find(s=>s.id==='ontvangst')?(()=>{ const it=(o.stappen||[]).find(s=>s.id==='ontvangst').items[0]; const d=!!(ch[it.id]&&ch[it.id].done); return `<li class="${d?'af':''}" style="border-top:1px dashed var(--line)"><label><input type="checkbox" data-intitem="${esc(it.id)}" data-order="${esc(o.nummer)}" ${d?'checked':''} ${kan?'':'disabled'}><span><b>${esc(it.tekst)}</b> <span class="hint">(jij)</span></span></label></li>`; })():''}</ul>
+        ${los&&kan?`<form class="losregel" data-order="${esc(o.nummer)}"><input name="tekst" placeholder="Nog een onderdeel toevoegen…"><button type="submit" class="btn" style="min-height:38px">+</button></form>`:''}
+        <div class="acties"><a class="btn" href="#${esc(o.nummer)}" style="min-height:36px;padding:6px 12px;font-size:13.5px">Order ${esc(o.nummer)} →</a></div></div>`; };
+    const volg=['bestellen','voorkap','bezig','los','verstuurd','ontvangen'];
+    const filt=S.intFilter; const zicht=f=>!filt||(filt===f)||(filt==='bezig'&&f==='voorkap');
+    for(const f of volg){ if(!zicht(f)) continue; const list=rows.filter(x=>x.i.fase===f).sort((a,b)=>(daysUntil(a.o.deadline)??9999)-(daysUntil(b.o.deadline)??9999)); if(!list.length){ if(f==='los') h+=`<h2 class="groep">${INT_FASEN[f]} <span class="hint">(0)</span></h2><div class="hint">Geen losse bestellingen open.</div>`; continue; } h+=`<h2 class="groep">${INT_FASEN[f]} <span class="hint">(${list.length})</span></h2>`+list.map(kaart).join(''); }
+    if(!filt){ const kl=rows.filter(x=>x.i.fase==='klaar'); if(kl.length) h+=`<details class="archief"><summary>Afgeronde losse bestellingen (${kl.length})</summary>${kl.map(kaart).join('')}</details>`; }
+    if(!rows.length) h+='<div class="empty">Nog geen orders met interieurwerk.</div>';
+    if(filt) h+=`<div style="margin-top:12px"><button type="button" class="btn" data-intfilter="">Alles tonen</button></div>`;
+    main.innerHTML=h+'</div>';
+  }
+  async function nieuweLosseBestelling(form){
+    const fd=new FormData(form); const voor=String(fd.get('voor')||'').trim()||'Voorraad Spéciale45'; const regels=String(fd.get('items')||'').split('\n').map(x=>x.trim()).filter(Boolean); const letop=String(fd.get('letop')||'').trim();
+    if(!regels.length){ toast('Typ minstens één onderdeel.'); return; }
+    const nr=volgendLosNummer(); const klant=/^voorraad/i.test(voor)?voor:'Nabestelling '+voor;
+    const o={nummer:nr,type:'los',aangemaakt:new Date().toISOString().slice(0,10),klant,kenteken:'',meldcode:'',model:'',basis:'',deadline:'',opdracht:{spuitwerk:[],montage:[],interieur:regels},referentie:'',letop:'',letopInterieur:letop||'Losse onderdelen — graag in een aparte doos met dit label.',
+      stappen:[{id:'interieur',titel:'Losse onderdelen',wie:'Interieurspecialist',foto:false,items:regels.map((t,i)=>({id:'l-'+(i+1),tekst:t})).concat([{id:'i-doos',tekst:'Verstuurd in een aparte doos met label: '+klant+' · order '+nr}])},{id:'ontvangst',titel:'Ontvangen',wie:'Spéciale45',foto:false,vereistStappen:['interieur'],items:[{id:'o-ontvangen',tekst:'Onderdelen ontvangen en gecontroleerd'}]}]};
+    try{ await S.db.doc('orders/'+nr).set(o); S.nieuwLos=false; toast('Losse bestelling '+nr+' aangemaakt'); }catch(err){ fail(err); }
+  }
+  async function losRegelErbij(form){
+    const nr=form.dataset.order, o=S.orders.find(x=>String(x.nummer)===String(nr)); const t=String(new FormData(form).get('tekst')||'').trim(); if(!o||!t) return;
+    const st=(o.stappen||[]).find(x=>x.id==='interieur'); if(!st) return; const n=(st.items||[]).filter(i=>/^l-\d+$/.test(i.id)).length+1;
+    const items=[...(st.items||[])]; const doos=items.findIndex(i=>i.id==='i-doos'); items.splice(doos<0?items.length:doos,0,{id:'l-'+n,tekst:t});
+    const stappen=(o.stappen||[]).map(x=>x.id==='interieur'?Object.assign({},x,{items}):x);
+    try{ await S.db.doc('orders/'+nr).update({stappen,'opdracht.interieur':firebase.firestore.FieldValue.arrayUnion(t),wijzigingen:firebase.firestore.FieldValue.arrayUnion({id:'w'+Date.now(),at:new Date().toISOString(),tekst:'Erbij: '+t,voor:['Interieurspecialist']})}); toast('Toegevoegd'); }catch(err){ fail(err); }
+  }
   function autoKaart(v){
     const o=orderVanAuto(v), f=faseVan(v,o), id=v.key, open=!!S.open[id], edit=S.bewerk===id;
     const dg=dagenSinds(v.binnen), du=daysUntil(v.deadline), ku=daysUntil(v.ingepland);
@@ -670,6 +733,9 @@
     const fl=e.target.closest('[data-filter]'); if(fl){ S.vzFilter=S.vzFilter===fl.dataset.filter?'':fl.dataset.filter; render(); window.scrollTo({top:0,behavior:'smooth'}); return; }
     if(e.target.closest('#nieuwAutoBtn')){ S.nieuwAuto=!S.nieuwAuto; S.bewerk=null; render(); const f=$('nieuwAutoForm'); if(f){ const i=f.querySelector('input'); if(i) i.focus(); } return; }
     if(e.target.closest('#nieuwAutoWeg')){ S.nieuwAuto=false; render(); return; }
+    if(e.target.closest('#nieuwLosBtn')){ S.nieuwLos=!S.nieuwLos; render(); const f=$('nieuwLosForm'); if(f){ const i=f.querySelector('input'); if(i) i.focus(); } return; }
+    if(e.target.closest('#nieuwLosWeg')){ S.nieuwLos=false; render(); return; }
+    const ifl=e.target.closest('[data-intfilter]'); if(ifl){ S.intFilter=S.intFilter===ifl.dataset.intfilter?'':ifl.dataset.intfilter; render(); window.scrollTo({top:0,behavior:'smooth'}); return; }
     const ar=e.target.closest('button[data-archiveer]'); if(ar){ try{ await S.db.doc('voertuigen/'+ar.dataset.archiveer).update({fase:'archief'}); toast('Naar het archief'); }catch(err){ fail(err); } return; }
     const tr=e.target.closest('button[data-terug]'); if(tr){ const v=S.voertuigen[tr.dataset.terug]||{}; const fase=v.afgeleverd?'afgeleverd':(v.klant&&v.soort!=='jvk'?'ingepland':'voorraad'); try{ await S.db.doc('voertuigen/'+tr.dataset.terug).update({fase}); toast('Terug naar actueel'); }catch(err){ fail(err); } return; }
     const tw=e.target.closest('button[data-todoweg]'); if(tw){ const v=S.voertuigen[tw.dataset.todoweg]; if(!v) return; const todo=(v.todo||[]).filter((_,i)=>i!==Number(tw.dataset.i)); try{ await S.db.doc('voertuigen/'+v.key).update({todo}); }catch(err){ fail(err); } return; }
@@ -701,6 +767,7 @@
     const sel=e.target.closest('select[data-uid]'); if(sel){ await setRolFor(sel.dataset.uid, sel.value); return; }
     const tv=e.target.closest('input[data-tel]'); if(tv){ if(tv.value!=='') await zetVoorraad(tv.dataset.tel,tv.value); return; }
     const chk=e.target.closest('input[type=checkbox][data-item]'); if(chk){ await toggle(chk.dataset.item,chk.checked,chk); return; }
+    const ii=e.target.closest('input[type=checkbox][data-intitem]'); if(ii){ const ref=S.db.doc('orders/'+ii.dataset.order+'/checks/'+ii.dataset.intitem); try{ if(ii.checked) await ref.set({done:true,by:who(),uid:S.uid,at:new Date().toISOString()}); else await ref.delete(); }catch(err){ ii.checked=!ii.checked; fail(err); } return; }
     const td=e.target.closest('input[type=checkbox][data-todo]'); if(td){ const v=S.voertuigen[td.dataset.todo]; if(!v) return; const todo=(v.todo||[]).map((t,i)=>i===Number(td.dataset.i)?Object.assign({},t,{done:td.checked,at:new Date().toISOString()}):t); try{ await S.db.doc('voertuigen/'+v.key).update({todo}); }catch(err){ td.checked=!td.checked; fail(err); } return; }
     const f=e.target.closest('input[type=file][data-step]'); if(f&&f.files&&f.files[0]){ await addPhoto(f.dataset.step,f.files[0]); f.value=''; }
   });
@@ -709,6 +776,8 @@
     if(e.target.id==='snelForm'){ e.preventDefault(); const raw=($('snelTag').value||'').trim(); const d=raw.replace(/\D/g,''); if(!raw){ toast('Typ het stickernummer of de meldcode.'); return; }
       if(/[A-Za-z]/.test(raw)){ location.hash='#'+kKey(raw); return; } if(d.length<=3){ location.hash='#t'+d.padStart(2,'0'); return; } if(d.length===4){ location.hash='#'+d; return; } location.hash='#'+d; return; }
     if(e.target.id==='nieuwAutoForm'){ e.preventDefault(); await nieuweAuto(e.target); return; }
+    if(e.target.id==='nieuwLosForm'){ e.preventDefault(); await nieuweLosseBestelling(e.target); return; }
+    if(e.target.classList.contains('losregel')){ e.preventDefault(); await losRegelErbij(e.target); e.target.reset(); return; }
     if(e.target.classList.contains('bewerk')&&e.target.dataset.key){ e.preventDefault(); await slaAutoOp(e.target); }
   });
   async function importeer(){
