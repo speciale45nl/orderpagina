@@ -1,5 +1,16 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#4a352b">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Orders S45">
+<meta name="format-detection" content="telephone=no">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-180.png">
 <title>Orderpagina Spéciale45</title>
-<meta name="claude:viewport-fit-sides" content="cover">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
@@ -34,6 +45,8 @@
     color-scheme:dark;
   }
   *{box-sizing:border-box}
+  input,select,textarea{font-size:16px}
+  html{-webkit-text-size-adjust:100%}
   body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:16px;line-height:1.45;-webkit-font-smoothing:antialiased}
   body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--accent)}
   .wrap{max-width:720px;margin:0 auto;padding-block:0 56px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
@@ -57,11 +70,12 @@
 
   .banner{margin:14px 0 0;padding:10px 14px;border-radius:10px;font-size:14px;background:var(--warn-bg)}
 
-  .back{display:inline-flex;align-items:center;gap:6px;color:inherit;text-decoration:none;font-size:14px;opacity:.9;border:1px solid rgba(255,255,255,.35);border-radius:999px;padding:4px 12px;background:transparent}
+  .back{display:inline-flex;align-items:center;gap:6px;text-decoration:none;font-size:15px;font-weight:700;min-height:40px;padding:6px 16px 6px 12px;border-radius:12px;background:var(--accent-ink);color:var(--accent);box-shadow:0 1px 2px rgba(0,0,0,.15)}
+  .back[hidden],.brand[hidden],.top .sub[hidden]{display:none}
   .toegang table{width:100%;border-collapse:collapse;font-size:14.5px}
   .toegang td{padding:9px 16px;border-top:1px solid var(--line);vertical-align:middle}
   .toegang tr:first-child td{border-top:0}
-  .toegang select{font:inherit;font-size:14px;padding:6px 10px;border:1px solid var(--line-strong);border-radius:8px;background:var(--paper);color:var(--ink)}
+  .toegang select{font:inherit;font-size:16px;padding:6px 10px;border:1px solid var(--line-strong);border-radius:8px;background:var(--paper);color:var(--ink)}
   .toegang .naam{font-weight:600}
   .toegang .sub{color:var(--muted);font-size:12.5px}
 
@@ -103,23 +117,48 @@
   .tabs{display:flex;gap:6px;margin-top:14px;background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:4px}
   .tabs button{flex:1;min-height:42px;font:inherit;font-size:15px;font-weight:700;border:0;border-radius:9px;background:transparent;color:var(--muted);cursor:pointer}
   .tabs button.aan{background:var(--accent);color:var(--accent-ink)}
-  .vz .zoek{width:100%;min-height:44px;margin-top:12px;border:1px solid var(--line-strong);border-radius:10px;padding:8px 12px;font:inherit;font-size:15px;background:var(--paper);color:var(--ink)}
-  .vz .tellers{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
-  .vz .teller{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
-  .vz .teller h3{margin:0 0 4px;font-size:12.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
-  .vz .teller .groot{font-size:22px;font-weight:800}
-  .vz .teller .regel{font-size:13px;color:var(--ink)}
+  .vz .zoek{width:100%;min-height:44px;margin-top:12px;border:1px solid var(--line-strong);border-radius:10px;padding:8px 12px;font:inherit;font-size:16px;background:var(--paper);color:var(--ink)}
+  .vz .tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+  .vz .tile{display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:9px 11px;border:1px solid var(--line);border-radius:12px;background:var(--paper);color:var(--ink);text-align:left;cursor:pointer;min-height:62px;box-shadow:var(--shadow)}
+  .vz .tile .n{font-size:22px;font-weight:800;line-height:1.1}
+  .vz .tile .l{font-size:11.5px;color:var(--muted);line-height:1.2}
+  .vz .tile.aan{border-color:var(--accent);background:var(--accent-soft)}
+  .vz .tile.let{border-color:var(--ok)} .vz .tile.let .n{color:var(--ok)}
+  .vz .zoekrij{display:flex;gap:8px;align-items:center;margin-top:12px} .vz .zoekrij .zoek{margin-top:0;flex:1;min-width:0} .vz .zoekrij .btn{min-height:44px;white-space:nowrap}
   .vz h2.groep{margin:18px 0 6px;font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+  .vz .auto.aandacht{border-color:var(--ok);box-shadow:0 0 0 2px var(--ok-bg),var(--shadow)}
+  .vz .auto .uitv{font-size:14px;margin-top:6px;line-height:1.4}
+  .vz .auto .r2 .urgent{color:var(--bad)}
+  .vz .chip{display:inline-block;padding:1px 8px;border-radius:999px;font-size:12px;font-weight:700} .vz .chip.ok{background:var(--ok-bg);color:var(--ok)} .vz .chip.bad{background:var(--bad-bg);color:var(--bad)}
+  .vz ul.todo{list-style:none;margin:8px 0 0;padding:0;border-top:1px solid var(--line)}
+  .vz ul.todo li label{display:grid;grid-template-columns:24px 1fr;gap:10px;align-items:start;padding:7px 0;cursor:pointer;font-size:14.5px}
+  .vz ul.todo input{width:22px;height:22px;margin:0;accent-color:var(--ok);cursor:pointer}
+  .vz ul.todo li.af span{color:var(--muted)}
+  .vz .auto .live{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;align-items:center}
+  .vz .auto .live .btn{min-height:36px;padding:6px 12px;font-size:13.5px}
+  .vz .knop{background:none;border:0;padding:4px 0;font:inherit;font-size:13.5px;color:var(--accent);text-decoration:underline;cursor:pointer}
+  .vz .details{margin-top:8px;padding-top:8px;border-top:1px solid var(--line);font-size:13.5px;display:grid;gap:3px}
+  .vz .details>div{display:grid;grid-template-columns:88px 1fr;gap:8px} .vz .details .k{color:var(--muted)}
+  .vz form.bewerk label:focus-within{outline:none}
+  .vz .opm{white-space:pre-wrap;font-size:13.5px;margin-top:4px}
+  .vz form.bewerk{margin-top:10px;padding-top:10px;border-top:1px solid var(--line);display:grid;gap:8px}
+  .vz form.bewerk.nieuw{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-top:10px;box-shadow:var(--shadow)}
+  .vz form.bewerk label{display:grid;gap:3px;font-size:12.5px;color:var(--muted);font-weight:600}
+  .vz form.bewerk input,.vz form.bewerk select,.vz form.bewerk textarea{width:100%;min-height:40px;border:1px solid var(--line-strong);border-radius:9px;padding:7px 10px;font:inherit;font-size:16px;background:var(--paper);color:var(--ink)}
+  .vz form.bewerk textarea{resize:vertical}
+  .vz form.bewerk .rij3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .vz form.bewerk .vink{display:flex;gap:16px;flex-wrap:wrap} .vz form.bewerk .vink label{display:inline-flex;align-items:center;gap:8px;font-size:14.5px;color:var(--ink);font-weight:500} .vz form.bewerk .vink input{width:22px;height:22px;min-height:0;accent-color:var(--ok)}
+  .vz .todolijst{display:flex;gap:6px;flex-wrap:wrap} .vz .todoitem{display:inline-flex;align-items:center;gap:6px;padding:4px 8px;border-radius:8px;background:var(--bg);border:1px solid var(--line);font-size:13px} .vz .todoitem button{border:0;background:none;font-size:16px;color:var(--bad);cursor:pointer;padding:0 2px}
+  .vz .logbtns{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
+  .vz select[data-koppelsel]{flex:1;min-width:160px;min-height:40px;border:1px solid var(--line-strong);border-radius:9px;padding:6px 10px;font:inherit;font-size:16px;background:var(--paper);color:var(--ink)}
+  .pill.st-nazorg{background:var(--warn-bg);color:var(--warn)}
+  @media (max-width:420px){ .vz form.bewerk .rij3{grid-template-columns:1fr 1fr} .vz .tile .l{font-size:11px} }
   .vz .auto{background:var(--paper);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:12px 14px;margin-top:8px}
   .vz .auto .r1{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
   .vz .auto .kent{font-family:"SF Mono",Menlo,Consolas,monospace;font-weight:700;font-size:16px;letter-spacing:.03em}
   .vz .auto .merk{font-weight:600}
   .vz .auto .r2{display:flex;gap:10px;flex-wrap:wrap;color:var(--muted);font-size:13px;margin-top:4px}
   .vz .auto .r2 b{color:var(--ink);font-weight:600}
-  .vz .auto .noot{font-size:14px;margin-top:8px;white-space:pre-wrap;line-height:1.4}
-  .vz .auto .noot.kort{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-  .vz .auto .tedoen{color:var(--bad);font-weight:700}
-  .vz .auto .meer{background:none;border:0;padding:0;margin-top:4px;font:inherit;font-size:13px;color:var(--accent);text-decoration:underline;cursor:pointer}
   .vz .auto .acties{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;align-items:center}
   .vz .auto .mini{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:3px;flex:1;min-width:120px}
   .vz .auto .mini span{height:5px;border-radius:3px;background:var(--line)} .vz .auto .mini span.done{background:var(--ok)} .vz .auto .mini span.cur{background:var(--warn)}
@@ -181,7 +220,7 @@
   .log .logform{padding:12px 16px 4px}
   .log .logbtns{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
   .btn.danger{background:var(--bad-bg);color:var(--bad);border-color:transparent}
-  .log textarea{width:100%;min-height:64px;border:1px solid var(--line-strong);border-radius:10px;padding:9px 12px;font:inherit;font-size:15px;background:var(--paper);color:var(--ink);resize:vertical}
+  .log textarea{width:100%;min-height:64px;border:1px solid var(--line-strong);border-radius:10px;padding:9px 12px;font:inherit;font-size:16px;background:var(--paper);color:var(--ink);resize:vertical}
   .entries{list-style:none;margin:0;padding:4px 16px 12px}
   .entries li{padding:9px 0;border-top:1px solid var(--line);font-size:15px}
   .entries li:first-child{border-top:0}
@@ -226,11 +265,12 @@
   @media (prefers-reduced-motion:reduce){.toast{transition:none}}
   @media (max-width:420px){.top h1{font-size:19px}.items label{padding:12px 12px}.card .bd,.card .hd{padding-left:12px;padding-right:12px}}
 </style>
-
+</head>
+<body>
 <div class="wrap">
   <header class="top" id="top">
     <div class="top-inner" id="topInner">
-      <div class="top-row"><a class="brand" href="#" id="home">Spéciale45</a><button type="button" id="rolTag" class="rol" hidden title="Twee keer tikken om uit te loggen"></button></div>
+      <div class="top-row"><a class="brand" href="#" id="home">Spéciale45</a><a class="back" href="#" id="back" hidden>‹ Alle orders</a><button type="button" id="rolTag" class="rol" hidden title="Twee keer tikken om uit te loggen"></button></div>
       <h1 id="title">Orders</h1>
       <div class="sub" id="subtitle"></div>
     </div>
@@ -249,7 +289,7 @@
   const S={ db:null,authReady:false,canWrite:true,readOnly:false,loginRol:'',
             role:'',name:'',uid:null,
             orders:[],order:null,orderId:null, checks:{},photos:[],log:[], unsub:[], qrOpen:false,
-            aanmeldingen:[], rollen:{}, toggled:{}, voorraad:{}, tel:{}, route:null, routeKey:'', tags:{}, voertuigen:{}, tagDoc:undefined, view:'', tab:(function(){ try{ return localStorage.getItem('s45tab')||'orders'; }catch(e){ return 'orders'; } })(), lijst:null, zoekV:'', open:{} };
+            aanmeldingen:[], rollen:{}, toggled:{}, voorraad:{}, tel:{}, route:null, routeKey:'', tags:{}, voertuigen:{}, tagDoc:undefined, view:'', tab:(function(){ try{ return localStorage.getItem('s45tab')||'orders'; }catch(e){ return 'orders'; } })(), lijst:null, zoekV:'', open:{}, bewerk:null, vzFilter:'', nieuwAuto:false, voertuigenGeladen:false };
   const kKey=k=>String(k||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
   const tagVan=kenteken=>{ const key=kKey(kenteken); for(const nn in S.tags){ if(kKey(S.tags[nn].kenteken)===key) return nn; } return ''; };
   const PARTS=[{id:'marshall',naam:'Marshall speakers',min:2},{id:'speakerband',naam:'Speakerbanden',min:2},{id:'oplader',naam:'Opladers (oplaadstuk laadpaal)',min:2}];
@@ -313,7 +353,11 @@
   }
 
   function setTop(title,sub,prog){
-    $('title').textContent=title; $('subtitle').innerHTML=sub;
+    const m=/<a class="back"[^>]*>.*?<\/a>/.exec(sub||''); // terugknop uit de subregel halen en linksboven zetten
+    if(m) sub=sub.replace(m[0],'');
+    $('title').textContent=title; $('subtitle').innerHTML=sub; $('subtitle').hidden=!sub;
+    const brand=$('home'), back=$('back'); const lbl=isS45()&&S.tab==='voorraad'?'Voorraad':'Alle orders';
+    brand.hidden=!!m; back.hidden=!m; back.textContent='‹ '+lbl;
     const tag=$('rolTag'); tag.hidden=!S.role; tag.textContent=S.role;
     const old=$('progWrap'); if(old) old.remove();
     if(prog&&prog.total){
@@ -388,7 +432,7 @@
         <div class="mini">${p.states.map((d,i)=>`<span class="${d?'done':(i===p.cur?'cur':'')}"></span>`).join('')}</div></a></li>`; }).join('')}</ul>`;
     if(S.role==='1stop'||isS45()) h+=voorraadKaart();
     if(isS45()) h+=`<section class="card"><div class="hd"><h2>Beheer</h2><span class="hint">Orders en auto's uit de chat inlezen</span></div><div class="bd">
-      <textarea id="importJson" placeholder='Plak hier de tekst die Claude je geeft (begint met { "orders": … )' style="width:100%;min-height:90px;border:1px solid var(--line-strong);border-radius:10px;padding:9px 12px;font:inherit;font-size:13px;background:var(--paper);color:var(--ink)"></textarea>
+      <textarea id="importJson" placeholder='Plak hier de tekst die Claude je geeft (begint met { "orders": … )' style="width:100%;min-height:90px;border:1px solid var(--line-strong);border-radius:10px;padding:9px 12px;font:inherit;font-size:16px;background:var(--paper);color:var(--ink)"></textarea>
       <div class="logbtns"><button type="button" class="btn primary" id="importBtn">Inlezen</button><span id="importMsg" class="hint"></span></div></div></section>`;
     if(false){
       const rows=[];
@@ -435,47 +479,98 @@
       await S.db.doc('voertuigen/'+key).update({tag:S.route.tag}); toast('Sticker '+S.route.tag+' gekoppeld aan '+(v.kenteken||'meldcode '+v.meldcode)); }
     catch(err){ fail(err); }
   }
-  const tabsHtml=()=>`<div class="tabs" role="tablist"><button type="button" data-tab="orders" class="${S.tab==='orders'?'aan':''}">Orders</button><button type="button" data-tab="voorraad" class="${S.tab==='voorraad'?'aan':''}">Voorraad</button></div>`;
-  // ── Voorraadlijst (zelfde data als het voorraadbestand) ──
+  // ── Voorraad: één kaart per auto (collectie voertuigen) ──
+  const FASEN={koppelen:'Nog te koppelen',verkocht:'Wacht op aanbetaling',klaar:'Klaar bij 1stop',ingepland:'In bewerking',nazorg:'Nazorg',afgeleverd:'Afgeleverd',jvk:'JVK showroom',voorraad:'Op voorraad',archief:'Archief'};
+  const FASE_CLS={voorraad:'st-voorraad',verkocht:'st-betaal',ingepland:'st-inplannen',klaar:'st-klaar',nazorg:'st-nazorg',afgeleverd:'st-klaar',archief:'st-default',jvk:'st-inplannen'};
+  const MODELLEN=['Fiat Topolino','Opel Rocks','Fiat Ami','Dolce Vita','Citroën Ami','Anders'];
   const alsDatum=v=>{ const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(String(v||'').trim()); if(!m) return null; return new Date(+m[1],+m[2]-1,+m[3]); };
-  const heeftKenteken=r=>!!(r.kenteken&&r.kenteken!=='—'&&String(r.kenteken).trim()!=='');
-  function moetInplannen(r){ if(r.inplannen) return true; if(r.voorraad) return false; const t=(r.toelichting||'').toLowerCase(); if(t.includes('in te plannen')||t.includes('inplannen')) return true; if(t.includes('gereed')||t.includes('afgerond')||t.includes('klaar')) return false; const g=alsDatum(r.ingepland); if(g){ const v=new Date(); v.setHours(0,0,0,0); return g>v; } if(t.includes('ingepland')) return false; if((r.ingepland||'').trim()!=='') return false; return true; }
-  const groepVan=r=>moetInplannen(r)?0:(r.voorraad?3:(r.jvk?2:1));
-  const GROEPEN=['Nog in te plannen / nog binnen te komen','Lopende bestellingen en werkzaamheden','Janssen van Kouwen (JVK)','Vrije voorraad'];
-  function dagenTekst(r){ const d=alsDatum(r.sinds); if(!d) return ''; const n=Math.max(0,Math.floor((Date.now()-d)/864e5)); return n===0?'vandaag toegevoegd':(n===1?'1 dag in lijst':n+' dagen in lijst'); }
-  function statusPill(t){ if(!t) return ''; const l=t.toLowerCase(); let c='st-default'; if(l.includes('voorraad')) c='st-voorraad'; else if(l.includes('inplannen')||l.includes('ingepland')) c='st-inplannen'; else if(l.includes('klaar')||l.includes('betaald')) c='st-klaar'; else if(l.includes('betalen')) c='st-betaal'; return `<span class="pill ${c}">${esc(t)}</span>`; }
-  function noot(t){ return esc(t).replace(/^TE DOEN:/m,'<span class="tedoen">TE DOEN:</span>'); }
-  function orderVoor(r){ const key=kKey(r.kenteken); if(!key) return null; return S.orders.find(o=>kKey(o.kenteken)===key)||null; }
+  const vandaag0=()=>{ const d=new Date(); d.setHours(0,0,0,0); return d; };
+  const dagenSinds=iso=>{ const d=alsDatum(iso); return d?Math.max(0,Math.floor((vandaag0()-d)/864e5)):null; };
+  const euro=n=>(n===null||n===undefined||n==='')?'':'€ '+Number(n).toLocaleString('nl-NL');
+  function orderVanAuto(v){ if(v.order){ const o=S.orders.find(x=>String(x.nummer)===String(v.order)); if(o) return o; } const key=v.key||kKey(v.kenteken); if(!key) return null; return S.orders.find(o=>kKey(o.kenteken)===key)||null; }
+  function stapAf(o,id){ const st=(o.stappen||[]).find(s=>s.id===id); return !!st&&stepDone(st,o._checks||{}); }
+  function faseVan(v,o){ if(v.fase==='archief') return 'archief'; if(v.soort==='jvk') return 'jvk'; if(o){ if(stapAf(o,'afleveren')) return (v.todo||[]).some(t=>!t.done)?'nazorg':'afgeleverd'; if(stapAf(o,'klaar')) return 'klaar'; if(v.fase==='nazorg'||v.fase==='afgeleverd') return v.fase; return 'ingepland'; } return v.fase||'voorraad'; }
+  function autoVanOrder(o){ const key=kKey(o.kenteken); return Object.values(S.voertuigen).find(v=>String(v.order||'')===String(o.nummer)||(key&&v.key===key))||null; }
+  function betalingChip(v){ if(v.betaald) return '<span class="chip ok">Volledig betaald</span>'; if(v.aanbetaald) return '<span class="chip ok">Aanbetaald'+(v.aanbetaling?' '+esc(euro(v.aanbetaling)):'')+'</span>'; return ''; }
+  function tabsHtml(){ return `<div class="tabs" role="tablist"><button type="button" data-tab="orders" class="${S.tab==='orders'?'aan':''}">Orders</button><button type="button" data-tab="voorraad" class="${S.tab==='voorraad'?'aan':''}">Voorraad</button></div>`; }
+  function autoKaart(v){
+    const o=orderVanAuto(v), f=faseVan(v,o), id=v.key, open=!!S.open[id], edit=S.bewerk===id;
+    const dg=dagenSinds(v.binnen), du=daysUntil(v.deadline), ku=daysUntil(v.ingepland);
+    const todo=(v.todo||[]), openTodo=todo.filter(t=>!t.done).length;
+    const st=o?statusVan(o):null, p=o?progress(o.stappen||[],o._checks||{}):null;
+    let h=`<div class="auto ${f==='klaar'?'aandacht':''}" id="auto-${esc(id)}"><div class="r1">${v.tag?`<span class="tagnr">${esc(v.tag)}</span>`:''}<span class="kent">${esc(v.kenteken||('MC '+(v.meldcode||'?')))}</span><span class="merk">${esc(v.model||'')}</span><span class="pill ${FASE_CLS[f]||'st-default'}">${esc(FASEN[f]||f)}</span>${v.soort==='klant'?'<span class="pill st-default">Klantvoertuig</span>':''}</div>
+      <div class="r2">${v.klant?`<span><b>${esc(v.klant)}</b></span>`:'<span class="hint">geen klant</span>'}${v.meldcode?`<span>meldcode ${esc(v.meldcode)}</span>`:''}${dg!==null?`<span class="${dg>=30&&f!=='archief'?'lang':''}">${dg===0?'vandaag binnen':(dg===1?'1 dag hier':dg+' dagen hier')}</span>`:''}${v.ingepland&&ku!==null&&ku>=0?`<span>komt <b>${esc(fmtD(v.ingepland))}</b></span>`:''}${v.deadline?`<span class="${du!==null&&du<=3?'urgent':''}">klaar vóór <b>${esc(fmtD(v.deadline))}</b>${du!==null?(du<0?' · te laat':' · '+du+' dg'):''}</span>`:''}${v.afgeleverd?`<span>afgeleverd ${esc(fmtD(v.afgeleverd))}</span>`:''}${betalingChip(v)}</div>
+      ${v.uitvoering?`<div class="uitv">${esc(v.uitvoering)}</div>`:''}
+      ${todo.length?`<ul class="todo">${todo.map((t,i)=>`<li class="${t.done?'af':''}"><label><input type="checkbox" data-todo="${esc(id)}" data-i="${i}" ${t.done?'checked':''}><span>${esc(t.tekst)}</span></label></li>`).join('')}</ul>`:''}
+      ${o?`<div class="live">${st.controle?`<a class="btn ok" href="#${esc(o.nummer)}">✓ Foto's checken en akkoord geven</a>`:`<a class="btn" href="#${esc(o.nummer)}">Order ${esc(o.nummer)} →</a>`}<div class="mini">${p.states.map((d,i)=>`<span class="${d?'done':(i===p.cur?'cur':'')}"></span>`).join('')}</div>${st.open?`<span class="pill bad">⚠ ${st.open}</span>`:''}${st.ongezien.length?`<span class="pill bad">✎ ${esc(st.ongezien.join(', '))}</span>`:''}${st.bezig.filter(b=>!b.locked&&b.wie!=='Spéciale45').map(b=>`<span class="pill wacht">${esc(b.wie)} · ${esc(b.titel)}</span>`).join('')}</div>`:(v.klant&&v.soort!=='jvk'&&f!=='archief'&&f!=='voorraad'&&f!=='afgeleverd'&&f!=='nazorg'?`<div class="live"><span class="hint">Nog geen order op de orderpagina — stuur de factuur of offerte naar Claude.</span></div>`:'')}
+      <div class="acties"><button type="button" class="knop" data-bewerk="${esc(id)}">${edit?'Sluiten':'Bewerken'}</button><button type="button" class="knop" data-open="${esc(id)}">${open?'Minder':'Details'}</button>${(f==='afgeleverd')?`<button type="button" class="knop" data-archiveer="${esc(id)}">Naar archief</button>`:''}${f==='archief'?`<button type="button" class="knop" data-terug="${esc(id)}">Terug naar actueel</button>`:''}</div>`;
+    if(open){ const d=v.details||{}; const rest=(v.totaal&&v.aanbetaling)?v.totaal-v.aanbetaling:null;
+      h+=`<div class="details">${[['Totaal',euro(v.totaal)],['Aanbetaling',euro(v.aanbetaling)],['Restant',v.betaald?'voldaan':euro(rest)],['Offerte',d.offerte],['Factuur',d.factuur],['Basis',d.basis],['Chassis',d.chassis],['Inkoop',d.inkoop],['Garantie',d.garantie],['Adres',d.adres],['Aflevering',d.aflevering]].filter(x=>x[1]).map(x=>`<div><span class="k">${x[0]}</span><span>${esc(x[1])}</span></div>`).join('')}${v.opmerking?`<div class="opm">${esc(v.opmerking)}</div>`:''}${!Object.keys(d).length&&!v.opmerking&&!v.totaal?'<div class="hint">Geen extra gegevens.</div>':''}</div>`; }
+    if(edit){ h+=`<form class="bewerk" data-key="${esc(id)}">
+        <label>Klant <input name="klant" value="${esc(v.klant||'')}"></label>
+        <label>Status <select name="fase">${['voorraad','verkocht','ingepland','nazorg','afgeleverd','archief'].map(x=>`<option value="${x}" ${v.fase===x?'selected':''}>${FASEN[x]}</option>`).join('')}</select></label>
+        <label>Soort <select name="soort">${[['eigen','Eigen auto'],['klant','Klantvoertuig'],['jvk','JVK']].map(x=>`<option value="${x[0]}" ${v.soort===x[0]?'selected':''}>${x[1]}</option>`).join('')}</select></label>
+        <label>Model <select name="model">${MODELLEN.map(m=>`<option ${v.model===m?'selected':''}>${m}</option>`).join('')}</select></label>
+        <div class="rij3"><label>Kenteken <input name="kenteken" value="${esc(v.kenteken||'')}"></label><label>Meldcode <input name="meldcode" inputmode="numeric" maxlength="4" value="${esc(v.meldcode||'')}"></label><label>Order nr <input name="order" inputmode="numeric" value="${esc(v.order||'')}"></label></div>
+        <div class="rij3"><label>Binnen <input type="date" name="binnen" value="${esc(v.binnen||'')}"></label><label>Komt op <input type="date" name="ingepland" value="${esc(v.ingepland||'')}"></label><label>Klaar vóór <input type="date" name="deadline" value="${esc(v.deadline||'')}"></label></div>
+        <div class="rij3"><label>Totaal € <input name="totaal" inputmode="decimal" value="${v.totaal??''}"></label><label>Aanbetaling € <input name="aanbetaling" inputmode="decimal" value="${v.aanbetaling??''}"></label><label>Afgeleverd op <input type="date" name="afgeleverd" value="${esc(v.afgeleverd||'')}"></label></div>
+        <div class="vink"><label><input type="checkbox" name="aanbetaald" ${v.aanbetaald?'checked':''}> Aanbetaald</label><label><input type="checkbox" name="betaald" ${v.betaald?'checked':''}> Volledig betaald</label></div>
+        <label>Uitvoering (één regel) <textarea name="uitvoering" rows="2">${esc(v.uitvoering||'')}</textarea></label>
+        <label>Opmerking <textarea name="opmerking" rows="2">${esc(v.opmerking||'')}</textarea></label>
+        <label>Nieuw TE DOEN-punt <input name="todoNieuw" placeholder="bv. Zijpanelen plaatsen"></label>
+        ${todo.length?`<div class="todolijst">${todo.map((t,i)=>`<span class="todoitem">${esc(t.tekst)} <button type="button" data-todoweg="${esc(id)}" data-i="${i}" aria-label="Verwijder">×</button></span>`).join('')}</div>`:''}
+        <div class="logbtns"><button type="submit" class="btn primary">Opslaan</button><button type="button" class="btn" data-bewerk="${esc(id)}">Annuleren</button></div></form>`; }
+    return h+'</div>';
+  }
   function renderVoorraad(main){
-    setTop('Voorraad','Zelfde lijst als het voorraadbestand · live',null);
-    const L=S.lijst; let h=tabsHtml();
-    if(!L){ main.innerHTML=h+'<div class="empty">Nog geen voorraadlijst ingelezen. Vraag Claude om de lijst te verversen.</div>'; return; }
-    const act=L.actueel||[], arch=L.archief||[];
-    const tel=rows=>{ const o={}; rows.forEach(r=>{ const m=(r.merk&&r.merk!=='—')?r.merk:'Merk nog onbekend'; o[m]=(o[m]||0)+(parseInt(r.nr,10)||1); }); return o; };
-    const teBestellen=tel(act.filter(r=>!heeftKenteken(r)&&!r.klantvoertuig&&!r.jvk)), opVoorraad=tel(act.filter(r=>r.voorraad&&heeftKenteken(r)));
-    const som=o=>Object.values(o).reduce((a,b)=>a+b,0);
-    h+=`<div class="vz"><div class="tellers"><div class="teller"><h3>Nog te bestellen</h3><div class="groot">${som(teBestellen)}</div>${Object.keys(teBestellen).sort().map(m=>`<div class="regel">${teBestellen[m]}× ${esc(m)}</div>`).join('')||'<div class="regel hint">Alles gekoppeld</div>'}</div>
-      <div class="teller"><h3>Op voorraad</h3><div class="groot">${som(opVoorraad)}</div>${Object.keys(opVoorraad).sort().map(m=>`<div class="regel">${opVoorraad[m]}× ${esc(m)}</div>`).join('')||'<div class="regel hint">Geen vrije voorraad</div>'}</div></div>`;
+    setTop('Voorraad','Alle auto\'s · live',null);
+    const alle=Object.values(S.voertuigen), q=S.zoekV.trim().toLowerCase();
+    const past=v=>!q||[v.kenteken,v.meldcode,v.klant,v.model,v.uitvoering,v.opmerking,v.order,(v.todo||[]).map(t=>t.tekst).join(' ')].join(' ').toLowerCase().includes(q);
+    const items=alle.map(v=>({v,o:orderVanAuto(v)})).map(x=>Object.assign(x,{f:faseVan(x.v,x.o)}));
+    const losseOrders=S.orders.filter(o=>!autoVanOrder(o));
+    const tel=f=>items.filter(x=>x.f===f).length;
+    const tiles=[['koppelen',losseOrders.length],['verkocht',tel('verkocht')],['ingepland',tel('ingepland')],['klaar',tel('klaar')],['nazorg',tel('nazorg')],['voorraad',tel('voorraad')]];
+    let h=tabsHtml();
+    h+=`<div class="vz"><div class="tiles">${tiles.map(t=>`<button type="button" class="tile ${S.vzFilter===t[0]?'aan':''} ${t[0]==='klaar'&&t[1]?'let':''}" data-filter="${t[0]}"><span class="n">${t[1]}</span><span class="l">${esc(FASEN[t[0]])}</span></button>`).join('')}</div>`;
     // komende drie weken
-    const vandaag=new Date(); vandaag.setHours(0,0,0,0); const grens=new Date(vandaag.getTime()+21*864e5); const items=[];
-    act.forEach(r=>{ const naam=(r.klant&&!String(r.klant).startsWith('Voorraad'))?r.klant:(r.merk||'Voertuig'); const kent=heeftKenteken(r)?r.kenteken:''; const k=alsDatum(r.ingepland); if(k&&k>=vandaag&&k<=grens) items.push({d:k,naam,kent,s:'komt binnen'}); const l=alsDatum(r.leverdatum); if(l&&l>=vandaag&&l<=grens) items.push({d:l,naam,kent,s:'moet klaar zijn'}); });
-    items.sort((a,b)=>a.d-b.d);
-    h+=`<div class="binnenkort"><h3>Komende drie weken</h3>${items.length?'<ul style="margin:0;padding:0">'+items.map(i=>{ const dg=Math.round((i.d-vandaag)/864e5); const w=dg===0?'Vandaag':dg===1?'Morgen':i.d.getDate()+' '+MND[i.d.getMonth()]; return `<li><span class="w ${dg<=3?'urgent':''}">${w}</span><span>${esc(i.naam)}${i.kent?' — '+esc(i.kent):''}</span><span class="s">${i.s}</span></li>`; }).join('')+'</ul>':'<div class="hint">Geen binnenkomsten of deadlines gepland.</div>'}</div>`;
-    h+=`<input class="zoek" id="zoekV" placeholder="Zoek op klant, kenteken, merk of notitie…" value="${esc(S.zoekV)}">`;
-    const q=S.zoekV.trim().toLowerCase(); const past=r=>!q||[r.merk,r.kenteken,r.klant,r.toelichting,r.notities,r.aflevering].join(' ').toLowerCase().includes(q);
-    const rows=act.map((r,i)=>Object.assign({_i:i},r)).filter(past);
-    for(let g=0; g<4; g++){ const rs=rows.filter(r=>groepVan(r)===g); if(!rs.length) continue;
-      h+=`<h2 class="groep">${GROEPEN[g]} <span class="hint">(${rs.length})</span></h2>`+rs.map(r=>{ const o=orderVoor(r); const nn=heeftKenteken(r)?tagVan(r.kenteken):''; const id='v'+r._i; const openN=!!S.open[id]; const lang=(r.notities||'').length>140; const p=o?progress(o.stappen||[],o._checks||{}):null;
-        return `<div class="auto"><div class="r1">${nn?`<span class="tagnr">${esc(nn)}</span>`:''}<span class="kent">${esc(heeftKenteken(r)?r.kenteken:'—')}</span><span class="merk">${esc(r.merk||'')}${r.nr&&!heeftKenteken(r)?' <span class="hint">#'+esc(r.nr)+'</span>':''}</span>${r.klantvoertuig?'<span class="pill st-default">Klantvoertuig</span>':''}${statusPill(r.toelichting)}</div>
-          <div class="r2">${r.klant?`<span><b>${esc(r.klant)}</b></span>`:''}${dagenTekst(r)?`<span class="${(parseInt(dagenTekst(r),10)||0)>=30?'lang':''}">${dagenTekst(r)}</span>`:''}${r.ingepland?`<span>ingepland <b>${esc(fmtD(r.ingepland))}</b></span>`:''}${r.leverdatum?`<span>klaar vóór <b>${esc(fmtD(r.leverdatum))}</b></span>`:''}${r.aflevering?`<span>${esc(r.aflevering)}</span>`:''}</div>
-          ${r.notities?`<div class="noot ${lang&&!openN?'kort':''}">${noot(r.notities)}</div>${lang?`<button type="button" class="meer" data-open="${id}">${openN?'Minder':'Meer lezen'}</button>`:''}`:''}
-          ${o?`<div class="acties"><a class="btn" href="#${esc(o.nummer)}" style="min-height:36px;padding:6px 12px;font-size:13.5px">Order ${esc(o.nummer)} →</a><div class="mini">${p.states.map((d,i)=>`<span class="${d?'done':(i===p.cur?'cur':'')}"></span>`).join('')}</div><span class="hint">${p.done}/${p.total}</span></div>`:''}
-        </div>`; }).join(''); }
-    if(!rows.length) h+='<div class="empty">Niets gevonden.</div>';
-    const ar=arch.filter(past);
-    h+=`<details class="archief" ${q?'open':''}><summary>Afgerond en afgeleverd (${arch.length})</summary>${ar.map(r=>{ const s=alsDatum(r.gestart)||alsDatum(r.sinds), e=alsDatum(r.afgerond); const dl=(s&&e)?Math.max(0,Math.round((e-s)/864e5))+' dagen':''; return `<div class="arch"><span><b>${esc(r.klant||'')}</b> · ${esc(r.merk||'')}${heeftKenteken(r)?' · '+esc(r.kenteken):''}</span><span class="k">${r.afgerond?esc(fmtD(r.afgerond)):''}${dl?' · '+dl:''}</span></div>`; }).join('')||'<div class="hint">Niets gevonden.</div>'}</details>
-      <div class="hint" style="margin-top:14px">Bijgewerkt ${esc(fmt(L.updatedAt))} · bron: voorraadbestand</div></div>`;
+    const v0=vandaag0(), grens=new Date(v0.getTime()+21*864e5), agenda=[];
+    items.filter(x=>x.f!=='archief').forEach(x=>{ const v=x.v, naam=v.klant||v.model||'Auto', kent=v.kenteken||''; const k=alsDatum(v.ingepland); if(k&&k>=v0&&k<=grens) agenda.push({d:k,naam,kent,s:'komt binnen'}); const d=alsDatum(v.deadline||(x.o&&x.o.deadline)); if(d&&d>=v0&&d<=grens) agenda.push({d,naam,kent,s:'moet klaar zijn'}); });
+    agenda.sort((a,b)=>a.d-b.d);
+    h+=`<div class="binnenkort"><h3>Komende drie weken</h3>${agenda.length?'<ul style="margin:0;padding:0">'+agenda.map(i=>{ const dg=Math.round((i.d-v0)/864e5); const w=dg===0?'Vandaag':dg===1?'Morgen':i.d.getDate()+' '+MND[i.d.getMonth()]; return `<li><span class="w ${dg<=3?'urgent':''}">${w}</span><span>${esc(i.naam)}${i.kent?' — '+esc(i.kent):''}</span><span class="s">${i.s}</span></li>`; }).join('')+'</ul>':'<div class="hint">Niets gepland in de komende drie weken.</div>'}</div>`;
+    h+=`<div class="zoekrij"><input class="zoek" id="zoekV" placeholder="Zoek op klant, kenteken, meldcode, model…" value="${esc(S.zoekV)}"><button type="button" class="btn" id="nieuwAutoBtn">+ Auto</button></div>`;
+    if(S.nieuwAuto) h+=`<form class="bewerk nieuw" id="nieuwAutoForm"><b>Nieuwe auto</b>
+      <div class="rij3"><label>Kenteken <input name="kenteken" placeholder="FXP-24-V"></label><label>Meldcode <input name="meldcode" inputmode="numeric" maxlength="4" placeholder="0240"></label><label>Binnen <input type="date" name="binnen" value="${new Date().toISOString().slice(0,10)}"></label></div>
+      <div class="rij3"><label>Model <select name="model">${MODELLEN.map(m=>`<option>${m}</option>`).join('')}</select></label><label>Soort <select name="soort"><option value="eigen">Eigen auto</option><option value="klant">Klantvoertuig</option><option value="jvk">JVK</option></select></label><label>Klant (optioneel) <input name="klant"></label></div>
+      <div class="logbtns"><button type="submit" class="btn primary">Toevoegen</button><button type="button" class="btn" id="nieuwAutoWeg">Annuleren</button></div></form>`;
+    const filt=S.vzFilter;
+    const sectie=(f,list)=>list.length?`<h2 class="groep">${esc(FASEN[f])} <span class="hint">(${list.length})</span></h2>`+list.map(x=>autoKaart(x.v)).join(''):'';
+    if(!filt||filt==='koppelen'){ const lo=losseOrders.filter(o=>!q||[o.klant,o.kenteken,o.nummer,o.model].join(' ').toLowerCase().includes(q)); if(lo.length){ const vrij=items.filter(x=>x.f==='voorraad'); h+=`<h2 class="groep">Nog te koppelen aan een auto <span class="hint">(${lo.length})</span></h2>`+lo.map(o=>`<div class="auto"><div class="r1"><span class="merk">Order ${esc(o.nummer)}</span><span class="pill st-betaal">Nog geen auto</span></div><div class="r2"><span><b>${esc(o.klant||'')}</b></span><span>${esc(o.model||'')}</span>${o.deadline?`<span>klaar vóór <b>${esc(fmtD(o.deadline))}</b></span>`:''}</div>
+        <div class="acties"><select data-koppelsel="${esc(o.nummer)}"><option value="">— kies een voorraadauto —</option>${vrij.map(x=>`<option value="${esc(x.v.key)}">${esc(x.v.kenteken||'MC '+x.v.meldcode)} · ${esc(x.v.model||'')}${x.v.uitvoering?' · '+esc(x.v.uitvoering.slice(0,40)):''}</option>`).join('')}</select><button type="button" class="btn primary" data-koppelorder="${esc(o.nummer)}" style="min-height:38px">Koppelen</button><a class="btn" href="#${esc(o.nummer)}" style="min-height:38px">Order →</a></div></div>`).join(''); } }
+    const volg=['verkocht','klaar','ingepland','nazorg','afgeleverd','jvk','voorraad'];
+    for(const f of volg){ if(filt&&filt!==f) continue; const list=items.filter(x=>x.f===f&&past(x.v)).sort((a,b)=>(daysUntil(a.v.deadline)??9999)-(daysUntil(b.v.deadline)??9999)||String(a.v.klant||'').localeCompare(String(b.v.klant||''))); h+=sectie(f,list); }
+    if(!filt){ const ar=items.filter(x=>x.f==='archief'&&past(x.v)).sort((a,b)=>String(b.v.afgeleverd||'').localeCompare(String(a.v.afgeleverd||''))); h+=`<details class="archief" ${q&&ar.length?'open':''}><summary>Archief (${items.filter(x=>x.f==='archief').length})</summary>${ar.map(x=>`<div class="arch"><span><b>${esc(x.v.klant||'')}</b> · ${esc(x.v.model||'')}${x.v.kenteken?' · '+esc(x.v.kenteken):''}${x.v.uitvoering?' · '+esc(x.v.uitvoering):''}</span><span class="k">${x.v.afgeleverd?esc(fmtD(x.v.afgeleverd)):''}${(function(){ const s=alsDatum(x.v.binnen), e=alsDatum(x.v.afgeleverd); return (s&&e)?' · '+Math.max(0,Math.round((e-s)/864e5))+' dagen':''; })()} <button type="button" class="knop" data-open="${esc(x.v.key)}">${S.open[x.v.key]?'Minder':'Details'}</button>${S.open[x.v.key]?`<button type="button" class="knop" data-terug="${esc(x.v.key)}">Terug</button>`:''}</span>${S.open[x.v.key]?`<div class="opm" style="flex-basis:100%">${esc(x.v.opmerking||'Geen opmerkingen')}</div>`:''}</div>`).join('')||'<div class="hint">Niets gevonden.</div>'}</details>`; }
+    if(filt) h+=`<div style="margin-top:12px"><button type="button" class="btn" data-filter="">Alles tonen</button></div>`;
+    h+='</div>';
     main.innerHTML=h;
+  }
+  async function slaAutoOp(form){
+    const key=form.dataset.key, v=S.voertuigen[key]; if(!v) return; const fd=new FormData(form);
+    const num=x=>{ const s=String(fd.get(x)||'').replace(/[^\d.,]/g,'').replace(',','.'); return s===''?null:Number(s); };
+    const upd={klant:String(fd.get('klant')||'').trim(),fase:fd.get('fase'),soort:fd.get('soort'),model:fd.get('model'),kenteken:String(fd.get('kenteken')||'').trim(),meldcode:String(fd.get('meldcode')||'').replace(/\D/g,''),order:String(fd.get('order')||'').replace(/\D/g,''),binnen:fd.get('binnen')||'',ingepland:fd.get('ingepland')||'',deadline:fd.get('deadline')||'',afgeleverd:fd.get('afgeleverd')||'',totaal:num('totaal'),aanbetaling:num('aanbetaling'),aanbetaald:!!fd.get('aanbetaald'),betaald:!!fd.get('betaald'),uitvoering:String(fd.get('uitvoering')||'').trim(),opmerking:String(fd.get('opmerking')||'').trim()};
+    const nt=String(fd.get('todoNieuw')||'').trim(); if(nt) upd.todo=[...(v.todo||[]),{tekst:nt,done:false}];
+    try{ await S.db.doc('voertuigen/'+key).update(upd); S.bewerk=null; toast('Opgeslagen'); }catch(err){ fail(err); }
+  }
+  async function nieuweAuto(form){
+    const fd=new FormData(form); const kent=String(fd.get('kenteken')||'').trim().toUpperCase(), mc=String(fd.get('meldcode')||'').replace(/\D/g,'');
+    const key=kKey(kent)||(mc?'MC'+mc:''); if(!key){ toast('Vul een kenteken of meldcode in.'); return; }
+    if(S.voertuigen[key]){ toast('Deze auto staat er al in.'); return; }
+    const soort=fd.get('soort'); const doc={key,kenteken:kent,meldcode:mc,model:fd.get('model'),soort,fase:soort==='eigen'?'voorraad':'ingepland',klant:String(fd.get('klant')||'').trim()||(soort==='jvk'?'JVK showroom':''),binnen:fd.get('binnen')||'',tag:'',todo:[]};
+    try{ await S.db.doc('voertuigen/'+key).set(doc); S.nieuwAuto=false; toast('Auto toegevoegd'); }catch(err){ fail(err); }
+  }
+  async function koppelOrder(nr){
+    const sel=document.querySelector('select[data-koppelsel="'+nr+'"]'); const key=sel&&sel.value; if(!key){ toast('Kies eerst een auto.'); return; }
+    const v=S.voertuigen[key], o=S.orders.find(x=>String(x.nummer)===String(nr)); if(!v||!o) return;
+    try{ await S.db.doc('orders/'+nr).update({kenteken:v.kenteken||'',meldcode:v.meldcode||''}); await S.db.doc('voertuigen/'+key).update({order:String(nr),klant:o.klant||v.klant||'',fase:'ingepland'}); toast('Gekoppeld: '+(v.kenteken||'MC '+v.meldcode)+' → order '+nr); }catch(err){ fail(err); }
   }
   function voorraadKaart(){
     const kan=!!S.db&&!S.readOnly&&S.canWrite!==false;
@@ -562,6 +657,14 @@
     if(e.target.closest('#koppelBtn')){ await koppelTag(); return; }
     const tb=e.target.closest('.tabs button[data-tab]'); if(tb){ S.tab=tb.dataset.tab; try{ localStorage.setItem('s45tab',S.tab); }catch(err){} render(); return; }
     const mo=e.target.closest('button[data-open]'); if(mo){ S.open[mo.dataset.open]=!S.open[mo.dataset.open]; render(); return; }
+    const bw=e.target.closest('button[data-bewerk]'); if(bw){ S.bewerk=S.bewerk===bw.dataset.bewerk?null:bw.dataset.bewerk; S.nieuwAuto=false; render(); if(S.bewerk){ const f=document.querySelector('form.bewerk[data-key="'+S.bewerk+'"]'); if(f) f.scrollIntoView({behavior:'smooth',block:'nearest'}); } return; }
+    const fl=e.target.closest('[data-filter]'); if(fl){ S.vzFilter=S.vzFilter===fl.dataset.filter?'':fl.dataset.filter; render(); window.scrollTo({top:0,behavior:'smooth'}); return; }
+    if(e.target.closest('#nieuwAutoBtn')){ S.nieuwAuto=!S.nieuwAuto; S.bewerk=null; render(); const f=$('nieuwAutoForm'); if(f){ const i=f.querySelector('input'); if(i) i.focus(); } return; }
+    if(e.target.closest('#nieuwAutoWeg')){ S.nieuwAuto=false; render(); return; }
+    const ar=e.target.closest('button[data-archiveer]'); if(ar){ try{ await S.db.doc('voertuigen/'+ar.dataset.archiveer).update({fase:'archief'}); toast('Naar het archief'); }catch(err){ fail(err); } return; }
+    const tr=e.target.closest('button[data-terug]'); if(tr){ const v=S.voertuigen[tr.dataset.terug]||{}; const fase=v.afgeleverd?'afgeleverd':(v.klant&&v.soort!=='jvk'?'ingepland':'voorraad'); try{ await S.db.doc('voertuigen/'+tr.dataset.terug).update({fase}); toast('Terug naar actueel'); }catch(err){ fail(err); } return; }
+    const tw=e.target.closest('button[data-todoweg]'); if(tw){ const v=S.voertuigen[tw.dataset.todoweg]; if(!v) return; const todo=(v.todo||[]).filter((_,i)=>i!==Number(tw.dataset.i)); try{ await S.db.doc('voertuigen/'+v.key).update({todo}); }catch(err){ fail(err); } return; }
+    const ko=e.target.closest('button[data-koppelorder]'); if(ko){ await koppelOrder(ko.dataset.koppelorder); return; }
     if(e.target.closest('#importBtn')){ await importeer(); return; }
     const tm=e.target.closest('button[data-tel-min],button[data-tel-plus]');
     if(tm){ const id=tm.dataset.telMin||tm.dataset.telPlus; const inp=document.querySelector('input[data-tel="'+id+'"]'); if(!inp) return; const cur=inp.value===''?0:Number(inp.value); const n=Math.max(0,cur+(tm.dataset.telMin?-1:1)); inp.value=n; await zetVoorraad(id,n); return; }
@@ -586,17 +689,22 @@
     const sel=e.target.closest('select[data-uid]'); if(sel){ await setRolFor(sel.dataset.uid, sel.value); return; }
     const tv=e.target.closest('input[data-tel]'); if(tv){ if(tv.value!=='') await zetVoorraad(tv.dataset.tel,tv.value); return; }
     const chk=e.target.closest('input[type=checkbox][data-item]'); if(chk){ await toggle(chk.dataset.item,chk.checked,chk); return; }
+    const td=e.target.closest('input[type=checkbox][data-todo]'); if(td){ const v=S.voertuigen[td.dataset.todo]; if(!v) return; const todo=(v.todo||[]).map((t,i)=>i===Number(td.dataset.i)?Object.assign({},t,{done:td.checked,at:new Date().toISOString()}):t); try{ await S.db.doc('voertuigen/'+v.key).update({todo}); }catch(err){ td.checked=!td.checked; fail(err); } return; }
     const f=e.target.closest('input[type=file][data-step]'); if(f&&f.files&&f.files[0]){ await addPhoto(f.dataset.step,f.files[0]); f.value=''; }
   });
   document.addEventListener('input',e=>{ if(e.target.id==='koppelMc') koppelZoek(); if(e.target.id==='zoekV'){ S.zoekV=e.target.value; clearTimeout(S._zt); S._zt=setTimeout(()=>{ const el=$('zoekV'); const pos=el?el.selectionStart:0; render(); const n=$('zoekV'); if(n){ n.focus(); try{ n.setSelectionRange(pos,pos); }catch(err){} } },250); } });
-  document.addEventListener('submit',e=>{ if(e.target.id!=='snelForm') return; e.preventDefault(); const v=($('snelTag').value||'').replace(/\D/g,''); if(!v){ toast('Typ het nummer van de sticker.'); return; } location.hash='#t'+v.padStart(2,'0'); });
+  document.addEventListener('submit',async e=>{
+    if(e.target.id==='snelForm'){ e.preventDefault(); const v=($('snelTag').value||'').replace(/\D/g,''); if(!v){ toast('Typ het nummer van de sticker.'); return; } location.hash='#t'+v.padStart(2,'0'); return; }
+    if(e.target.id==='nieuwAutoForm'){ e.preventDefault(); await nieuweAuto(e.target); return; }
+    if(e.target.classList.contains('bewerk')&&e.target.dataset.key){ e.preventDefault(); await slaAutoOp(e.target); }
+  });
   async function importeer(){
     const t=$('importJson'), msg=$('importMsg'); let d;
     try{ d=JSON.parse((t.value||'').trim()); }catch(e){ msg.textContent='Dit is geen geldige tekst. Plak precies wat Claude je gaf.'; return; }
     msg.textContent='Bezig…'; let n=0;
     try{
       for(const o of (d.orders||[])){ if(!o.nummer) continue; await S.db.doc('orders/'+String(o.nummer)).set(o); n++; }
-      for(const v of (d.voertuigen||[])){ if(!v.key) continue; const ref=S.db.doc('voertuigen/'+v.key); const cur=await ref.get(); const {tag,...rest}=v; await ref.set(cur.exists?rest:{...rest,tag:tag||''},{merge:true}); n++; }
+      for(const v of [...(d.voertuigen||[]),...(d.archief||[]).map(x=>Object.assign({},x,{fase:'archief'}))]){ if(!v.key) continue; const ref=S.db.doc('voertuigen/'+v.key); const cur=await ref.get(); const {tag,...rest}=v; await ref.set(cur.exists?rest:{...rest,tag:tag||''},{merge:true}); n++; }
       for(const [id,aantal] of Object.entries(d.voorraad||{})){ const ref=S.db.doc('voorraad/'+id); if(!(await ref.get()).exists){ await ref.set({aantal,by:'Spéciale45 (startwaarde)',at:new Date().toISOString()}); n++; } }
       if(d.voorraadlijst){ await S.db.doc('lijsten/voorraad').set(d.voorraadlijst); n++; }
       for(const [nr,w] of Object.entries(d.wijzigingen||{})){ await S.db.doc('orders/'+nr).update({wijzigingen:firebase.firestore.FieldValue.arrayUnion(...[].concat(w))}); n++; }
@@ -651,7 +759,7 @@
       return;
     }
     if(!S.orderId){
-      if(isS45()) S.unsub.push(S.db.doc('lijsten/voorraad').onSnapshot(snap=>{ S.lijst=snap.exists?snap.data():null; render(); },()=>{}));
+      if(isS45()) S.unsub.push(S.db.collection('voertuigen').onSnapshot(snap=>{ const m={}; snap.docs.forEach(d=>{ if(d.exists) m[d.id]=Object.assign({key:d.id},d.data()); }); S.voertuigen=m; S.voertuigenGeladen=true; render(); },()=>{ S.voertuigenGeladen=true; render(); }));
       S.unsub.push(S.db.collection('orders').onSnapshot(snap=>{
         const seen=new Set(S.orders.map(o=>o.id));
         S.orders=snap.docs.filter(d=>d.exists).map(d=>{ const prev=S.orders.find(x=>x.id===d.id)||{}; return Object.assign({id:d.id,_checks:prev._checks||{},_log:prev._log||[],_photos:prev._photos||[],_sub:prev._sub},d.data()); });
@@ -693,3 +801,5 @@
   document.addEventListener('keydown',e=>{ if(e.key==='Enter'&&e.target&&e.target.id==='pin') login(); });
 })();
 </script>
+</body>
+</html>
