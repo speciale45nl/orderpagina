@@ -292,6 +292,14 @@
 <script>
 (function(){
   'use strict';
+  const BUILD='2026-10-29T10:18';
+  let laatsteCheck=0;
+  async function checkVersie(){ // als app op het beginscherm blijft de oude pagina anders hangen
+    const nu=Date.now(); if(nu-laatsteCheck<90000) return; laatsteCheck=nu;
+    try{ const r=await fetch('version.txt?x='+nu,{cache:'no-store'}); if(!r.ok) return; const v=(await r.text()).trim();
+      if(v&&v!==BUILD){ toast('Nieuwe versie laden…'); setTimeout(()=>location.replace(location.pathname+'?v='+encodeURIComponent(v)+location.hash),600); } }catch(e){}
+  }
+  setTimeout(checkVersie,2500); document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible') checkVersie(); });
   const ROLES=['1stop','Interieurspecialist','Spéciale45'];
   const EMAILS={'1stop':'1stop@orders.speciale45.nl','Interieurspecialist':'interieur@orders.speciale45.nl','Spéciale45':'beheer@orders.speciale45.nl'};
   const rolVanEmail=e=>{ for(const r in EMAILS){ if(EMAILS[r]===e) return r; } return ''; };
