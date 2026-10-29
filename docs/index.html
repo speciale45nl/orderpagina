@@ -212,6 +212,10 @@
   .photos .ph{width:84px;height:84px;border-radius:8px;overflow:hidden;border:1px solid var(--line);background:var(--bg);position:relative}
   .photos .ph img{width:100%;height:100%;object-fit:cover;display:block}
   .photos .ph span{position:absolute;left:0;right:0;bottom:0;font-size:10.5px;padding:2px 5px;background:rgba(0,0,0,.55);color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .photos .ph .weg{position:absolute;top:3px;right:3px;width:26px;height:26px;border-radius:50%;border:0;background:rgba(0,0,0,.65);color:#fff;font-size:18px;line-height:26px;padding:0;cursor:pointer}
+  .photos .ph .bevestig{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:rgba(0,0,0,.72)}
+  .photos .ph .bevestig button{border:0;border-radius:8px;padding:5px 12px;font:inherit;font-size:13px;font-weight:700;cursor:pointer}
+  .photos .ph .bevestig .ja{background:var(--bad);color:#fff} .photos .ph .bevestig .nee{background:#fff;color:#222}
   .btn{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line-strong);background:var(--paper);color:var(--ink);border-radius:10px;padding:10px 14px;font-size:15px;font-weight:600;min-height:46px}
   .btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
   .btn.photo{border-style:dashed}
@@ -289,7 +293,7 @@
   const S={ db:null,authReady:false,canWrite:true,readOnly:false,loginRol:'',
             role:'',name:'',uid:null,
             orders:[],order:null,orderId:null, checks:{},photos:[],log:[], unsub:[], qrOpen:false,
-            aanmeldingen:[], rollen:{}, toggled:{}, voorraad:{}, tel:{}, route:null, routeKey:'', tags:{}, voertuigen:{}, tagDoc:undefined, view:'', tab:(function(){ try{ return localStorage.getItem('s45tab')||'orders'; }catch(e){ return 'orders'; } })(), lijst:null, zoekV:'', open:{}, bewerk:null, vzFilter:'', nieuwAuto:false, voertuigenGeladen:false };
+            aanmeldingen:[], rollen:{}, toggled:{}, voorraad:{}, tel:{}, route:null, routeKey:'', tags:{}, voertuigen:{}, tagDoc:undefined, view:'', tab:(function(){ try{ return localStorage.getItem('s45tab')||'orders'; }catch(e){ return 'orders'; } })(), lijst:null, zoekV:'', open:{}, fotoWeg:null, bewerk:null, vzFilter:'', nieuwAuto:false, voertuigenGeladen:false };
   const kKey=k=>String(k||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
   const tagVan=kenteken=>{ const key=kKey(kenteken); for(const nn in S.tags){ if(kKey(S.tags[nn].kenteken)===key) return nn; } return ''; };
   const PARTS=[{id:'marshall',naam:'Marshall speakers',min:2},{id:'speakerband',naam:'Speakerbanden',min:2},{id:'oplader',naam:'Opladers (oplaadstuk laadpaal)',min:2}];
@@ -311,7 +315,7 @@
     if(/^\d{4,6}$/.test(h)) return {order:h};
     if(/^[A-Za-z0-9-]{4,12}$/.test(h)) return {kenteken:kKey(h)};
     return null; }
-  function resetOrderState(){ S.order=null; S.checks={}; S.photos=[]; S.log=[]; S.qrOpen=false; S.toggled={}; S.tagDoc=undefined; S.view=''; }
+  function resetOrderState(){ S.order=null; S.checks={}; S.photos=[]; S.log=[]; S.qrOpen=false; S.fotoWeg=null; S.toggled={}; S.tagDoc=undefined; S.view=''; }
   function goHome(){ if(location.hash){ location.hash=''; } S.route=null; S.routeKey=''; S.orderId=null; resetOrderState(); subscribe(); render(); }
   $('home').addEventListener('click',e=>{ e.preventDefault(); goHome(); });
   function route(){
@@ -629,7 +633,7 @@
         <ul class="items">${items.map(it=>{ const c=S.checks[it.id], d=!!(c&&c.done), ok=canTick&&(!locked||d);
           const vraag=d&&S.tel[it.id]&&(it.telt||[]).length?`<div class="telvraag"><b>Even tellen: hoeveel liggen er nu nog?</b>${(it.telt||[]).map(pid=>{ const v=S.voorraad[pid]||{}; const n=(typeof v.aantal==='number')?Math.max(0,v.aantal-1):''; return `<div class="rij"><span>${esc(partNaam(pid))}</span><input type="number" inputmode="numeric" min="0" data-telvraag="${esc(pid)}" value="${n}" placeholder="?" style="width:72px;height:40px;text-align:center;font:inherit;font-size:18px;font-weight:700;border:1px solid var(--line-strong);border-radius:8px;background:var(--paper);color:var(--ink)"></div>`; }).join('')}<div class="acties"><button type="button" class="btn primary" data-telsave="${esc(it.id)}">Opslaan</button><button type="button" class="later" data-tellater="${esc(it.id)}">Later</button></div></div>`:'';
           return `<li class="${d?'done':''}"><label class="${ok?'':'ro'} ${locked&&!d?'locked':''}"><input type="checkbox" id="chk-${esc(it.id)}" data-item="${esc(it.id)}" ${d?'checked':''} ${ok?'':'disabled'}><span><span class="t">${esc(it.tekst)}</span>${d?`<span class="meta">${esc(c.by||'')} · ${esc(fmt(c.at))}</span>`:''}</span></label>${vraag}</li>`; }).join('')}</ul>
-        ${st.foto?`<div class="photos">${photos.map(f=>`<div class="ph"><img src="${esc(f.data||f.url||'')}" alt="Foto" loading="lazy"><span>${esc(f.by||'')} · ${esc(fmt(f.at))}</span></div>`).join('')}
+        ${st.foto?`<div class="photos">${photos.map(f=>{ const mag=canTick&&(isS45()||f.uid===S.uid); const vraag=S.fotoWeg===f.id; return `<div class="ph ${vraag?'vraag':''}"><img src="${esc(f.data||f.url||'')}" alt="Foto" loading="lazy"><span>${esc(f.by||'')} · ${esc(fmt(f.at))}</span>${mag&&!vraag?`<button type="button" class="weg" data-fotoweg="${esc(f.id)}" aria-label="Foto verwijderen">×</button>`:''}${vraag?`<div class="bevestig"><button type="button" class="ja" data-fotoja="${esc(f.id)}">Weg</button><button type="button" class="nee" data-fotonee="1">Nee</button></div>`:''}</div>`; }).join('')}
           ${canPhoto&&!locked?`<label class="btn photo" for="foto-${esc(st.id)}">📷 ${esc(photos.length?'Nog een foto':fotoLabel(st))}<input type="file" id="foto-${esc(st.id)}" data-step="${esc(st.id)}" accept="image/*" capture="environment" hidden></label>`:''}
           ${!photos.length?`<span class="hint">${locked?'Foto kan zodra deze stap open is.':'Eén foto is genoeg.'}</span>`:''}</div>`:''}
       </div></section>`;
@@ -676,6 +680,9 @@
     if(tl){ delete S.tel[tl.dataset.tellater]; render(); return; }
     const ak=e.target.closest('button[data-akkoord]');
     if(ak){ try{ await S.db.doc('orders/'+S.orderId+'/checks/'+ak.dataset.akkoord).set({done:true,by:who(),uid:S.uid,at:new Date().toISOString()}); toast('Akkoord gegeven'); }catch(err){ fail(err); } return; }
+    const fw=e.target.closest('button[data-fotoweg]'); if(fw){ S.fotoWeg=fw.dataset.fotoweg; render(); return; }
+    if(e.target.closest('button[data-fotonee]')){ S.fotoWeg=null; render(); return; }
+    const fj=e.target.closest('button[data-fotoja]'); if(fj){ S.fotoWeg=null; try{ await S.db.doc('orders/'+S.orderId+'/photos/'+fj.dataset.fotoja).delete(); toast('Foto verwijderd'); }catch(err){ fail(err); } return; }
     const sc=e.target.closest('.nudoen[data-scroll]');
     if(sc){ const el=$('stap-'+sc.dataset.scroll); if(el){ el.scrollIntoView({behavior:'smooth',block:'start'}); } return; }
     const tg=e.target.closest('.hd[data-toggle]');
@@ -775,7 +782,7 @@
     const base='orders/'+S.orderId;
     S.unsub.push(S.db.doc(base).onSnapshot(snap=>{ S.order=snap.exists?snap.data():null; if(!snap.exists){ setTop('Order '+S.orderId,'<a class="back" href="#" id="back">← Alle orders</a>',null); $('main').innerHTML=`<div class="empty">Deze order bestaat niet of je hebt er geen toegang toe.</div>`; return; } render(); },()=>render()));
     S.unsub.push(S.db.collection(base+'/checks').onSnapshot(snap=>{ const m={}; snap.docs.forEach(d=>{ if(d.exists) m[d.id]=d.data(); }); S.checks=m; if(S.order) render(); },()=>{}));
-    S.unsub.push(S.db.collection(base+'/photos').orderBy('at','asc').onSnapshot(snap=>{ S.photos=snap.docs.filter(d=>d.exists).map(d=>d.data()); if(S.order) render(); },()=>{}));
+    S.unsub.push(S.db.collection(base+'/photos').orderBy('at','asc').onSnapshot(snap=>{ S.photos=snap.docs.filter(d=>d.exists).map(d=>Object.assign({id:d.id},d.data())); if(S.order) render(); },()=>{}));
     S.unsub.push(S.db.collection(base+'/log').orderBy('at','desc').limit(100).onSnapshot(snap=>{ S.log=snap.docs.filter(d=>d.exists).map(d=>Object.assign({id:d.id},d.data())); if(S.order) render(); },()=>{}));
   }
   function resolveRoute(){ // sticker/kenteken → lopende order

@@ -13,7 +13,7 @@ service cloud.firestore {
       match /photos/{id} {
         allow read: if ingelogd();
         allow create: if ingelogd() && request.resource.data.data is string && request.resource.data.data.size() < 900000;
-        allow delete: if beheer();
+        allow delete: if beheer() || (ingelogd() && resource.data.uid == request.auth.uid); // eigen foto mag weg
         allow update: if false;
       }
       match /log/{id} {
