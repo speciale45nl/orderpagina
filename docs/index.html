@@ -309,6 +309,10 @@
   const fmt=iso=>{ if(!iso) return ''; const d=new Date(iso); if(isNaN(d)) return ''; const p=n=>String(n).padStart(2,'0'); return `${d.getDate()} ${MND[d.getMonth()]} ${p(d.getHours())}:${p(d.getMinutes())}`; };
   const fmtD=iso=>{ if(!iso) return ''; const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(iso); if(!m) return iso; return `${+m[3]} ${MND[+m[2]-1]} ${m[1]}`; };
   const daysAgo=iso=>{ if(!iso) return null; const d=new Date(iso); if(isNaN(d)) return null; return Math.floor((Date.now()-d.getTime())/864e5); };
+  const minDagen=(iso,n)=>{ const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(iso||''); if(!m) return ''; const d=new Date(+m[1],+m[2]-1,+m[3]); d.setDate(d.getDate()-n); const q=x=>String(x).padStart(2,'0'); return d.getFullYear()+'-'+q(d.getMonth()+1)+'-'+q(d.getDate()); };
+  const intDeadline=o=>o.type==='los'?(o.deadline||''):minDagen(o.deadline,3); // interieurset moet 3 dagen vóór de klaar-vóór-datum van 1stop binnen zijn
+  const mijnDeadline=o=>isInt()?intDeadline(o):(o.deadline||'');
+  const deadlineLabel=()=>isInt()?'bij 1stop vóór':'klaar vóór';
   const daysUntil=iso=>{ const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(iso||''); if(!m) return null; const t=new Date(+m[1],+m[2]-1,+m[3]); const n=new Date(); n.setHours(0,0,0,0); return Math.round((t-n)/864e5); };
   function toast(m){ const t=$('toast'); t.textContent=m; t.classList.add('show'); clearTimeout(toast._t); toast._t=setTimeout(()=>t.classList.remove('show'),2600); }
   const who=()=>S.name?`${S.role} (${S.name})`:S.role;
@@ -421,8 +425,7 @@
     list.sort((a,b)=>(b._st.open-a._st.open)||((b._st.controle?1:0)-(a._st.controle?1:0))||((daysUntil(a.deadline)??9999)-(daysUntil(b.deadline)??9999)));
     let h = isS45()?tabsHtml():'';
     h += isInt()?'':`<form class="snel" id="snelForm"><label for="snelTag">Stickernummer of meldcode <span class="hint" style="font-weight:500">(sticker: 2 cijfers · meldcode: 4 cijfers)</span></label><input id="snelTag" inputmode="numeric" placeholder="07" aria-label="Stickernummer, meldcode of kenteken"><button type="submit" class="btn primary">Open</button></form>`;
-    h += !list.length ? '<div class="empty">Geen orders voor jou op dit moment.</div>' :
-      `<ul class="orders">${list.map(o=>{ const st=mySteps(o), p=progress(st,o._checks||{}), x=o._st, du=daysUntil(o.deadline);
+    const li=o=>{ const st=mySteps(o), p=progress(st,o._checks||{}), x=o._st, dl=mijnDeadline(o), du=daysUntil(dl);
       const pills=[];
       if(x.open) pills.push(`<span class="pill bad">⚠ ${x.open} probleem${x.open>1?'en':''}</span>`);
       if(isS45()&&x.ongezien.length) pills.push(`<span class="pill bad">✎ wijziging niet gezien: ${esc(x.ongezien.join(', '))}</span>`);
@@ -436,13 +439,17 @@
           if(!lopend.length&&!x.klaar) pills.push('<span class="pill todo">Wacht</span>');
         }
       } else if(p.cur<0) pills.push('<span class="pill ok">Jouw werk klaar</span>'); else { const mijn=curVoor(o,o._checks||{},o._photos||[],S.role); if(mijn&&mijn.locked){ const stp=(o.stappen||[]).find(y=>y.id===mijn.id); const wie=(stp.vereistStappen||[]).map(id=>stapWie(o,id)).filter(Boolean)[0]; pills.push(`<span class="pill todo">${wie?'Wacht op '+esc(wie):'Eerst foto\'s'} · ${esc(mijn.titel)}</span>`); } else pills.push(`<span class="pill cur">${esc(st[p.cur].titel)}</span>`); }
-      if(o.deadline) pills.push(`<span class="pill ${du!==null&&du<=3?'bad':'todo'}">klaar vóór ${esc(fmtD(o.deadline))}${du!==null?(du<0?' · te laat':` · ${du} dg`):''}</span>`);
+      if(dl&&!(p.cur<0||x.afgeleverd)) pills.push(`<span class="pill ${du!==null&&du<=3?'bad':'todo'}">${deadlineLabel()} ${esc(fmtD(dl))}${du!==null?(du<0?' · te laat':` · ${du} dg`):''}</span>`);
       if(isS45()&&x.dagen!==null&&x.dagen>=3) pills.push(`<span class="pill todo">${x.dagen} dagen stil</span>`);
       const nn=isInt()?'':tagVan(o.kenteken,o.meldcode);
       return `<li><a href="#${esc(o.nummer)}"><div class="row"><span class="klant">${nn?`<span class="tagnr">${esc(nn)}</span>`:''}${isInt()?esc(o.klant):esc(autoLabel(o))+' · '+esc(o.model||'')}</span></div>
         <div class="sub">${isInt()?'order '+esc(o.nummer):esc(o.klant)+' · meldcode '+esc(o.meldcode||'—')+' · order '+esc(o.nummer)}</div>
         <div class="flags">${pills.join('')}</div>
-        <div class="mini">${p.states.map((d,i)=>`<span class="${d?'done':(i===p.cur?'cur':'')}"></span>`).join('')}</div></a></li>`; }).join('')}</ul>`;
+        <div class="mini">${p.states.map((d,i)=>`<span class="${d?'done':(i===p.cur?'cur':'')}"></span>`).join('')}</div></a></li>`; };
+    const klaarVoorMij=o=>{ const p=progress(mySteps(o),o._checks||{}); return p.cur<0||(isS45()&&o._st.afgeleverd); };
+    const actief=list.filter(o=>!klaarVoorMij(o)), af=list.filter(klaarVoorMij);
+    h += !actief.length ? `<div class="empty">${isS45()?'Geen lopende orders.':'Niets te doen op dit moment.'}</div>` : `<ul class="orders">${actief.map(li).join('')}</ul>`;
+    if(af.length) h+=`<details class="archief" style="margin-top:14px"><summary style="cursor:pointer;font-weight:700;padding:8px 0;color:var(--muted)">${isS45()?'Afgeleverd':'Afgehandeld'} (${af.length})</summary><ul class="orders" style="margin-top:8px">${af.map(li).join('')}</ul></details>`;
     if(S.role==='1stop'||isS45()) h+=voorraadKaart();
     if(isS45()) h+=`<section class="card"><div class="hd"><h2>Beheer</h2><span class="hint">Orders en auto's uit de chat inlezen</span></div><div class="bd">
       <textarea id="importJson" placeholder='Plak hier de tekst die Claude je geeft (begint met { "orders": … )' style="width:100%;min-height:90px;border:1px solid var(--line-strong);border-radius:10px;padding:9px 12px;font:inherit;font-size:16px;background:var(--paper);color:var(--ink)"></textarea>
@@ -516,7 +523,8 @@
     const chk=id=>!!(c[id]&&c[id].done); const vz=(o.stappen||[]).find(x=>x.id==='voorkap-verzenden');
     const voorkapWacht=items.some(i=>i.id==='i-voorkap')&&!chk('i-voorkap')&&!!vz&&!stepDone(vz,c);
     const blocked=!stappenOk(o,st,c); let fase;
-    if(o.type==='los') fase=(done&&chk('o-ontvangen'))?'klaar':'los'; else if(done&&chk('m-doos')) fase='ontvangen'; else if(done||chk('i-doos')) fase='verstuurd'; else if(blocked) fase='bestellen'; else if(voorkapWacht) fase='voorkap'; else fase='bezig';
+    const afgeleverd=(()=>{ const a=(o.stappen||[]).find(x=>x.id==='afleveren'); return !!a&&stepDone(a,c); })();
+    if(o.type==='los') fase=(done&&chk('o-ontvangen'))?'klaar':'los'; else if(afgeleverd) fase='klaar'; else if(done&&chk('m-doos')) fase='ontvangen'; else if(done||chk('i-doos')) fase='verstuurd'; else if(blocked) fase='bestellen'; else if(voorkapWacht) fase='voorkap'; else fase='bezig';
     const acts=items.map(i=>c[i.id]&&c[i.id].at).filter(Boolean).sort();
     return {st,items,n,done,blocked,voorkapWacht,fase,last:acts[acts.length-1]||null};
   }
@@ -532,11 +540,12 @@
     if(S.nieuwLos) h+=`<form class="bewerk nieuw" id="nieuwLosForm"><b>Losse bestelling bij de interieurspecialist</b>
       <label>Voor wie <input name="voor" placeholder="bv. Beary Bears B.V. of Voorraad Spéciale45" value="Voorraad Spéciale45"></label>
       <label>Onderdelen, één per regel <textarea name="items" rows="4" placeholder="2× trektouwen Porsche bruin leer&#10;1× tapijtset"></textarea></label>
-      <label>Opmerking voor de interieurspecialist (optioneel) <input name="letop" placeholder="bv. graag vóór 6 november"></label>
+      <div class="rij3"><label>Bij 1stop vóór (optioneel) <input type="date" name="deadline"></label></div>
+      <label>Opmerking voor de interieurspecialist (optioneel) <input name="letop" placeholder="bv. hoort bij de set van Beary Bears"></label>
       <div class="logbtns"><button type="submit" class="btn primary">Bestelling aanmaken</button><button type="button" class="btn" id="nieuwLosWeg">Annuleren</button></div></form>`;
     const kaart=x=>{ const o=x.o, i=x.i, ch=c(o); const kan=!!S.db&&!S.readOnly&&S.canWrite!==false; const los=o.type==='los';
-      return `<div class="auto ${i.fase==='bestellen'?'let':''}" id="int-${esc(o.nummer)}"><div class="r1"><span class="merk">${esc(o.klant||'')}</span><span class="pill ${INT_CLS[i.fase]}">${esc(los?(i.fase==='klaar'?'Afgerond':'Los'):INT_FASEN[i.fase])}</span>${los?'':`<span class="hint">${esc(o.kenteken||(o.meldcode?'MC '+o.meldcode:''))}</span>`}</div>
-        <div class="r2"><span>order ${esc(o.nummer)}</span><span>${i.n}/${i.items.length} af</span>${i.last?`<span>laatste vinkje ${esc(fmt(i.last))}</span>`:'<span class="hint">nog niets afgevinkt</span>'}${o.deadline?`<span>klaar vóór <b>${esc(fmtD(o.deadline))}</b></span>`:''}</div>
+      return `<div class="auto ${i.fase==='bestellen'?'let':''}" id="int-${esc(o.nummer)}"><div class="r1"><span class="merk">${esc(o.klant||'')}</span><span class="pill ${los&&i.done&&i.fase!=='klaar'?'st-klaar':INT_CLS[i.fase]}">${esc(los?(i.fase==='klaar'?'Afgerond':(i.done?'Verstuurd · bevestig ontvangst':'Los')):INT_FASEN[i.fase])}</span>${los?'':`<span class="hint">${esc(o.kenteken||(o.meldcode?'MC '+o.meldcode:''))}</span>`}</div>
+        <div class="r2"><span>order ${esc(o.nummer)}</span><span>${i.n}/${i.items.length} af</span>${i.last?`<span>laatste vinkje ${esc(fmt(i.last))}</span>`:'<span class="hint">nog niets afgevinkt</span>'}${o.deadline?`<span>bij 1stop vóór <b>${esc(fmtD(intDeadline(o)))}</b></span>`:''}</div>
         ${o.letopInterieur?`<div class="uitv" style="color:var(--warn)">${esc(o.letopInterieur)}</div>`:''}
         <ul class="todo">${i.items.map(it=>{ const d=!!(ch[it.id]&&ch[it.id].done); return `<li class="${d?'af':''}"><label><input type="checkbox" data-intitem="${esc(it.id)}" data-order="${esc(o.nummer)}" ${d?'checked':''} ${kan?'':'disabled'}><span>${esc(it.tekst)}${d?` <span class="hint">· ${esc(ch[it.id].by||'')}</span>`:''}</span></label></li>`; }).join('')}
         ${los&&(o.stappen||[]).find(s=>s.id==='ontvangst')?(()=>{ const it=(o.stappen||[]).find(s=>s.id==='ontvangst').items[0]; const d=!!(ch[it.id]&&ch[it.id].done); return `<li class="${d?'af':''}" style="border-top:1px dashed var(--line)"><label><input type="checkbox" data-intitem="${esc(it.id)}" data-order="${esc(o.nummer)}" ${d?'checked':''} ${kan?'':'disabled'}><span><b>${esc(it.tekst)}</b> <span class="hint">(jij)</span></span></label></li>`; })():''}</ul>
@@ -545,7 +554,7 @@
     const volg=['bestellen','voorkap','bezig','los','verstuurd','ontvangen'];
     const filt=S.intFilter; const zicht=f=>!filt||(filt===f)||(filt==='bezig'&&f==='voorkap');
     for(const f of volg){ if(!zicht(f)) continue; const list=rows.filter(x=>x.i.fase===f).sort((a,b)=>(daysUntil(a.o.deadline)??9999)-(daysUntil(b.o.deadline)??9999)); if(!list.length){ if(f==='los') h+=`<h2 class="groep">${INT_FASEN[f]} <span class="hint">(0)</span></h2><div class="hint">Geen losse bestellingen open.</div>`; continue; } h+=`<h2 class="groep">${INT_FASEN[f]} <span class="hint">(${list.length})</span></h2>`+list.map(kaart).join(''); }
-    if(!filt){ const kl=rows.filter(x=>x.i.fase==='klaar'); if(kl.length) h+=`<details class="archief"><summary>Afgeronde losse bestellingen (${kl.length})</summary>${kl.map(kaart).join('')}</details>`; }
+    if(!filt){ const kl=rows.filter(x=>x.i.fase==='klaar'); if(kl.length) h+=`<details class="archief"><summary>Afgerond (${kl.length})</summary>${kl.map(kaart).join('')}</details>`; }
     if(!rows.length) h+='<div class="empty">Nog geen orders met interieurwerk.</div>';
     if(filt) h+=`<div style="margin-top:12px"><button type="button" class="btn" data-intfilter="">Alles tonen</button></div>`;
     main.innerHTML=h+'</div>';
@@ -554,7 +563,7 @@
     const fd=new FormData(form); const voor=String(fd.get('voor')||'').trim()||'Voorraad Spéciale45'; const regels=String(fd.get('items')||'').split('\n').map(x=>x.trim()).filter(Boolean); const letop=String(fd.get('letop')||'').trim();
     if(!regels.length){ toast('Typ minstens één onderdeel.'); return; }
     const nr=volgendLosNummer(); const klant=/^voorraad/i.test(voor)?voor:'Nabestelling '+voor;
-    const o={nummer:nr,type:'los',aangemaakt:new Date().toISOString().slice(0,10),klant,kenteken:'',meldcode:'',model:'',basis:'',deadline:'',opdracht:{spuitwerk:[],montage:[],interieur:regels},referentie:'',letop:'',letopInterieur:letop||'Losse onderdelen — graag in een aparte doos met dit label.',
+    const o={nummer:nr,type:'los',aangemaakt:new Date().toISOString().slice(0,10),klant,kenteken:'',meldcode:'',model:'',basis:'',deadline:String(fd.get('deadline')||''),opdracht:{spuitwerk:[],montage:[],interieur:regels},referentie:'',letop:'',letopInterieur:letop||'Losse onderdelen — graag in een aparte doos met dit label.',
       stappen:[{id:'interieur',titel:'Losse onderdelen',wie:'Interieurspecialist',foto:false,items:regels.map((t,i)=>({id:'l-'+(i+1),tekst:t})).concat([{id:'i-doos',tekst:'Verstuurd in een aparte doos met label: '+klant+' · order '+nr}])},{id:'ontvangst',titel:'Ontvangen',wie:'Spéciale45',foto:false,vereistStappen:['interieur'],items:[{id:'o-ontvangen',tekst:'Onderdelen ontvangen en gecontroleerd'}]}]};
     try{ await S.db.doc('orders/'+nr).set(o); S.nieuwLos=false; toast('Losse bestelling '+nr+' aangemaakt'); }catch(err){ fail(err); }
   }
@@ -599,7 +608,7 @@
     const alle=Object.values(S.voertuigen), q=S.zoekV.trim().toLowerCase();
     const past=v=>!q||[v.kenteken,v.meldcode,v.klant,v.model,v.uitvoering,v.opmerking,v.order,(v.todo||[]).map(t=>t.tekst).join(' ')].join(' ').toLowerCase().includes(q);
     const items=alle.map(v=>({v,o:orderVanAuto(v)})).map(x=>Object.assign(x,{f:faseVan(x.v,x.o)}));
-    const losseOrders=S.orders.filter(o=>!autoVanOrder(o));
+    const losseOrders=S.orders.filter(o=>o.type!=='los'&&!autoVanOrder(o));
     const tel=f=>items.filter(x=>x.f===f).length;
     const tiles=[['koppelen',losseOrders.length],['verkocht',tel('verkocht')],['ingepland',tel('ingepland')],['klaar',tel('klaar')],['nazorg',tel('nazorg')],['voorraad',tel('voorraad')]];
     let h=tabsHtml();
@@ -657,11 +666,11 @@
   }
   function renderOrder(main){
     const o=S.order, steps=mySteps(o), p=progress(steps,S.checks);
-    const du=daysUntil(o.deadline);
+    const dlO=mijnDeadline(o), du=daysUntil(dlO);
     const bezig=ROLES.map(w=>curVoor(o,S.checks,S.photos,w)).filter(Boolean), nuIds=new Set(bezig.filter(b=>!b.locked).map(b=>b.id));
     if(isS45()&&p.cur>=0){ const l=bezig.filter(b=>!b.locked).map(b=>b.titel); if(l.length) p.label=l.join(' + '); }
     const nn=isInt()?'':tagVan(o.kenteken,o.meldcode);
-    setTop(isInt()?o.klant:autoLabel(o), `<a class="back" href="#" id="back">← Alle orders</a>${nn?`<span class="tagnr" title="Stickernummer op de auto">${esc(nn)}</span>`:''}${isInt()?`<span>order ${esc(o.nummer)}</span>`:`<span>${esc(o.model||'')}</span><span>meldcode ${esc(o.meldcode||'—')}</span>`}${o.deadline?`<span><b>klaar vóór ${esc(fmtD(o.deadline))}</b></span>`:''}`, p);
+    setTop(isInt()?o.klant:autoLabel(o), `<a class="back" href="#" id="back">← Alle orders</a>${nn?`<span class="tagnr" title="Stickernummer op de auto">${esc(nn)}</span>`:''}${isInt()?`<span>order ${esc(o.nummer)}</span>`:(o.type==='los'?`<span>losse interieurbestelling · order ${esc(o.nummer)}</span>`:`<span>${esc(o.model||'')}</span><span>meldcode ${esc(o.meldcode||'—')}</span>`)}${dlO?`<span><b>${deadlineLabel()} ${esc(fmtD(dlO))}</b></span>`:''}`, p);
     const canTick=!!S.db&&!S.readOnly&&S.canWrite!==false, canPhoto=canTick;
     const specKeys = isS45() ? ['spuitwerk','montage','interieur'] : (S.role==='1stop'?['spuitwerk','montage']:['interieur']);
     const spec=(o.opdracht||{});
@@ -680,7 +689,7 @@
         </div></div>`; } }
     h+=`<section class="card"><div class="hd"><h2>${isS45()?'Opdracht':(isInt()?'Deze bestelling':'Deze auto')}</h2><span class="hint">${isInt()?'order '+esc(o.nummer):esc(o.klant)+' · order '+esc(o.nummer)}</span></div><div class="bd">
       <div class="big ${isInt()?'naam':''}">${isInt()?esc(o.klant):esc(autoLabel(o))}</div>
-      <div class="meta-row">${isInt()?`<span>order ${esc(o.nummer)}</span>`:`<span>${esc(o.model||'')}</span><span>basis ${esc(o.basis||'')}</span>`}${o.deadline?`<span><b>klaar vóór ${esc(fmtD(o.deadline))}</b>${du!==null?' ('+(du<0?'te laat':du+' dagen')+')':''}</span>`:''}</div>
+      <div class="meta-row">${isInt()?`<span>order ${esc(o.nummer)}</span>`:(o.type==='los'?`<span>losse interieurbestelling</span>`:`<span>${esc(o.model||'')}</span>${o.basis?`<span>basis ${esc(o.basis)}</span>`:''}`)}${dlO?`<span><b>${deadlineLabel()} ${esc(fmtD(dlO))}</b>${du!==null?' ('+(du<0?'te laat':du+' dagen')+')':''}</span>`:''}</div>
       ${isS45()?`<ul class="lines">${specKeys.filter(k=>spec[k]&&spec[k].length).map(k=>`<li><b>${k==='spuitwerk'?'Spuitwerk':(k==='montage'?'Montage':'Interieur')}</b>${spec[k].map(esc).join('<br>')}</li>`).join('')}</ul>`:''}
       ${o.referentie&&specKeys.includes('spuitwerk')?`<div class="ref">${esc(o.referentie)}</div>`:''}
       ${o.letop&&!isInt()?`<span class="req">${esc(o.letop)}</span>`:''}${o.letopInterieur&&(isInt()||isS45())?`<span class="req">${esc(o.letopInterieur)}</span>`:''}
