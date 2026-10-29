@@ -328,6 +328,8 @@
     const states=steps.map(st=>stepDone(st,checks));
     return {states, cur:states.findIndex(x=>!x), done:states.filter(Boolean).length, total:steps.length, steps};
   }
+  const FOTO_LABELS={spuitwerk:'Snelle foto spuitwerk',montage:'Snelle interieurfoto',afleveren:'Afleverfoto voor insta',interieur:'Snelle foto van de set'};
+  const fotoLabel=st=>st.fotoLabel||FOTO_LABELS[st.id]||'Foto maken';
   function fotosOk(o,st,photos){ const need=st.vereistFotoVan||[]; return need.every(id=>photos.some(f=>f.stap===id)); }
   function stappenOk(o,st,checks){ const need=st.vereistStappen||[]; return need.every(id=>{ const x=(o.stappen||[]).find(y=>y.id===id); return x&&stepDone(x,checks); }); }
   const WIJZ_VOOR=['1stop','Interieurspecialist'];
@@ -628,8 +630,8 @@
           const vraag=d&&S.tel[it.id]&&(it.telt||[]).length?`<div class="telvraag"><b>Even tellen: hoeveel liggen er nu nog?</b>${(it.telt||[]).map(pid=>{ const v=S.voorraad[pid]||{}; const n=(typeof v.aantal==='number')?Math.max(0,v.aantal-1):''; return `<div class="rij"><span>${esc(partNaam(pid))}</span><input type="number" inputmode="numeric" min="0" data-telvraag="${esc(pid)}" value="${n}" placeholder="?" style="width:72px;height:40px;text-align:center;font:inherit;font-size:18px;font-weight:700;border:1px solid var(--line-strong);border-radius:8px;background:var(--paper);color:var(--ink)"></div>`; }).join('')}<div class="acties"><button type="button" class="btn primary" data-telsave="${esc(it.id)}">Opslaan</button><button type="button" class="later" data-tellater="${esc(it.id)}">Later</button></div></div>`:'';
           return `<li class="${d?'done':''}"><label class="${ok?'':'ro'} ${locked&&!d?'locked':''}"><input type="checkbox" id="chk-${esc(it.id)}" data-item="${esc(it.id)}" ${d?'checked':''} ${ok?'':'disabled'}><span><span class="t">${esc(it.tekst)}</span>${d?`<span class="meta">${esc(c.by||'')} · ${esc(fmt(c.at))}</span>`:''}</span></label>${vraag}</li>`; }).join('')}</ul>
         ${st.foto?`<div class="photos">${photos.map(f=>`<div class="ph"><img src="${esc(f.data||f.url||'')}" alt="Foto" loading="lazy"><span>${esc(f.by||'')} · ${esc(fmt(f.at))}</span></div>`).join('')}
-          ${canPhoto?`<label class="btn photo" for="foto-${esc(st.id)}">📷 Foto maken<input type="file" id="foto-${esc(st.id)}" data-step="${esc(st.id)}" accept="image/*" capture="environment" hidden></label>`:''}
-          ${!photos.length?`<span class="hint">Minimaal één foto als dit klaar is.</span>`:''}</div>`:''}
+          ${canPhoto&&!locked?`<label class="btn photo" for="foto-${esc(st.id)}">📷 ${esc(photos.length?'Nog een foto':fotoLabel(st))}<input type="file" id="foto-${esc(st.id)}" data-step="${esc(st.id)}" accept="image/*" capture="environment" hidden></label>`:''}
+          ${!photos.length?`<span class="hint">${locked?'Foto kan zodra deze stap open is.':'Eén foto is genoeg.'}</span>`:''}</div>`:''}
       </div></section>`;
     });
     h+=`<section class="card log"><div class="hd"><h2>Opmerkingen en problemen</h2><span class="hint">Alles wat afwijkt, staat hier</span></div>
