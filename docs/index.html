@@ -47,14 +47,13 @@
   *{box-sizing:border-box}
   input,select,textarea{font-size:16px}
   html{-webkit-text-size-adjust:100%}
-  body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:16px;line-height:1.45;-webkit-font-smoothing:antialiased}
-  body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--top)}
-  .wrap{max-width:720px;margin:0 auto;padding-block:0 56px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:16px;line-height:1.45;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:720px;margin:0 auto;padding-block:0 calc(56px + env(safe-area-inset-bottom,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
   a{color:inherit}
   button{font:inherit;cursor:pointer}
   button:focus-visible,input:focus-visible,textarea:focus-visible,label:focus-within{outline:2px solid var(--accent);outline-offset:2px}
 
-  .top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--top);color:var(--top-ink);margin:0 calc(-1 * max(16px,env(safe-area-inset-left,0px))) 0 calc(-1 * max(16px,env(safe-area-inset-right,0px)));padding-block:12px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+  .top{position:sticky;top:0;z-index:5;background:var(--top);color:var(--top-ink);margin:0 calc(-1 * max(16px,env(safe-area-inset-left,0px))) 0 calc(-1 * max(16px,env(safe-area-inset-right,0px)));padding-top:calc(12px + env(safe-area-inset-top,0px));padding-bottom:12px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
   .top-inner{max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:6px}
   .top-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
   .brand{display:inline-flex;align-items:center;text-decoration:none;height:30px} .brand img{height:26px;width:auto;display:block}
