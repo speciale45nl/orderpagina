@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#4a352b">
+<meta name="theme-color" content="#111111">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Orders S45">
@@ -20,7 +20,7 @@
   /* Layout: wie-ben-je als eerste scherm, daarna één kolom: kop met voortgang, opdracht, de eigen stappen, opmerkingen. */
   :root{
     --bg:#f4eee3; --paper:#fffdf9; --ink:#2b221b; --muted:#7a6c5d; --line:#e0d4c2; --line-strong:#c9b89f;
-    --accent:#4a352b; --accent-ink:#fff8ee; --accent-soft:#eadfcf;
+    --accent:#141414; --accent-ink:#ffffff; --accent-soft:#e9e2d6; --top:#111111; --top-ink:#ffffff;
     --ok:#2e7437; --ok-bg:#e2efdf; --warn:#a85e18; --warn-bg:#fae8d3; --bad:#a9322a; --bad-bg:#f8e1dd;
     --shadow:0 1px 2px rgba(43,34,27,.06),0 6px 18px rgba(43,34,27,.07);
     --prog-track:rgba(255,255,255,.22); --prog-done:#9ed59c; --prog-cur:#f3c97a;
@@ -29,35 +29,35 @@
   @media (prefers-color-scheme:dark){
     :root:not([data-theme="light"]){
       --bg:#1b1612; --paper:#241e18; --ink:#f0e8db; --muted:#a89a89; --line:#3a3027; --line-strong:#56483b;
-      --accent:#dcbf98; --accent-ink:#1b1612; --accent-soft:#3a3027;
+      --accent:#f0e8db; --accent-ink:#141414; --accent-soft:#3a3027; --top:#0c0c0c; --top-ink:#ffffff;
       --ok:#8fd297; --ok-bg:#1e3322; --warn:#f0b273; --warn-bg:#3d2a15; --bad:#f29a90; --bad-bg:#3f1f1b;
       --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 18px rgba(0,0,0,.35);
-      --prog-track:rgba(0,0,0,.22); --prog-done:#5fae6b; --prog-cur:#d9a24a;
+      --prog-track:rgba(255,255,255,.2); --prog-done:#5fae6b; --prog-cur:#d9a24a;
       color-scheme:dark;
     }
   }
   :root[data-theme="dark"]{
     --bg:#1b1612; --paper:#241e18; --ink:#f0e8db; --muted:#a89a89; --line:#3a3027; --line-strong:#56483b;
-    --accent:#dcbf98; --accent-ink:#1b1612; --accent-soft:#3a3027;
+    --accent:#f0e8db; --accent-ink:#141414; --accent-soft:#3a3027; --top:#0c0c0c; --top-ink:#ffffff;
     --ok:#8fd297; --ok-bg:#1e3322; --warn:#f0b273; --warn-bg:#3d2a15; --bad:#f29a90; --bad-bg:#3f1f1b;
     --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 18px rgba(0,0,0,.35);
-    --prog-track:rgba(0,0,0,.22); --prog-done:#5fae6b; --prog-cur:#d9a24a;
+    --prog-track:rgba(255,255,255,.2); --prog-done:#5fae6b; --prog-cur:#d9a24a;
     color-scheme:dark;
   }
   *{box-sizing:border-box}
   input,select,textarea{font-size:16px}
   html{-webkit-text-size-adjust:100%}
   body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:16px;line-height:1.45;-webkit-font-smoothing:antialiased}
-  body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--accent)}
+  body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--top)}
   .wrap{max-width:720px;margin:0 auto;padding-block:0 56px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
   a{color:inherit}
   button{font:inherit;cursor:pointer}
   button:focus-visible,input:focus-visible,textarea:focus-visible,label:focus-within{outline:2px solid var(--accent);outline-offset:2px}
 
-  .top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--accent);color:var(--accent-ink);margin:0 calc(-1 * max(16px,env(safe-area-inset-left,0px))) 0 calc(-1 * max(16px,env(safe-area-inset-right,0px)));padding-block:12px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+  .top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--top);color:var(--top-ink);margin:0 calc(-1 * max(16px,env(safe-area-inset-left,0px))) 0 calc(-1 * max(16px,env(safe-area-inset-right,0px)));padding-block:12px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
   .top-inner{max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:6px}
   .top-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
-  .brand{font-family:Georgia,"Times New Roman",serif;font-size:15px;opacity:.85;text-decoration:none}
+  .brand{display:inline-flex;align-items:center;text-decoration:none;height:30px} .brand img{height:26px;width:auto;display:block}
   .rol{font-size:13px;opacity:.85;border:1px solid rgba(255,255,255,.35);border-radius:999px;padding:4px 12px}
   .top h1{margin:0;font-size:22px;line-height:1.2;font-weight:700;text-wrap:balance}
   .top .sub{font-size:14px;opacity:.9;display:flex;gap:12px;flex-wrap:wrap}
@@ -70,7 +70,7 @@
 
   .banner{margin:14px 0 0;padding:10px 14px;border-radius:10px;font-size:14px;background:var(--warn-bg)}
 
-  .back{display:inline-flex;align-items:center;gap:6px;text-decoration:none;font-size:15px;font-weight:700;min-height:40px;padding:6px 16px 6px 12px;border-radius:12px;background:var(--accent-ink);color:var(--accent);box-shadow:0 1px 2px rgba(0,0,0,.15)}
+  .back{display:inline-flex;align-items:center;gap:6px;text-decoration:none;font-size:15px;font-weight:700;min-height:40px;padding:6px 16px 6px 12px;border-radius:12px;background:var(--top-ink);color:var(--top);box-shadow:0 1px 2px rgba(0,0,0,.25)}
   .back[hidden],.brand[hidden],.top .sub[hidden]{display:none}
   .toegang table{width:100%;border-collapse:collapse;font-size:14.5px}
   .toegang td{padding:9px 16px;border-top:1px solid var(--line);vertical-align:middle}
@@ -103,11 +103,13 @@
   .step .teller{font-size:12.5px;color:var(--muted);margin-right:6px}
   .nudoen[data-scroll]{cursor:pointer}
   .tagnr{display:inline-grid;place-items:center;min-width:44px;height:36px;padding:0 8px;border-radius:9px;background:var(--ink);color:var(--bg);font-weight:800;font-size:19px;letter-spacing:.02em;margin-right:10px;vertical-align:middle}
-  .top .tagnr{background:var(--accent-ink);color:var(--accent);height:30px;min-width:38px;font-size:17px}
+  .top .tagnr{background:var(--top-ink);color:var(--top);height:30px;min-width:38px;font-size:17px}
   .snel{display:flex;gap:8px;align-items:center;margin-top:16px;padding:12px 16px;background:var(--paper);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow)}
   .snel label{font-weight:700;font-size:15px;flex:1;min-width:120px}
   .snel input{width:92px;height:46px;text-align:center;font:inherit;font-size:22px;font-weight:800;border:1px solid var(--line-strong);border-radius:10px;background:var(--paper);color:var(--ink)}
   .koppel select{width:100%;font:inherit;font-size:16px;padding:12px;border:1px solid var(--line-strong);border-radius:10px;background:var(--paper);color:var(--ink);margin:10px 0}
+  .logo-login{text-align:center;margin-top:28px} .logo-login img{height:54px;width:auto}
+  @media (prefers-color-scheme:dark){ :root:not([data-theme="light"]) .logo-login img{content:url("logo-wit.png")} } :root[data-theme="dark"] .logo-login img{content:url("logo-wit.png")}
   .login .rollen{display:grid;gap:10px;margin:4px 0 14px}
   .login .rollen button{min-height:56px;font:inherit;font-size:17px;font-weight:700;border:2px solid var(--line-strong);border-radius:12px;background:var(--paper);color:var(--ink);cursor:pointer}
   .login .rollen button.aan{border-color:var(--accent);background:var(--accent-soft)}
@@ -278,7 +280,7 @@
 <div class="wrap">
   <header class="top" id="top">
     <div class="top-inner" id="topInner">
-      <div class="top-row"><a class="brand" href="#" id="home">Spéciale45</a><a class="back" href="#" id="back" hidden>‹ Alle orders</a><button type="button" id="rolTag" class="rol" hidden title="Twee keer tikken om uit te loggen"></button></div>
+      <div class="top-row"><a class="brand" href="#" id="home" aria-label="Spéciale45"><img src="logo-wit.png" alt="Spéciale45"></a><a class="back" href="#" id="back" hidden>‹ Alle orders</a><button type="button" id="rolTag" class="rol" hidden title="Twee keer tikken om uit te loggen"></button></div>
       <h1 id="title">Orders</h1>
       <div class="sub" id="subtitle"></div>
     </div>
@@ -388,7 +390,7 @@
   }
   function renderLogin(main){
     setTop('Orderpagina','Spéciale45 · werkplaats',null);
-    main.innerHTML=`<section class="card login"><div class="hd"><h2>Wie ben je?</h2></div><div class="bd">
+    main.innerHTML=`<div class="logo-login"><img src="logo-zwart.png" alt="Spéciale45"></div><section class="card login"><div class="hd"><h2>Wie ben je?</h2></div><div class="bd">
       <div class="rollen">${ROLES.map(r=>`<button type="button" data-rol="${esc(r)}" class="${S.loginRol===r?'aan':''}">${esc(r)}</button>`).join('')}</div>
       <label for="pin"><b>Pincode</b> <span class="hint">(4 cijfers)</span></label>
       <div class="pin"><input id="pin" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="one-time-code" aria-label="Pincode"><button type="button" class="btn primary" id="loginBtn">Inloggen</button></div>
