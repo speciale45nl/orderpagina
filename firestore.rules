@@ -34,6 +34,8 @@ service cloud.firestore {
       allow update, delete: if beheer();
     }
     match /voorraad/{id} { allow read, write: if ingelogd(); }
+    // Voorraadlijst (kopie van het voorraadbestand, met klant- en betaalinfo): alleen Spéciale45
+    match /lijsten/{id} { allow read, write: if beheer(); }
     match /{document=**} { allow read, write: if false; }
   }
 }
