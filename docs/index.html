@@ -467,7 +467,7 @@
     const r=S.route, back='<a class="back" href="#" id="back">← Alle orders</a>';
     if(r.tag&&S.tagDoc===undefined){ setTop('Sticker '+r.tag,back,null); main.innerHTML='<div class="empty">Even kijken welke auto dit is…</div>'; return; }
     if(r.tag&&!S.tagDoc){ // nieuwe sticker: koppelen aan een auto
-      const vrij=Object.values(S.voertuigen).filter(v=>!v.tag).sort((a,b)=>String(a.kenteken).localeCompare(String(b.kenteken)));
+      const vrij=Object.values(S.voertuigen).filter(v=>!v.tag&&v.soort!=='jvk'&&v.fase!=='archief').sort((a,b)=>String(a.kenteken).localeCompare(String(b.kenteken)));
       setTop('Sticker '+r.tag,back,null);
       if(isInt()){ main.innerHTML='<div class="empty">Deze sticker is nog niet aan een auto gekoppeld. Dat doet 1stop of Spéciale45.</div>'; return; }
       main.innerHTML=`<section class="card koppel"><div class="hd"><h2>Nieuwe sticker — welke auto is dit?</h2></div><div class="bd">
@@ -483,7 +483,7 @@
     const titel=v?(v.kenteken||('Meldcode '+v.meldcode)):key;
     setTop(titel, back+(r.tag?`<span class="tagnr">${esc(r.tag)}</span>`:'')+(v?`<span>${esc(v.model||'')}</span><span>meldcode ${esc(v.meldcode||'—')}</span>`:''), null);
     if(!S.ordersGeladen){ main.innerHTML='<div class="empty">Opdracht wordt gezocht…</div>'; return; }
-    main.innerHTML=`<div class="empty"><b>${esc(titel)}</b>${v&&v.model?' · '+esc(v.model):''}<br>${v?'Voorraadauto — nog geen opdracht.':(r.meldcode?'Geen auto met meldcode '+esc(r.meldcode)+' gevonden. Controleer de 4 cijfers (sticker in de deurstijl).':'Deze auto staat nog niet in het systeem.')}<br><span class="hint">Zodra Spéciale45 deze auto aan een klant koppelt, verschijnt de opdracht hier op dezelfde sticker.</span>${isS45()&&v&&v.klant?`<br><span class="hint">Voorraadbestand: ${esc(v.klant)}</span>`:''}</div>`;
+    main.innerHTML=`<div class="empty"><b>${esc(titel)}</b>${v&&v.model?' · '+esc(v.model):''}<br>${v?'Voorraadauto — nog geen opdracht.':(r.meldcode?'Geen auto met meldcode '+esc(r.meldcode)+' gevonden. Controleer de 4 cijfers (sticker in de deurstijl).':'Deze auto staat nog niet in het systeem.')}<br><span class="hint">${v&&v.soort==='jvk'?'JVK-auto: krijgt geen sticker, altijd opzoeken op meldcode.':'Zodra Spéciale45 deze auto aan een klant koppelt, verschijnt de opdracht hier op dezelfde sticker.'}</span>${isS45()&&v&&v.klant?`<br><span class="hint">Voorraadbestand: ${esc(v.klant)}</span>`:''}</div>`;
   }
   function koppelZoek(){ // meldcode → auto
     const mc=($('koppelMc')&&$('koppelMc').value||'').replace(/\D/g,''); const out=$('koppelMatch'), sel=$('koppelSel'); if(!out) return null;
