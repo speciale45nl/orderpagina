@@ -426,7 +426,7 @@
     let list=S.orders.filter(o=>mySteps(o).length&&!(isS45()&&o.type==='los')).map(o=>Object.assign({_st:statusVan(o)},o));
     list.sort((a,b)=>(b._st.open-a._st.open)||((b._st.controle?1:0)-(a._st.controle?1:0))||((daysUntil(a.deadline)??9999)-(daysUntil(b.deadline)??9999)));
     let h = isS45()?tabsHtml():'';
-    h += isInt()?'':`<form class="snel" id="snelForm"><label for="snelTag">Stickernummer of meldcode <span class="hint" style="font-weight:500">(sticker: 2 cijfers · meldcode: 4 cijfers)</span></label><input id="snelTag" inputmode="numeric" placeholder="07" aria-label="Stickernummer, meldcode of kenteken"><button type="submit" class="btn primary">Open</button></form>`;
+    h += isInt()?'':`<form class="snel" id="snelForm"><label for="snelTag">Meldcode van de auto <span class="hint" style="font-weight:500">(4 cijfers, sticker in de deurstijl)</span></label><input id="snelTag" inputmode="numeric" placeholder="0240" aria-label="Meldcode, kenteken of stickernummer"><button type="submit" class="btn primary">Open</button></form>`;
     const li=o=>{ const st=mySteps(o), p=progress(st,o._checks||{}), x=o._st, dl=mijnDeadline(o), du=daysUntil(dl);
       const pills=[];
       if(x.open) pills.push(`<span class="pill bad">⚠ ${x.open} probleem${x.open>1?'en':''}</span>`);
@@ -485,7 +485,7 @@
     const titel=v?(v.kenteken||('Meldcode '+v.meldcode)):key;
     setTop(titel, back+(r.tag?`<span class="tagnr">${esc(r.tag)}</span>`:'')+(v?`<span>${esc(v.model||'')}</span><span>meldcode ${esc(v.meldcode||'—')}</span>`:''), null);
     if(!S.ordersGeladen){ main.innerHTML='<div class="empty">Opdracht wordt gezocht…</div>'; return; }
-    main.innerHTML=`<div class="empty"><b>${esc(titel)}</b>${v&&v.model?' · '+esc(v.model):''}<br>${v?'Voorraadauto — nog geen opdracht.':(r.meldcode?'Geen auto met meldcode '+esc(r.meldcode)+' gevonden. Controleer de 4 cijfers (sticker in de deurstijl).':'Deze auto staat nog niet in het systeem.')}<br><span class="hint">${v&&v.soort==='jvk'?'JVK-auto: krijgt geen sticker, altijd opzoeken op meldcode.':'Zodra Spéciale45 deze auto aan een klant koppelt, verschijnt de opdracht hier op dezelfde sticker.'}</span>${isS45()&&v&&v.klant?`<br><span class="hint">Voorraadbestand: ${esc(v.klant)}</span>`:''}</div>`;
+    main.innerHTML=`<div class="empty"><b>${esc(titel)}</b>${v&&v.model?' · '+esc(v.model):''}<br>${v?'Voorraadauto — nog geen opdracht.':(r.meldcode?'Geen auto met meldcode '+esc(r.meldcode)+' gevonden. Controleer de 4 cijfers (sticker in de deurstijl).':'Deze auto staat nog niet in het systeem.')}<br><span class="hint">${v&&v.soort==='jvk'?'JVK-auto: krijgt geen sticker, altijd opzoeken op meldcode.':'Zodra Spéciale45 deze auto aan een klant koppelt, staat de opdracht hier.'}</span>${isS45()&&v&&v.klant?`<br><span class="hint">Voorraadbestand: ${esc(v.klant)}</span>`:''}</div>`;
   }
   function koppelZoek(){ // meldcode → auto
     const mc=($('koppelMc')&&$('koppelMc').value||'').replace(/\D/g,''); const out=$('koppelMatch'), sel=$('koppelSel'); if(!out) return null;
@@ -784,7 +784,7 @@
   });
   document.addEventListener('input',e=>{ if(e.target.id==='koppelMc') koppelZoek(); if(e.target.id==='zoekV'){ S.zoekV=e.target.value; clearTimeout(S._zt); S._zt=setTimeout(()=>{ const el=$('zoekV'); const pos=el?el.selectionStart:0; render(); const n=$('zoekV'); if(n){ n.focus(); try{ n.setSelectionRange(pos,pos); }catch(err){} } },250); } });
   document.addEventListener('submit',async e=>{
-    if(e.target.id==='snelForm'){ e.preventDefault(); const raw=($('snelTag').value||'').trim(); const d=raw.replace(/\D/g,''); if(!raw){ toast('Typ het stickernummer of de meldcode.'); return; }
+    if(e.target.id==='snelForm'){ e.preventDefault(); const raw=($('snelTag').value||'').trim(); const d=raw.replace(/\D/g,''); if(!raw){ toast('Typ de meldcode van de auto (4 cijfers).'); return; }
       if(/[A-Za-z]/.test(raw)){ location.hash='#'+kKey(raw); return; } if(d.length<=3){ location.hash='#t'+d.padStart(2,'0'); return; } if(d.length===4){ location.hash='#'+d; return; } location.hash='#'+d; return; }
     if(e.target.id==='nieuwAutoForm'){ e.preventDefault(); await nieuweAuto(e.target); return; }
     if(e.target.id==='nieuwLosForm'){ e.preventDefault(); await nieuweLosseBestelling(e.target); return; }
