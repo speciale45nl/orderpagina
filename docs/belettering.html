@@ -113,6 +113,8 @@
   .crow .pc{margin-left:auto;color:var(--muted);font-size:12.5px;white-space:nowrap}
   .crow input[type=text]{flex:1;min-width:0;min-height:30px;border:1px solid var(--line);border-radius:7px;padding:3px 8px;font-size:13.5px;background:var(--paper)}
   .crow button{border:1px solid var(--line-strong);background:transparent;border-radius:7px;font-size:12px;padding:3px 8px;min-height:30px;white-space:nowrap}
+  .crow input.sqc{width:24px;height:24px;border:1px solid rgba(0,0,0,.25);border-radius:6px;padding:0;background:none;flex:none;cursor:pointer;min-height:0}
+  .crow input.sqc::-webkit-color-swatch-wrapper{padding:0} .crow input.sqc::-webkit-color-swatch{border:none;border-radius:5px} .crow input.sqc::-moz-color-swatch{border:none;border-radius:5px}
   .crow.off{opacity:.45} .crow.off .sq{background-image:linear-gradient(45deg,transparent 45%,#a9322a 45%,#a9322a 55%,transparent 55%)}
 
   .stagecard .hd{flex-wrap:wrap;row-gap:8px}
@@ -614,7 +616,7 @@ async function normalizeSvg(text, opts = {}){
     let pad = 0;
     g.querySelectorAll('[stroke]').forEach(el => { if (el.getAttribute('stroke') !== 'none'){ const sw = parseFloat(el.getAttribute('stroke-width') || '1'); if (sw / 2 > pad) pad = sw / 2; } });
     pad = Math.min(pad, Math.max(bb.width, bb.height) * 0.05);
-    const vb = [bb.x - pad, bb.y - pad, bb.width + 2 * pad, bb.height + 2 * pad].map(x => +x.toFixed(3));
+    const vb = (opts.vb || [bb.x - pad, bb.y - pad, bb.width + 2 * pad, bb.height + 2 * pad]).map(x => +(+x).toFixed(3));
     live.removeAttribute('width'); live.removeAttribute('height');
     live.setAttribute('viewBox', vb.join(' ')); live.setAttribute('preserveAspectRatio', 'xMidYMid meet');
     // vlaggen
@@ -743,7 +745,7 @@ async function openTrace(L, it){
   const im = await loadImg(await traceSource(L));
   const sw = im.naturalWidth, sh = im.naturalHeight, long = Math.max(sw, sh);
   let f = 1; if (long < 1400) f = Math.min(6, 1400 / long); else if (long > 2000) f = 2000 / long;
-  if (sw * sh * f * f > 2.6e6) f = Math.sqrt(2.6e6 / (sw * sh));
+  if (sw * sh * f * f > 1.15e6) f = Math.sqrt(1.15e6 / (sw * sh)); // de vectoriseer-module kan maximaal ±1,3 miljoen pixels per keer aan
   const w = Math.max(1, Math.round(sw * f)), ht = Math.max(1, Math.round(sh * f)), c = canvas(w, ht), g = c.getContext('2d');
   g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'high'; g.drawImage(im, 0, 0, w, ht);
   const d = g.getImageData(0, 0, w, ht).data;
@@ -1411,8 +1413,70 @@ async function dropColor(hex){
   try { const n = await normalizeSvg(new XMLSerializer().serializeToString(doc.documentElement)); setItemL(it, {...L, ...n, svgOrig:orig}); }
   catch (e) { toast('Dan blijft er niets over van het logo'); }
 }
-async function restoreColors(){ const it = cur(), L = it && it.L; if (!L || !L.svgOrig) return; const n = await normalizeSvg(L.svgOrig); n.flags.bgRemoved = L.flags.bgRemoved; const nl = {...L, ...n}; delete nl.svgOrig; setItemL(it, nl); }
-async function restoreBg(){ const it = cur(), L = it && it.L; if (!L || !L.srcText) return; const n = await normalizeSvg(L.srcText, {dropBg:false}); const nl = {...L, ...n}; delete nl.svgOrig; setItemL(it, nl); }
+async function restoreColors(){ const it = cur(), L = it && it.L; if (!L || !L.svgOrig) return; const n = await normalizeSvg(L.svgOrig, {vb:svgVB(L.svgOrig)}); n.flags.bgRemoved = L.flags.bgRemoved; const nl = {...L, ...n}; delete nl.svgOrig;
+  if (L.foilOrig) it.foil = {...L.foilOrig}; delete nl.foilOrig; setItemL(it, nl); }
+const svgVB = svg => { const m = /viewBox="([^"]+)"/.exec(svg); const a = m ? m[1].trim().split(/[\s,]+/).map(Number) : null; return a && a.length === 4 && a.every(isFinite) ? a : undefined; };
+// Kleuren van een SVG-logo vervangen. map = {oudeHex: nieuweHex} of {'*': hex} voor het hele logo in één kleur.
+function recolorSvg(svg, map){
+  const doc = new DOMParser().parseFromString(svg, 'image/svg+xml');
+  const conv = v => { const c = parseColor(v); if (!c || c[3] === 0) return v; const hx = toHex(c[0], c[1], c[2]); return map['*'] || map[hx] || v; };
+  for (const el of doc.querySelectorAll('*')){
+    for (const a of ['fill', 'stroke', 'stop-color']){ const v = el.getAttribute(a); if (v && v !== 'none' && !v.startsWith('url(')) el.setAttribute(a, conv(v)); }
+    const st = el.getAttribute('style'); if (st) el.setAttribute('style', st.replace(/(stop-color|fill|stroke)\s*:\s*([^;]+)/g, (m, k, v) => k + ':' + conv(v.trim())));
+  }
+  return new XMLSerializer().serializeToString(doc.documentElement);
+}
+async function recolor(it, map){
+  const L = it.L; if (!L || L.kind !== 'svg') return;
+  try {
+    const n = await normalizeSvg(recolorSvg(L.svg, map), {vb:svgVB(L.svg)}); n.flags.bgRemoved = L.flags.bgRemoved;
+    // foliekleuren meenemen naar de nieuwe kleur; de oorspronkelijke bewaren voor "terugzetten"
+    const foilOrig = L.foilOrig || {...it.foil}, foil = {};
+    for (const [k, v] of Object.entries(it.foil)){ const nk = map['*'] || map[k] || k; if (!(nk in foil)) foil[nk] = v; }
+    it.foil = foil;
+    setItemL(it, {...L, ...n, svgOrig:L.svgOrig || L.svg, foilOrig});
+  } catch (e) { console.error(e); toast('Kleur aanpassen mislukt'); }
+}
+// PDF-logo bewerkbaar maken: precies omzetten naar SVG (alleen vormen), anders overtrekken.
+async function pdfToSvgText(L){
+  const pdfjs = await getPdfjs(), page = await pdfPage(L), vp = page.getViewport({scale:1});
+  const g = new pdfjs.SVGGraphics(page.commonObjs, page.objs); g.embedFonts = false;
+  let t = new XMLSerializer().serializeToString(await g.getSVG(await page.getOperatorList(), vp));
+  t = t.replace(/<(\/?)svg:/g, '<$1').replace(/\sxmlns:svg="[^"]*"/g, '');
+  if (!/^<svg[^>]*\sxmlns=/.test(t)) t = t.replace(/^<svg/, `<svg xmlns="${NS}"`);
+  const c = L.pdf.crop, [x0, y0] = vp.convertToViewportPoint(c.left, c.top), [x1, y1] = vp.convertToViewportPoint(c.right, c.bottom);
+  return {svg:t, vb:[Math.min(x0, x1), Math.min(y0, y1), Math.abs(x1 - x0), Math.abs(y1 - y0)]};
+}
+async function sameShape(L, svg){
+  const pw = 400, ph = Math.max(1, Math.round(400 / L.aspect));
+  const a = (await logoCanvas(L, pw, ph, 0)).getContext('2d').getImageData(0, 0, pw, ph).data;
+  const im = await loadImg(svgDataURL(svgSized(svg, pw, ph))), c = canvas(pw, ph), g = c.getContext('2d'); g.drawImage(im, 0, 0, pw, ph);
+  const b = g.getImageData(0, 0, pw, ph).data; let inter = 0, uni = 0;
+  for (let i = 0; i < pw * ph; i++){ const A = a[i * 4 + 3] > 128, B = b[i * 4 + 3] > 128; if (A || B) uni++; if (A && B) inter++; }
+  return uni > 0 && inter / uni > 0.95;
+}
+async function makeEditable(it){
+  const L = it.L; if (!L || L.kind !== 'pdf') return;
+  const btn = $('#b-editable'); if (btn){ btn.disabled = true; btn.textContent = 'Bezig…'; }
+  try {
+    if (!L.flags.text){
+      const r = await pdfToSvgText(L), full = await normalizeSvg(r.svg, {vb:r.vb});
+      if (Math.abs(full.aspect - L.aspect) / L.aspect < 0.03 && await sameShape(L, full.svg)){
+        const n = await normalizeSvg(r.svg, {dropBg:true, vb:r.vb}), nl = {kind:'svg', name:L.name, ...n, origin:'pdf'};
+        if (n.flags.bgRemoved){ nl.srcText = r.svg; nl.srcVb = r.vb; }
+        setItemL(it, nl); toast('Omgezet naar SVG: je kunt de kleuren nu aanpassen'); return;
+      }
+    }
+  } catch (e) { console.warn('pdf naar svg', e); }
+  try {
+    const long = 2000, pw = L.aspect >= 1 ? long : Math.round(long * L.aspect), ph = L.aspect >= 1 ? Math.round(long / L.aspect) : long;
+    const url = (await logoCanvas(L, pw, ph, 8)).toDataURL('image/png');
+    toast(L.flags.text ? 'Deze PDF bevat tekst: de tool trekt het logo over' : 'Precies omzetten lukte niet: de tool trekt het logo over');
+    openTrace({kind:'raster', name:L.name, raster:{url, w:pw, h:ph, src:url}}, it);
+  } catch (e) { console.error(e); toast('Omzetten mislukt: ' + (e.message || e)); }
+  finally { if (btn && btn.isConnected){ btn.disabled = false; btn.textContent = 'Kleuren aanpassen'; } }
+}
+async function restoreBg(){ const it = cur(), L = it && it.L; if (!L || !L.srcText) return; const n = await normalizeSvg(L.srcText, {dropBg:false, vb:L.srcVb}); const nl = {...L, ...n}; delete nl.svgOrig; setItemL(it, nl); }
 
 /* ============================== controles ============================== */
 const ZONE_TXT = {greep:'raakt de deurgreep. Maak de sticker kleiner of schuif hem naar beneden of naar het midden.', blink:'raakt het zijknipperlicht op de deur.', badge:'raakt het Italiaanse vlaggetje op de deur.'};
@@ -1587,7 +1651,7 @@ function renderLogoInfo(it){
   const box = $('#logo-info'), L = it.L;
   box.classList.toggle('hidden', !L); $('#drop').querySelector('b').textContent = L ? 'Ander logo kiezen' : 'Sleep het logo hierheen';
   box.innerHTML = ''; if (!L) return;
-  const kindChip = L.kind === 'svg' ? (L.origin === 'omgezet' ? ['ok', 'Vector (omgezet)'] : ['ok', 'Vector · SVG']) : L.kind === 'pdf' ? (L.flags.rasterInside ? ['warn', 'PDF · deels pixels'] : ['ok', 'Vector · PDF']) : ['bad', 'Pixelbestand'];
+  const kindChip = L.kind === 'svg' ? (L.origin === 'omgezet' ? ['ok', 'Vector (omgezet)'] : L.origin === 'pdf' ? ['ok', 'Vector · uit PDF'] : ['ok', 'Vector · SVG']) : L.kind === 'pdf' ? (L.flags.rasterInside ? ['warn', 'PDF · deels pixels'] : ['ok', 'Vector · PDF']) : ['bad', 'Pixelbestand'];
   const thumb = h('div', {class:'thumb checker'}, h('img', {src:logoHref(L), alt:''}));
   box.append(h('div', {class:'logo-head mt'}, thumb, h('div', {style:'min-width:0'}, h('div', {class:'nm'}, L.name), h('div', {class:'chips'}, h('span', {class:'chip ' + kindChip[0]}, kindChip[1]), L.kind === 'raster' ? h('span', {class:'chip'}, `${L.raster.w} × ${L.raster.h} px`) : null))));
   if (L.note) box.append(h('p', {class:'small', style:'margin:10px 0 0'}, L.note));
@@ -1597,7 +1661,6 @@ function renderLogoInfo(it){
     box.append(h('div', {class:'btns mt'}, h('button', {class:'btn', type:'button', onclick:() => openTrace(L, it)}, 'Omzetten naar vector')));
   }
   if (L.origin === 'omgezet' && L.traceSrc) box.append(h('div', {class:'btns mt'}, h('button', {class:'btn sec sm', type:'button', onclick:() => reopenTrace()}, 'Omzetten aanpassen')));
-  if (L.svgOrig) box.append(h('div', {class:'btns mt'}, h('button', {class:'btn sec sm', type:'button', onclick:restoreColors}, 'Weggelaten kleuren terugzetten')));
 }
 function renderColors(it){
   const box = $('#ed-colors'); box.innerHTML = '';
@@ -1606,11 +1669,27 @@ function renderColors(it){
   box.append(h('div', {class:'lbl mt'}, it.sharesEstimated ? 'Kleuren (geschat) en foliekleur' : 'Kleuren en foliekleur'), cl);
   for (const c of it.shares.slice(0, 10)){
     const inp = h('input', {type:'text', value:it.foil[c.hex] || '', placeholder:'Foliekleur, bijv. ' + colorName(c.hex), oninput:e => { it.foil[c.hex] = e.target.value; renderExport(); save(); }});
-    cl.append(h('div', {class:'crow'}, h('span', {class:'sq', style:`background:${c.hex}`}), h('span', {class:'hx'}, c.hex), inp,
+    const editable = it.type === 'logo' && it.L.kind === 'svg';
+    const sq = editable ? h('input', {type:'color', class:'sqc', value:c.hex, title:'Kleur aanpassen', 'aria-label':'Kleur ' + c.hex + ' aanpassen', onchange:e => { if (e.target.value !== c.hex) recolor(it, {[c.hex]:e.target.value}); }}) : h('span', {class:'sq', style:`background:${c.hex}`});
+    cl.append(h('div', {class:'crow'}, sq, h('span', {class:'hx'}, c.hex), inp,
       h('span', {class:'pc'}, (c.pct * 100).toFixed(c.pct < 0.01 ? 1 : 0).replace('.', ',') + '%'),
       it.type === 'logo' && it.L.kind === 'svg' && it.shares.length > 1 ? h('button', {type:'button', title:'Deze kleur niet plakken', onclick:() => dropColor(c.hex)}, 'Weglaten') : null));
   }
   if (it.shares.length > 10) cl.append(h('div', {class:'small muted'}, `+ ${it.shares.length - 10} kleuren meer: dit lijkt een foto of illustratie, kies dan "Geprinte sticker".`));
+  if (it.type !== 'logo') return;
+  const L = it.L;
+  if (L.kind === 'svg'){
+    box.append(h('p', {class:'small muted', style:'margin:8px 0 0'}, 'Klik op een kleurvakje om die kleur te veranderen.'));
+    const mono = h('div', {class:'swatches', style:'margin-top:6px'});
+    for (const [n, c] of FOILS) mono.append(h('button', {type:'button', title:n, 'aria-label':'Hele logo ' + n.toLowerCase(), style:`background:${c}`, onclick:() => recolor(it, {'*':c})}));
+    mono.append(h('input', {type:'color', title:'Eigen kleur', 'aria-label':'Hele logo in eigen kleur', value:'#111111', onchange:e => recolor(it, {'*':e.target.value})}));
+    box.append(h('div', {class:'lbl mt'}, 'Hele logo in één kleur'), mono);
+    if ((it.shares || []).length > 1) box.append(h('p', {class:'small muted', style:'margin:6px 0 0'}, 'Let op: delen van het logo die op elkaar liggen worden dan één vlak. Laat zo nodig een kleur weg in plaats van hem te veranderen.'));
+    if (L.svgOrig) box.append(h('div', {class:'btns mt'}, h('button', {class:'btn sec sm', type:'button', onclick:restoreColors}, 'Oorspronkelijke kleuren terugzetten')));
+  } else if (L.kind === 'pdf'){
+    box.append(h('div', {class:'btns mt'}, h('button', {class:'btn sec sm', type:'button', id:'b-editable', onclick:() => makeEditable(it)}, 'Kleuren aanpassen')));
+    box.append(h('p', {class:'small muted', style:'margin:6px 0 0'}, 'Om de kleuren te veranderen zet de tool de PDF eerst om naar SVG. Controleer daarna even of het logo er nog precies hetzelfde uitziet.'));
+  } else box.append(h('p', {class:'small muted', style:'margin:8px 0 0'}, 'Zet het logo eerst om naar vector; daarna kun je de kleuren aanpassen.'));
 }
 async function reopenTrace(){ const it = cur(), L = it && it.L; if (!L || !L.traceSrc) return; await openTrace({kind:'raster', name:L.name, raster:{url:L.traceSrc, src:L.traceSrc}}, it); }
 function buildSwatches(sel, list, onPick){
@@ -1974,7 +2053,7 @@ async function exportVoorbeeld(){ download(await voorbeeldBlob(), exportName('jp
 
 /* ============================== opslaan ============================== */
 function serL(L){
-  const l = {kind:L.kind, name:L.name, aspect:L.aspect, flags:L.flags, colors:L.colors, origin:L.origin, note:L.note, missing:L.missing, lines:L.lines, qrN:L.qrN, qrQuiet:L.qrQuiet};
+  const l = {kind:L.kind, name:L.name, aspect:L.aspect, flags:L.flags, colors:L.colors, origin:L.origin, note:L.note, missing:L.missing, lines:L.lines, qrN:L.qrN, qrQuiet:L.qrQuiet, foilOrig:L.foilOrig, srcVb:L.srcVb};
   if (L.kind === 'svg'){ l.svg = L.svg; if (L.svgOrig) l.svgOrig = L.svgOrig; if (L.srcText) l.srcText = L.srcText; if (L.traceSrc && L.traceSrc.length < 1.5e6) l.traceSrc = L.traceSrc; }
   if (L.kind === 'pdf'){ l.pdf = {b64:b64(L.pdf.bytes), crop:L.pdf.crop}; l.preview = L.preview; }
   if (L.kind === 'raster'){ l.raster = {url:L.raster.url, w:L.raster.w, h:L.raster.h}; if (L.raster.src && L.raster.src.length < 1.5e6) l.raster.src = L.raster.src; }
