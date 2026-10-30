@@ -136,6 +136,7 @@
   .cars{display:flex;gap:6px;align-items:center}
   .cars button{width:26px;height:26px;border-radius:50%;border:2px solid var(--paper);box-shadow:0 0 0 1px var(--line-strong);padding:0}
   .cars button[aria-pressed="true"]{box-shadow:0 0 0 2px var(--accent)}
+  .cars button.pill{width:auto;border-radius:13px;padding:0 10px;font-size:12.5px;font-weight:700;background:var(--paper);color:var(--ink)}
   .cars input[type=color]{width:30px;height:30px;border:0;padding:0;background:transparent}
   .place{padding:12px 16px 16px;border-top:1px solid var(--line)}
   .place .grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
@@ -336,6 +337,8 @@
       <div class="stagebar">
         <span class="lbl">Autokleur</span>
         <div class="cars" id="cars"></div>
+        <span class="lbl" style="margin-left:6px">Dak</span>
+        <div class="cars" id="roofs"></div>
         <span class="sp" style="flex:1"></span>
         <label class="toggle hidden" id="linkwrap"><input type="checkbox" id="f-linked" checked> Beide deuren gelijk</label>
       </div>
@@ -441,6 +444,7 @@ const zonesFor = (d, side) => side === 'R'
 const midV = d => (d.marge + GREEP.v0 - 10) / 2;
 const CARS = [['Verde Vita','#93bbae'],['Wit','#f3f1ec'],['Crème','#efe2c4'],['Zwart','#262626'],['Roze','#ecbcc6'],['Lichtblauw','#a9c9e0'],['Rood','#b8312f']];
 const FOILS = [['Zwart','#111111'],['Wit','#ffffff'],['Grijs','#8a8d8f'],['Rood','#c62828'],['Blauw','#1f4e9c'],['Groen','#2e7d32'],['Goud','#c9a24a']];
+const ROOFS = [['Antraciet (af fabriek)','#3a3f40'],['Zwart','#262626'],['Wit','#f3f1ec'],['Crème','#efe2c4']];
 const QRCOLS = [['Zwart','#111111'],['Donkerblauw','#14295a'],['Donkergroen','#1f4d2b'],['Donkerrood','#7a1c1c']];
 const KEY = 's45-belettering-v2', KEY_OLD = 's45-belettering-v1';
 const TYPES = {logo:'Logo', tekst:'Tekst', qr:'QR-code'};
@@ -449,7 +453,7 @@ const WHERE_SHORT = {LR:'Beide deuren', L:'Links', R:'Rechts', F:'Voor', B:'Acht
 
 const S = {
   job:{klant:'', order:'', kenteken:'', opm:''},
-  items:[], active:null, view:'L', zoom:'deur', car:CARS[0][1], dims:{...DEF}
+  items:[], active:null, view:'L', zoom:'deur', car:CARS[0][1], roof:null, dims:{...DEF}
 };
 
 const $ = (s, r=document) => r.querySelector(s);
@@ -1062,10 +1066,10 @@ async function qrToSvg(q){
 // zone-X.png (voor/achter, 2 px per cm): rood = lak, blauw = glas, groen = hoe recht het vlak naar je toe staat, alfa = auto.
 // Het modelbestand zelf staat hier niet (licentie): alleen deze beelden.
 const VIEW = {
-  L:{base:'belettering/topolino-L.webp', lak:'belettering/topolino-L-lak.webp', x:-799, y:-1282, w:2640, h:1640, sh:[540, 293, 1360, 46]},
-  R:{base:'belettering/topolino-R.webp', lak:'belettering/topolino-R-lak.webp', x:-761, y:-1282, w:2640, h:1640, sh:[540, 293, 1360, 46]},
-  F:{base:'belettering/topolino-F.webp', lak:'belettering/topolino-F-lak.webp', zone:'belettering/zone-F.png', x:-820, y:-1580, w:1640, h:1640, sh:[0, 4, 800, 40]},
-  B:{base:'belettering/topolino-B.webp', lak:'belettering/topolino-B-lak.webp', zone:'belettering/zone-B.png', x:-820, y:-1580, w:1640, h:1640, sh:[0, 4, 800, 40]}
+  L:{base:'belettering/topolino-L.webp', lak:'belettering/topolino-L-lak.webp', dak:'belettering/topolino-L-dak.webp', x:-799, y:-1282, w:2640, h:1640, sh:[540, 293, 1360, 46]},
+  R:{base:'belettering/topolino-R.webp', lak:'belettering/topolino-R-lak.webp', dak:'belettering/topolino-R-dak.webp', x:-761, y:-1282, w:2640, h:1640, sh:[540, 293, 1360, 46]},
+  F:{base:'belettering/topolino-F.webp', lak:'belettering/topolino-F-lak.webp', dak:'belettering/topolino-F-dak.webp', zone:'belettering/zone-F.png', x:-820, y:-1580, w:1640, h:1640, sh:[0, 4, 800, 40]},
+  B:{base:'belettering/topolino-B.webp', lak:'belettering/topolino-B-lak.webp', dak:'belettering/topolino-B-dak.webp', zone:'belettering/zone-B.png', x:-820, y:-1580, w:1640, h:1640, sh:[0, 4, 800, 40]}
 };
 const AUTO_VB = [-880, -1340, 2860, 1720], FB_VB = [-880, -1600, 1760, 1690];
 // Vaste obstakels die niet in het 3D-model zitten.
@@ -1193,17 +1197,19 @@ function fbMax(it, v, p){
 const _img = {}; const img = url => _img[url] || (_img[url] = loadImg(url).catch(e => { delete _img[url]; throw e; }));
 const _tint = new Map(), _tintUrl = new Map();
 // Auto in een lakkleur: wit beeld × kleur binnen het lakmasker, glans erover.
-function tintedCar(v, color){
-  const key = v + color;
+// Het dak (topolino-X-dak.webp: glans + dakmasker) krijgt zijn eigen kleur; standaard dezelfde als de auto.
+const roofColor = () => S.roof || S.car;
+function tintedCar(v, color, roof = color){
+  const key = v + color + '|' + roof;
   if (_tint.has(key)) return _tint.get(key);
   const job = (async () => {
-    const C = VIEW[v], [b, l] = await Promise.all([img(C.base), img(C.lak)]);
+    const C = VIEW[v], [b, l, r] = await Promise.all([img(C.base), img(C.lak), img(C.dak)]);
     const W = b.naturalWidth, H = b.naturalHeight, c = canvas(W, H), g = c.getContext('2d');
     g.drawImage(b, 0, 0);
-    const t = canvas(W, H), tg = t.getContext('2d'); tg.fillStyle = color; tg.fillRect(0, 0, W, H); tg.globalCompositeOperation = 'destination-in'; tg.drawImage(l, 0, 0);
-    g.globalCompositeOperation = 'multiply'; g.drawImage(t, 0, 0);
-    g.globalCompositeOperation = 'lighter'; g.globalAlpha = 0.16; g.drawImage(t, 0, 0); g.globalAlpha = 1;
-    g.globalCompositeOperation = 'screen'; g.drawImage(l, 0, 0);
+    const layer = (mask, col) => { const t = canvas(W, H), tg = t.getContext('2d'); tg.fillStyle = col; tg.fillRect(0, 0, W, H); tg.globalCompositeOperation = 'destination-in'; tg.drawImage(mask, 0, 0);
+      g.globalCompositeOperation = 'multiply'; g.drawImage(t, 0, 0); g.globalCompositeOperation = 'lighter'; g.globalAlpha = 0.16; g.drawImage(t, 0, 0); g.globalAlpha = 1; };
+    layer(l, color); layer(r, roof);
+    g.globalCompositeOperation = 'screen'; g.drawImage(l, 0, 0); g.drawImage(r, 0, 0);
     g.globalCompositeOperation = 'destination-in'; g.drawImage(b, 0, 0);
     const url = await new Promise(res => c.toBlob(bl => res(URL.createObjectURL(bl)), 'image/webp', 0.9));
     _tintUrl.set(key, url);
@@ -1218,12 +1224,12 @@ function viewBox(v){ const d = S.dims; return !isDoor(v) ? FB_VB : S.zoom === 'd
 function logoHref(L){ return L.kind === 'svg' ? svgDataURL(L.svg) : L.kind === 'pdf' ? L.preview : L.raster.url; }
 // Vaste laag: schaduw op de grond en de auto in de gekozen kleur.
 function drawCar(svg, v){
-  const C = VIEW[v], defs = E('defs', null, svg), color = S.car, key = v + color, [cx, cy, rx, ry] = C.sh;
+  const C = VIEW[v], defs = E('defs', null, svg), color = S.car, roof = roofColor(), key = v + color + '|' + roof, [cx, cy, rx, ry] = C.sh;
   const rg = E('radialGradient', {id:'gsh'}, defs);
   E('stop', {offset:0, 'stop-color':'#000', 'stop-opacity':0.3}, rg); E('stop', {offset:1, 'stop-color':'#000', 'stop-opacity':0}, rg);
   E('ellipse', {cx, cy, rx, ry, fill:'url(#gsh)'}, svg);
   const im = E('image', {href:_tintUrl.get(key) || C.base, x:C.x, y:C.y, width:C.w, height:C.h, preserveAspectRatio:'none'}, svg);
-  if (!_tintUrl.has(key)) tintedCar(v, color).then(t => { if (im.isConnected && S.car === color) im.setAttribute('href', t.url); }).catch(e => console.warn('autokleur', e));
+  if (!_tintUrl.has(key)) tintedCar(v, color, roof).then(t => { if (im.isConnected && S.car === color && roofColor() === roof) im.setAttribute('href', t.url); }).catch(e => console.warn('autokleur', e));
 }
 // Eén sticker in beeld, met de schaduw en glans van de auto eroverheen.
 function drawSticker(parent, it, v, active, fs){
@@ -1299,7 +1305,7 @@ function drawActive(dyn, v, vb){
   }
 }
 function renderStage(){
-  const svg = $('#stage'), v = S.view, vb = viewBox(v), key = [v, isDoor(v) ? S.zoom : '', S.car, S.dims.W, S.dims.H].join('|');
+  const svg = $('#stage'), v = S.view, vb = viewBox(v), key = [v, isDoor(v) ? S.zoom : '', S.car, roofColor(), S.dims.W, S.dims.H].join('|');
   if (!isDoor(v)) loadZone(v);
   if (svg.dataset.key !== key){
     svg.innerHTML = ''; svg.setAttribute('viewBox', vb.join(' ')); drawCar(svg, v); E('g', {id:'oth'}, svg); E('g', {id:'dyn'}, svg);
@@ -1607,6 +1613,7 @@ function renderJob(){
   $('#linkwrap').classList.toggle('hidden', !(it && it.where === 'LR' && isDoor(S.view)));
   $('#f-linked').checked = !!(it && it.linked);
   $$('#cars button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === S.car)));
+  $$('#roofs button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === (S.roof || ''))));
   for (const k of ['W','H','crU','marge']) $('#d-' + k).value = S.dims[k];
 }
 function thumbOf(it){
@@ -1973,7 +1980,7 @@ function werkDoor(doc, pg, pngs){
   return cy;
 }
 async function fbBackground(v){
-  const t = await tintedCar(v, '#e4e4e4'), V = VIEW[v], src = t.canvas, fx = src.width / V.w, fy = src.height / V.h, ppm = 0.55;
+  const t = await tintedCar(v, '#e4e4e4', '#e4e4e4'), V = VIEW[v], src = t.canvas, fx = src.width / V.w, fy = src.height / V.h, ppm = 0.55;
   const c = canvas(1640 * ppm, 1580 * ppm), g = c.getContext('2d'); g.fillStyle = '#ffffff'; g.fillRect(0, 0, c.width, c.height);
   g.drawImage(src, (-820 - V.x) * fx, (-1560 - V.y) * fy, 1640 * fx, 1580 * fy, 0, 0, c.width, c.height);
   return c.toDataURL('image/jpeg', 0.85);
@@ -2040,7 +2047,7 @@ async function sceneCanvas(v, Wpx){
   g.save(); g.translate((cx - VX0) * k, (cy - VY0) * k); g.scale(1, ry / rx);
   const gr = g.createRadialGradient(0, 0, 0, 0, 0, rx * k); gr.addColorStop(0, 'rgba(0,0,0,.3)'); gr.addColorStop(1, 'rgba(0,0,0,0)');
   g.fillStyle = gr; g.beginPath(); g.arc(0, 0, rx * k, 0, Math.PI * 2); g.fill(); g.restore();
-  const t = await tintedCar(v, S.car);
+  const t = await tintedCar(v, S.car, roofColor());
   g.drawImage(t.canvas, (V.x - VX0) * k, (V.y - VY0) * k, V.w * k, V.h * k);
   const [base, lak] = await Promise.all([img(V.base), img(V.lak)]), fx = base.naturalWidth / V.w, fy = base.naturalHeight / V.h;
   for (const it of itemsOn(v)){
@@ -2090,7 +2097,7 @@ function deL(l){ if (l && l.kind === 'pdf') l.pdf = {bytes:unb64(l.pdf.b64), cro
 let saveT;
 function save(){ clearTimeout(saveT); saveT = setTimeout(() => {
   try {
-    const o = {v:2, job:S.job, active:S.active, view:S.view, zoom:S.zoom, car:S.car, dims:S.dims, dimsVer:DIMS_VERSION,
+    const o = {v:2, job:S.job, active:S.active, view:S.view, zoom:S.zoom, car:S.car, roof:S.roof, dims:S.dims, dimsVer:DIMS_VERSION,
       items:S.items.map(it => ({id:it.id, type:it.type, text:it.text, qr:it.qr, where:it.where, linked:it.linked, place:it.place, soort:it.soort, foil:it.foil, L:it.L ? serL(it.L) : null}))};
     let s = JSON.stringify(o);
     if (s.length > 4.5e6){ for (const x of o.items) if (x.L){ delete x.L.srcText; delete x.L.traceSrc; delete x.L.svgOrig; if (x.L.raster) delete x.L.raster.src; } s = JSON.stringify(o); }
@@ -2108,7 +2115,7 @@ function load(){
     }
     if (!o) return;
     const j = o.job || {}; S.job = {klant:j.klant || '', order:j.order || '', kenteken:j.kenteken || '', opm:j.opm || ''};
-    S.zoom = o.zoom || 'deur'; S.car = o.car || S.car; S.dims = o.dimsVer === DIMS_VERSION ? {...DEF, ...(o.dims || {})} : {...DEF};
+    S.zoom = o.zoom || 'deur'; S.car = o.car || S.car; S.roof = o.roof || null; S.dims = o.dimsVer === DIMS_VERSION ? {...DEF, ...(o.dims || {})} : {...DEF};
     S.items = (o.items || []).map(x => { const it = newItem(x.type || 'logo'); Object.assign(it, {id:x.id || it.id, where:x.where || it.where, linked:x.linked !== false, place:x.place || {}, soort:x.soort || it.soort, foil:x.foil || {}});
       if (x.text) it.text = {...it.text, ...x.text}; if (x.qr) it.qr = {...it.qr, ...x.qr}; it.L = deL(x.L); for (const k of Object.keys(it.place)) if (!it.place[k]) delete it.place[k]; return it; });
     for (const it of S.items){ if (it.where === 'LR' && it.linked && it.place.L) it.place.R = mirrorP(it.place.L); ensurePlaces(it, false); }
@@ -2144,6 +2151,10 @@ function bind(){
   const cars = $('#cars');
   for (const [n, c] of CARS) cars.append(h('button', {type:'button', title:n, 'aria-label':n, 'data-v':c, style:`background:${c}`, onclick:() => { S.car = c; renderJob(); renderStage(); renderChecks(); renderItems(); save(); }}));
   let carT; cars.append(h('input', {type:'color', title:'Eigen kleur', 'aria-label':'Eigen autokleur', value:'#93bbae', oninput:e => { clearTimeout(carT); const v = e.target.value; carT = setTimeout(() => { S.car = v; renderJob(); renderStage(); renderChecks(); renderItems(); save(); }, 180); }}));
+  const roofs = $('#roofs'), setRoof = v => { S.roof = v || null; renderJob(); renderStage(); save(); };
+  roofs.append(h('button', {type:'button', class:'pill', 'data-v':'', title:'Dak in dezelfde kleur als de auto', onclick:() => setRoof(null)}, 'Zelfde'));
+  for (const [n, c] of ROOFS) roofs.append(h('button', {type:'button', title:n, 'aria-label':'Dak ' + n.toLowerCase(), 'data-v':c, style:`background:${c}`, onclick:() => setRoof(c)}));
+  let roofT; roofs.append(h('input', {type:'color', title:'Eigen dakkleur', 'aria-label':'Eigen dakkleur', value:'#3a3f40', oninput:e => { clearTimeout(roofT); const v = e.target.value; roofT = setTimeout(() => setRoof(v), 180); }}));
   // bestand
   const drop = $('#drop');
   $('#file').addEventListener('change', e => onFile(e.target.files[0]));
