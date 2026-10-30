@@ -156,6 +156,42 @@
   .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--accent);color:var(--accent-ink);padding:10px 16px;border-radius:10px;font-weight:700;font-size:14px;box-shadow:0 6px 20px rgba(0,0,0,.25);z-index:50;opacity:0;transition:opacity .2s;pointer-events:none;max-width:90vw}
   .toast.on{opacity:1}
   .hidden{display:none!important}
+  /* stickerlijst */
+  .items{display:flex;flex-direction:column;gap:6px}
+  .item{display:flex;align-items:center;gap:10px;padding:7px 9px;border:1px solid var(--line);border-radius:11px;background:var(--paper);text-align:left;width:100%;min-height:56px}
+  .item:hover{border-color:var(--line-strong)}
+  .item[aria-current="true"]{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+  .item .ti{width:58px;height:40px;border-radius:7px;border:1px solid var(--line);display:grid;place-items:center;overflow:hidden;flex:none;font-weight:800;color:var(--muted);font-size:13px}
+  .item .ti img{max-width:86%;max-height:86%;display:block}
+  .item .tx{min-width:0;flex:1;display:block}
+  .item .t1,.item .t2{display:block}
+  .item .t1{font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .item .t1 .nr{color:var(--muted);margin-right:4px}
+  .item .t2{font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .item .st{flex:none;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-weight:900;font-size:12px;background:var(--accent-soft);color:var(--muted)}
+  .item .st.ok{background:var(--ok-bg);color:var(--ok)} .item .st.warn{background:var(--warn-bg);color:var(--warn)} .item .st.bad{background:var(--bad-bg);color:var(--bad)}
+  .adds{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+  .editor{border-top:1px solid var(--line);margin:14px -16px 0;padding:12px 16px 2px}
+  .edhd{display:flex;align-items:center;gap:8px;margin-bottom:10px;font-weight:700}
+  .edhd .sp{flex:1}
+  .seg.five button{padding:4px 3px;font-size:13px}
+  .swatches{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+  .swatches button{width:26px;height:26px;border-radius:50%;border:2px solid var(--paper);box-shadow:0 0 0 1px var(--line-strong);padding:0}
+  .swatches button[aria-pressed="true"]{box-shadow:0 0 0 2px var(--accent)}
+  .swatches input[type=color]{width:30px;height:30px;border:0;padding:0;background:transparent}
+  .qrbox{display:flex;gap:12px;align-items:center}
+  .qrprev{width:132px;height:132px;border-radius:9px;border:1px solid var(--line);display:grid;place-items:center;flex:none;overflow:hidden}
+  .qrprev img{width:88%;height:88%;display:block;image-rendering:pixelated}
+  .qrbox p{margin:0}
+  .seg .cnt{display:inline-grid;place-items:center;min-width:18px;height:18px;border-radius:9px;background:var(--accent);color:var(--accent-ink);font-size:11px;font-weight:800;margin-left:5px;padding:0 5px;vertical-align:1px}
+  #stage .oth{fill:none;stroke:rgba(30,111,217,.55)}
+  #stage [data-role=logo]:hover + .oth{stroke:rgba(30,111,217,.9)}
+  .units{display:flex;flex-direction:column;gap:8px}
+  .unit{border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:13.5px}
+  .unit .u1{display:flex;gap:6px 10px;align-items:baseline;flex-wrap:wrap}
+  .unit .u1 b{font-size:14.5px}
+  .unit .u2{color:var(--muted);margin-top:3px;line-height:1.38}
+  .unit .ub{display:flex;gap:6px;margin-top:7px}
 </style>
 </head>
 <body>
@@ -180,33 +216,62 @@
           <label class="fld"><span>Ordernummer</span><input id="f-order" inputmode="numeric" autocomplete="off" placeholder="Bijv. 20250583"></label>
         </div>
         <div class="row">
-          <label class="fld"><span>Kenteken</span><input id="f-kenteken" autocomplete="off" placeholder="Optioneel"></label>
-          <label class="fld"><span>Model</span><select id="f-model"><option>Fiat Topolino gesloten</option></select></label>
-        </div>
-        <div class="lbl">Soort sticker</div>
-        <div class="seg" id="s-soort">
-          <button type="button" data-v="snij">Gesneden folie</button>
-          <button type="button" data-v="print">Geprinte sticker</button>
-        </div>
-        <div class="lbl">Op welke deur</div>
-        <div class="seg" id="s-deuren">
-          <button type="button" data-v="L">Links</button>
-          <button type="button" data-v="R">Rechts</button>
-          <button type="button" data-v="LR">Beide deuren</button>
+          <label class="fld" style="margin-bottom:0"><span>Kenteken</span><input id="f-kenteken" autocomplete="off" placeholder="Optioneel"></label>
+          <label class="fld" style="margin-bottom:0"><span>Model</span><select id="f-model"><option>Fiat Topolino gesloten</option></select></label>
         </div>
       </div>
     </section>
 
-    <!-- 2. Logo -->
-    <section class="card" id="c-logo">
-      <div class="hd"><span class="num">2</span>Logo van de klant</div>
+    <!-- 2. Stickers -->
+    <section class="card" id="c-items">
+      <div class="hd"><span class="num">2</span>Stickers</div>
       <div class="bd">
-        <label class="drop" id="drop">
-          <input type="file" id="file" accept=".svg,.pdf,.ai,.eps,.png,.jpg,.jpeg,.webp,.gif,image/*,application/pdf">
-          <b>Sleep het logo hierheen</b><br><span class="small">of klik om te kiezen · SVG, PDF, AI, PNG of JPG</span>
-        </label>
-        <div id="logo-info" class="hidden"></div>
-        <div id="logo-err" class="err hidden"></div>
+        <div class="items" id="items"></div>
+        <p class="small muted hidden" id="no-items" style="margin:0">Nog geen stickers. Voeg een logo, tekst of QR-code toe.</p>
+        <div class="adds">
+          <button class="btn sec sm" type="button" id="add-logo">+ Logo</button>
+          <button class="btn sec sm" type="button" id="add-tekst">+ Tekst of website</button>
+          <button class="btn sec sm" type="button" id="add-qr">+ QR-code</button>
+        </div>
+        <div class="editor" id="editor">
+          <div class="edhd"><span id="ed-title"></span><span class="sp"></span><button class="btn sec sm" type="button" id="ed-del">Verwijderen</button></div>
+          <div id="ed-logo">
+            <label class="drop" id="drop">
+              <input type="file" id="file" accept=".svg,.pdf,.ai,.eps,.png,.jpg,.jpeg,.webp,.gif,image/*,application/pdf">
+              <b>Sleep het logo hierheen</b><br><span class="small">of klik om te kiezen · SVG, PDF, AI, PNG of JPG</span>
+            </label>
+            <div id="logo-info" class="hidden"></div>
+            <div id="logo-err" class="err hidden"></div>
+          </div>
+          <div id="ed-tekst" class="hidden">
+            <label class="fld"><span>Tekst (Enter = nieuwe regel)</span><textarea id="tx-val" rows="2" placeholder="Bijv. www.bakkerijjansen.nl"></textarea></label>
+            <label class="fld"><span>Lettertype</span><select id="tx-font"></select></label>
+            <div class="lbl">Kleur</div>
+            <div class="swatches" id="tx-col"></div>
+            <div id="tx-err" class="err hidden"></div>
+          </div>
+          <div id="ed-qr" class="hidden">
+            <label class="fld"><span>Link of tekst in de QR-code</span><input id="qr-val" type="url" inputmode="url" autocomplete="off" spellcheck="false" placeholder="https://www.bakkerijjansen.nl"></label>
+            <div class="lbl">Kleur</div>
+            <div class="swatches" id="qr-col"></div>
+            <label class="toggle mt"><input type="checkbox" id="qr-bg" checked> Witte achtergrond (aanbevolen)</label>
+            <div class="qrbox mt"><div class="qrprev checker" id="qr-prev"></div><p class="small muted" id="qr-info"></p></div>
+          </div>
+          <div class="lbl mt">Plek op de auto</div>
+          <div class="seg five" id="s-where">
+            <button type="button" data-v="LR">Beide deuren</button>
+            <button type="button" data-v="L">Links</button>
+            <button type="button" data-v="R">Rechts</button>
+            <button type="button" data-v="F">Voor</button>
+            <button type="button" data-v="B">Achter</button>
+          </div>
+          <div class="lbl">Soort sticker</div>
+          <div class="seg" id="s-soort">
+            <button type="button" data-v="snij">Gesneden folie</button>
+            <button type="button" data-v="print">Geprinte sticker</button>
+          </div>
+          <div id="ed-colors"></div>
+        </div>
       </div>
     </section>
 
@@ -250,11 +315,13 @@
     <!-- 3. Plaatsen -->
     <section class="card stagecard" id="c-stage">
       <div class="hd">
-        <span class="num">3</span>Plaatsen op de deur
+        <span class="num">3</span>Plaatsen
         <span class="sp"></span>
-        <div class="seg" id="s-side">
-          <button type="button" data-v="L">Linkerdeur</button>
-          <button type="button" data-v="R">Rechterdeur</button>
+        <div class="seg" id="s-view">
+          <button type="button" data-v="L">Links</button>
+          <button type="button" data-v="R">Rechts</button>
+          <button type="button" data-v="F">Voor</button>
+          <button type="button" data-v="B">Achter</button>
         </div>
         <div class="seg" id="s-zoom">
           <button type="button" data-v="deur">Deur</button>
@@ -262,7 +329,7 @@
         </div>
       </div>
       <div class="stagewrap" id="stagewrap">
-        <svg id="stage" xmlns="http://www.w3.org/2000/svg" tabindex="0" role="img" aria-label="Deur van de Topolino met het logo"></svg>
+        <svg id="stage" xmlns="http://www.w3.org/2000/svg" tabindex="0" role="img" aria-label="De Topolino met de stickers"></svg>
       </div>
       <div class="stagebar">
         <span class="lbl">Autokleur</span>
@@ -272,11 +339,11 @@
       </div>
       <div class="place" id="place">
         <div class="grid">
-          <label class="fld"><span>Breedte logo</span><div class="unit"><input type="number" id="p-w" min="10" step="1" inputmode="decimal"></div></label>
-          <label class="fld"><span>Hoogte logo</span><div class="unit"><input type="number" id="p-h" min="5" step="1" inputmode="decimal"></div></label>
-          <label class="fld"><span>Boven onderrand deur</span><div class="unit"><input type="number" id="p-b" step="1" inputmode="decimal"></div></label>
-          <label class="fld"><span>Vanaf voornaad</span><div class="unit"><input type="number" id="p-l" step="1" inputmode="decimal"></div></label>
-          <label class="fld"><span>Vanaf achternaad</span><div class="unit"><input type="number" id="p-r" step="1" inputmode="decimal"></div></label>
+          <label class="fld"><span>Breedte</span><div class="unit"><input type="number" id="p-w" min="10" step="1" inputmode="decimal"></div></label>
+          <label class="fld"><span>Hoogte</span><div class="unit"><input type="number" id="p-h" min="5" step="1" inputmode="decimal"></div></label>
+          <label class="fld"><span id="lbl-b">Boven onderrand deur</span><div class="unit"><input type="number" id="p-b" step="1" inputmode="decimal"></div></label>
+          <label class="fld"><span id="lbl-l">Vanaf voornaad</span><div class="unit"><input type="number" id="p-l" step="1" inputmode="decimal"></div></label>
+          <label class="fld" id="fld-r"><span>Vanaf achternaad</span><div class="unit"><input type="number" id="p-r" step="1" inputmode="decimal"></div></label>
         </div>
         <div class="btns">
           <button class="btn sec sm" type="button" id="b-hc">Midden op de deur</button>
@@ -284,7 +351,7 @@
           <button class="btn sec sm" type="button" id="b-max">Zo groot mogelijk</button>
         </div>
         <ul class="chk" id="checks"></ul>
-        <p class="small muted" style="margin:12px 0 0">Auto: gerenderd uit het 3D-model "Fiat Topolino 2024" van Behr Bros (3DExport), onder licentie van Spéciale45. Op ware schaal.</p>
+        <p class="small muted" style="margin:12px 0 0">Auto: gerenderd uit het 3D-model "Fiat Topolino 2024" van Behr Bros (3DExport), onder licentie van Spéciale45. Op ware schaal. Op de ruiten tekent de tool de sticker iets platter, omdat je schuin op het glas kijkt; de maten zijn de echte stickermaten.</p>
       </div>
     </section>
 
@@ -292,14 +359,15 @@
     <section class="card" id="c-exp">
       <div class="hd"><span class="num">4</span>Naar het stickerbedrijf</div>
       <div class="bd">
-        <dl class="sum" id="sum"></dl>
+        <div class="units" id="sum"></div>
         <label class="fld mt"><span>Opmerking voor het stickerbedrijf (komt op de werktekening)</span><textarea id="f-opm" placeholder="Bijv. foliekleur, glans of mat, levertijd"></textarea></label>
         <div class="btns">
-          <button class="btn" type="button" id="x-sticker" disabled>Stickerbestand (PDF, 1:1)</button>
-          <button class="btn sec" type="button" id="x-svg" disabled>Als SVG</button>
+          <button class="btn" type="button" id="x-zip" disabled>Alles downloaden (zip)</button>
+          <button class="btn sec" type="button" id="x-sticker" disabled>Stickerbestanden</button>
           <button class="btn sec" type="button" id="x-werk" disabled>Werktekening (PDF)</button>
-          <button class="btn sec" type="button" id="x-voorbeeld" disabled>Klantvoorbeeld (PNG)</button>
+          <button class="btn sec" type="button" id="x-voorbeeld" disabled>Klantvoorbeeld (JPG)</button>
         </div>
+        <p class="small muted" style="margin:8px 0 0">De zip bevat alle stickerbestanden op ware grootte (PDF, en SVG waar dat kan), de werktekening, het klantvoorbeeld en de mailtekst.</p>
         <div class="lbl mt">Mailtekst</div>
         <textarea class="mail" id="mail" readonly></textarea>
         <div class="btns mt"><button class="btn sec sm" type="button" id="x-copy">Kopieer mailtekst</button></div>
@@ -339,8 +407,19 @@ const CDN = {
   pdflib: 'https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js',
   jspdf: 'https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js',
   svg2pdf: 'https://cdn.jsdelivr.net/npm/svg2pdf.js@2.2.4/dist/svg2pdf.umd.min.js',
-  potrace: 'https://cdn.jsdelivr.net/npm/esm-potrace-wasm@0.5.1/dist/index.js'
+  potrace: 'https://cdn.jsdelivr.net/npm/esm-potrace-wasm@0.5.1/dist/index.js',
+  opentype: 'https://cdn.jsdelivr.net/npm/opentype.js@1.3.4/dist/opentype.min.js',
+  qrcode: 'https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js',
+  jszip: 'https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js'
 };
+// Lettertypen voor tekst-stickers (open licentie, OFL). De tekst wordt omgezet naar contouren, dus het stickerbedrijf heeft het lettertype niet nodig.
+const FONTS = [
+  {id:'montserrat', name:'Montserrat · strak', url:'https://cdn.jsdelivr.net/npm/@fontsource/montserrat@5.2.8/files/montserrat-latin-700-normal.woff'},
+  {id:'poppins', name:'Poppins · rond', url:'https://cdn.jsdelivr.net/npm/@fontsource/poppins@5.2.7/files/poppins-latin-600-normal.woff'},
+  {id:'oswald', name:'Oswald · smal', url:'https://cdn.jsdelivr.net/npm/@fontsource/oswald@5.2.8/files/oswald-latin-600-normal.woff'},
+  {id:'playfair', name:'Playfair · klassiek', url:'https://cdn.jsdelivr.net/npm/@fontsource/playfair-display@5.2.8/files/playfair-display-latin-700-normal.woff'},
+  {id:'pacifico', name:'Pacifico · handschrift', url:'https://cdn.jsdelivr.net/npm/@fontsource/pacifico@5.2.7/files/pacifico-latin-400-normal.woff'}
+];
 const NS = 'http://www.w3.org/2000/svg';
 const MODEL = 'Fiat Topolino (gesloten)';
 // Deurmal Topolino gesloten. Alle maten in mm. u = vanaf de naad bij de greep, v = vanaf de onderrand van de deur.
@@ -359,12 +438,16 @@ const zonesFor = (d, side) => side === 'R'
   : [{k:'greep', ...GREEP}, {k:'badge', u0:3, u1:89, v0:528, v1:550}, {k:'blink', u0:d.W - 84, u1:d.W - 12, v0:518, v1:561}];
 const midV = d => (d.marge + GREEP.v0 - 10) / 2;
 const CARS = [['Verde Vita','#93bbae'],['Wit','#f3f1ec'],['Crème','#efe2c4'],['Zwart','#262626'],['Roze','#ecbcc6'],['Lichtblauw','#a9c9e0'],['Rood','#b8312f']];
-const KEY = 's45-belettering-v1';
+const FOILS = [['Zwart','#111111'],['Wit','#ffffff'],['Grijs','#8a8d8f'],['Rood','#c62828'],['Blauw','#1f4e9c'],['Groen','#2e7d32'],['Goud','#c9a24a']];
+const QRCOLS = [['Zwart','#111111'],['Donkerblauw','#14295a'],['Donkergroen','#1f4d2b'],['Donkerrood','#7a1c1c']];
+const KEY = 's45-belettering-v2', KEY_OLD = 's45-belettering-v1';
+const TYPES = {logo:'Logo', tekst:'Tekst', qr:'QR-code'};
+const VIEWNAME = {L:'linkerkant', R:'rechterkant', F:'voorkant', B:'achterkant'};
+const WHERE_SHORT = {LR:'Beide deuren', L:'Links', R:'Rechts', F:'Voor', B:'Achter'};
 
 const S = {
-  job:{klant:'', order:'', kenteken:'', soort:'snij', deuren:'LR', opm:''},
-  logo:null, place:{L:null, R:null}, linked:true, side:'L', zoom:'deur', car:CARS[0][1],
-  dims:{...DEF}, thin:null, shares:null, foil:{}
+  job:{klant:'', order:'', kenteken:'', opm:''},
+  items:[], active:null, view:'L', zoom:'deur', car:CARS[0][1], dims:{...DEF}
 };
 
 const $ = (s, r=document) => r.querySelector(s);
@@ -610,255 +693,8 @@ async function importRasterURL(url, name, note){
   return {kind:'raster', name, raster:{url:pc.toDataURL('image/png'), w:cw, h:ch, src:url}, aspect:cw / ch, note};
 }
 
-/* ============================== bestand openen ============================== */
-async function onFile(file){
-  showErr(null);
-  if (!file) return;
-  setLogoBusy(true);
-  try {
-    const buf = new Uint8Array(await file.arrayBuffer()), name = file.name || 'logo';
-    const ext = (name.split('.').pop() || '').toLowerCase();
-    const head = new TextDecoder('latin1').decode(buf.subarray(0, Math.min(buf.length, 4096)));
-    let L;
-    if (head.includes('%PDF-')){ L = await importPdf(buf, name); }
-    else if (/<svg[\s>]/i.test(new TextDecoder().decode(buf.subarray(0, Math.min(buf.length, 65536)))) || ext === 'svg'){
-      const text = new TextDecoder().decode(buf);
-      const n = await normalizeSvg(text, {dropBg:true});
-      if (n.flags.rasterInside && n.flags.shapes === 0){
-        const href = (text.match(/(?:xlink:)?href\s*=\s*["'](data:image\/[^"']+)["']/i) || [])[1];
-        if (!href) throw new Error('Dit SVG-bestand bevat alleen een plaatje dat niet ingesloten is.');
-        L = await importRasterURL(href, name, 'Dit SVG-bestand bevat alleen een ingesloten plaatje, geen echte vectoren.');
-      } else { L = {kind:'svg', name, ...n, origin:'bestand'}; if (text.length < 1.5e6) L.srcText = text; }
-    }
-    else if (head.startsWith('%!PS') || ext === 'eps' || ext === 'ai'){
-      throw new Error('Dit is een EPS- of oud Illustrator-bestand. Dat kan de browser niet openen. Vraag de klant om een PDF of SVG, of open het in Illustrator en kies "Opslaan als PDF". Het EPS-bestand zelf kun je wel gewoon naar het stickerbedrijf sturen.');
-    }
-    else if ((file.type || '').startsWith('image/') || ['png','jpg','jpeg','webp','gif','bmp'].includes(ext)){
-      L = await importRasterURL(await blobToDataURL(file), name);
-    }
-    else throw new Error('Dit bestandstype ken ik niet. Gebruik SVG, PDF, AI, PNG of JPG.');
-    setLogo(L, true);
-    if (L.kind === 'raster') openTrace(L);
-  } catch (e) {
-    console.error(e); showErr(e.message || String(e));
-  } finally { setLogoBusy(false); $('#file').value = ''; }
-}
-function showErr(msg){ const el = $('#logo-err'); el.textContent = msg || ''; el.classList.toggle('hidden', !msg); }
-function setLogoBusy(on){ const d = $('#drop'); d.style.opacity = on ? .5 : 1; d.querySelector('b').textContent = on ? 'Bezig met lezen…' : (S.logo ? 'Ander logo kiezen' : 'Sleep het logo hierheen'); }
-
-function setLogo(L, fresh){
-  const prevAspect = S.logo ? S.logo.aspect : null;
-  S.logo = L; S.thin = null; S.shares = null;
-  if (fresh || !S.place.L){ const p = defaultPlace(); S.place.L = {...p}; S.place.R = mirrorP(p); }
-  else if (prevAspect && Math.abs(prevAspect - L.aspect) > 0.01){ for (const k of ['L','R']) if (S.place[k]) S.place[k] = fitPlace(S.place[k]); }
-  renderAll(); computeShares(); scheduleThin(); save();
-}
-
-/* ============================== plaatsing ============================== */
-// Plek per deur in beeld (zoals je voor de deur staat): u = vanaf de linkernaad in beeld, v = boven de onderrand.
-// Linkerdeur: links in beeld = voorkant auto. Rechterdeur: links in beeld = achterkant auto.
-// "Beide deuren gelijk" = aan beide kanten even ver van de voorkant (in beeld dus gespiegeld).
-const curSide = () => S.job.deuren === 'L' ? 'L' : S.job.deuren === 'R' ? 'R' : S.side;
-const otherSide = s => s === 'L' ? 'R' : 'L';
-const mirrorP = p => p ? {...p, u:S.dims.W - p.u} : p;
-const placeOf = side => S.place[side] || mirrorP(S.place[otherSide(side)]);
-function setPlace(p, side = curSide()){ S.place[side] = {...p}; if (S.linked) S.place[otherSide(side)] = mirrorP(p); }
-const hOf = p => p.w / S.logo.aspect;
-const frontGap = (side, p) => side === 'L' ? p.u - p.w / 2 : S.dims.W - (p.u + p.w / 2);
-const rearGap = (side, p) => side === 'L' ? S.dims.W - (p.u + p.w / 2) : p.u - p.w / 2;
-function defaultPlace(){ const d = S.dims, a = S.logo ? S.logo.aspect : 2.5; const best = maxPlace(a); const w = Math.min(best.w * 0.8, 600); return {u:d.W / 2, v:midV(d), w}; }
-function maxPlace(a){
-  // het vlak onder de lijn, onder greep, knipperlicht en vlaggetje, over de volle breedte
-  const d = S.dims, m = d.marge, h = (GREEP.v0 - 10) - m, w = Math.min(h * a, d.W - 2 * m);
-  return {w, v:midV(d), u:d.W / 2};
-}
-function fitPlace(p){ const d = S.dims, a = S.logo.aspect; let w = Math.min(p.w, d.W - 2, (d.H - 2) * a); return {u:clamp(p.u, w / 2, d.W - w / 2), v:clamp(p.v, w / a / 2, d.H - w / a / 2), w}; }
-
-/* ============================== tekenen ============================== */
-// De auto: renders uit het gekochte 3D-model ("Fiat Topolino 2024", Behr Bros, 3DExport), orthografisch op ware schaal,
-// 1,25 px per mm, beeld 2640 × 1640 mm. topolino-X.webp = auto met witte lak; topolino-X-lak.webp = glans (rgb) + lakmasker (alfa).
-// Het modelbestand zelf staat hier niet (licentie): alleen deze beelden.
-const CAR_IMG = {L:{base:'belettering/topolino-L.webp', lak:'belettering/topolino-L-lak.webp', x:-799}, R:{base:'belettering/topolino-R.webp', lak:'belettering/topolino-R-lak.webp', x:-761}};
-const IMG_Y = -1282, IMG_W = 2640, IMG_H = 1640, AUTO_VB = [-880, -1340, 2860, 1720];
-const _img = {}; const img = url => _img[url] || (_img[url] = loadImg(url).catch(e => { delete _img[url]; throw e; }));
-const _tint = new Map(), _tintUrl = new Map();
-// Auto in een lakkleur: wit beeld × kleur binnen het lakmasker, glans erover.
-function tintedCar(side, color){
-  const key = side + color;
-  if (_tint.has(key)) return _tint.get(key);
-  const job = (async () => {
-    const C = CAR_IMG[side], [b, l] = await Promise.all([img(C.base), img(C.lak)]);
-    const W = b.naturalWidth, H = b.naturalHeight, c = canvas(W, H), g = c.getContext('2d');
-    g.drawImage(b, 0, 0);
-    const t = canvas(W, H), tg = t.getContext('2d'); tg.fillStyle = color; tg.fillRect(0, 0, W, H); tg.globalCompositeOperation = 'destination-in'; tg.drawImage(l, 0, 0);
-    g.globalCompositeOperation = 'multiply'; g.drawImage(t, 0, 0);
-    g.globalCompositeOperation = 'lighter'; g.globalAlpha = 0.16; g.drawImage(t, 0, 0); g.globalAlpha = 1;
-    g.globalCompositeOperation = 'screen'; g.drawImage(l, 0, 0);
-    g.globalCompositeOperation = 'destination-in'; g.drawImage(b, 0, 0);
-    const url = await new Promise(res => c.toBlob(bl => res(URL.createObjectURL(bl)), 'image/webp', 0.9));
-    _tintUrl.set(key, url);
-    return {url, canvas:c};
-  })();
-  _tint.set(key, job);
-  job.catch(() => _tint.delete(key));
-  if (_tint.size > 8){ const [k0, v0] = _tint.entries().next().value; _tint.delete(k0); _tintUrl.delete(k0); v0.then(t => URL.revokeObjectURL(t.url)).catch(() => {}); }
-  return job;
-}
-function viewBox(){ const d = S.dims; return S.zoom === 'deur' ? [-230, -(d.H + 260), d.W + 460, d.H + 260 + 340] : AUTO_VB; }
-function logoHref(L){ return L.kind === 'svg' ? svgDataURL(L.svg) : L.kind === 'pdf' ? L.preview : L.raster.url; }
-// Vaste laag: schaduw op de grond en de auto in de gekozen kleur.
-function drawCar(svg, side){
-  const C = CAR_IMG[side], defs = E('defs', null, svg), color = S.car, key = side + color;
-  const rg = E('radialGradient', {id:'gsh'}, defs);
-  E('stop', {offset:0, 'stop-color':'#000', 'stop-opacity':0.3}, rg); E('stop', {offset:1, 'stop-color':'#000', 'stop-opacity':0}, rg);
-  E('ellipse', {cx:540, cy:293, rx:1360, ry:46, fill:'url(#gsh)'}, svg);
-  const im = E('image', {href:_tintUrl.get(key) || C.base, x:C.x, y:IMG_Y, width:IMG_W, height:IMG_H, preserveAspectRatio:'none'}, svg);
-  if (!_tintUrl.has(key)) tintedCar(side, color).then(t => { if (im.isConnected && S.car === color) im.setAttribute('href', t.url); }).catch(e => console.warn('autokleur', e));
-}
-// Losse laag: logo, maten en grepen (wordt bij elke beweging opnieuw getekend).
-function drawLogoLayer(dyn, side, vb){
-  dyn.innerHTML = '';
-  const d = S.dims, fs = vb[2] / 44, C = CAR_IMG[side];
-  const p = S.logo ? placeOf(side) : null;
-  if (!S.logo || !p){
-    const zx = 140, zy = 60, zw = d.W - 280, zh = GREEP.v0 - 120;
-    E('rect', {x:zx, y:-(zy + zh), width:zw, height:zh, rx:18, class:'ph', 'stroke-width':4, 'stroke-dasharray':'18 12'}, dyn);
-    const t = E('text', {x:d.W / 2, y:-(zy + zh / 2), 'text-anchor':'middle', 'dominant-baseline':'middle', 'font-size':fs, class:'phtxt'}, dyn); t.textContent = 'Sleep hier het logo naartoe';
-    return;
-  }
-  const L = S.logo, href = logoHref(L), w = p.w, hh = hOf(p), x0 = p.u - w / 2, x1 = p.u + w / 2, y0 = p.v - hh / 2, y1 = p.v + hh / 2;
-  const lg = E('g', {'data-role':'logo', style:'cursor:move'}, dyn);
-  E('rect', {x:x0, y:-y1, width:w, height:hh, fill:'transparent', 'pointer-events':'all'}, lg);
-  E('image', {href, x:x0, y:-y1, width:w, height:hh, preserveAspectRatio:'none'}, lg);
-  // schaduw en glans van de deur ook over de sticker (niet tijdens het slepen)
-  if (!drag){
-    const mk = E('mask', {id:'lmk', maskUnits:'userSpaceOnUse', x:x0, y:-y1, width:w, height:hh, style:'mask-type:alpha'}, E('defs', null, dyn));
-    E('image', {href, x:x0, y:-y1, width:w, height:hh, preserveAspectRatio:'none'}, mk);
-    E('image', {href:C.base, x:C.x, y:IMG_Y, width:IMG_W, height:IMG_H, preserveAspectRatio:'none', mask:'url(#lmk)', opacity:0.5, style:'mix-blend-mode:multiply', 'pointer-events':'none'}, dyn);
-    E('image', {href:C.lak, x:C.x, y:IMG_Y, width:IMG_W, height:IMG_H, preserveAspectRatio:'none', mask:'url(#lmk)', opacity:0.55, style:'mix-blend-mode:screen', 'pointer-events':'none'}, dyn);
-  }
-  if (S.thin && S.thin.overlay && S.thin.w === Math.round(w)) E('image', {href:S.thin.overlay, x:x0, y:-y1, width:w, height:hh, preserveAspectRatio:'none', 'pointer-events':'none'}, dyn);
-  const dash = `${fs * 0.3} ${fs * 0.2}`;
-  if (drag){ // hulplijnen: rand van de deur en de lijn (vouw)
-    E('rect', {x:0, y:-d.H, width:d.W, height:d.H, rx:30, class:'zone', 'stroke-width':fs * 0.06, 'stroke-dasharray':dash, 'pointer-events':'none'}, dyn);
-    E('line', {x1:0, x2:d.W, y1:-d.crU, y2:-d.crU, class:'zone', 'stroke-width':fs * 0.06, 'stroke-dasharray':dash, 'pointer-events':'none'}, dyn);
-  }
-  if (drag && drag.snapX) E('line', {x1:d.W / 2, x2:d.W / 2, y1:-d.H, y2:0, class:'guide', 'stroke-width':4, 'stroke-dasharray':'16 10'}, dyn);
-  if (drag && drag.snapY) E('line', {x1:0, x2:d.W, y1:-midV(d), y2:-midV(d), class:'guide', 'stroke-width':4, 'stroke-dasharray':'16 10'}, dyn);
-  // maatlijnen
-  const dims = E('g', {'pointer-events':'none'}, dyn), lw = fs * 0.07, tk = fs * 0.35;
-  const label = (x, y, txt, big) => { const t = E('text', {x, y, 'text-anchor':'middle', 'dominant-baseline':'middle', 'font-size':big ? fs * 1.05 : fs * 0.9, class:'dlbl', 'stroke-width':fs * 0.28}, dims); t.textContent = txt; };
-  const dimH = (xa, xb, y, txt) => { if (xb - xa < 2) return; E('line', {x1:xa, x2:xb, y1:y, y2:y, class:'dim', 'stroke-width':lw}, dims); for (const x of [xa, xb]) E('line', {x1:x, x2:x, y1:y - tk, y2:y + tk, class:'dim', 'stroke-width':lw}, dims); label((xa + xb) / 2, y - fs * 0.75, txt); };
-  const dimV = (x, ya, yb, txt) => { if (yb - ya < 2) return; E('line', {x1:x, x2:x, y1:-ya, y2:-yb, class:'dim', 'stroke-width':lw}, dims); for (const y of [ya, yb]) E('line', {x1:x - tk, x2:x + tk, y1:-y, y2:-y, class:'dim', 'stroke-width':lw}, dims); label(x + fs * 1.9, -(ya + yb) / 2, txt); };
-  dimH(0, x0, -p.v, mm(x0)); dimH(x1, d.W, -p.v, mm(d.W - x1)); dimV(p.u, 0, y0, mm(y0));
-  label(p.u, -y1 - fs * 0.85, `${mm(w)} × ${mm(hh)} mm`, true);
-  // selectie en hoekgrepen
-  E('rect', {x:x0, y:-y1, width:w, height:hh, class:'sel', 'stroke-width':fs * 0.07, 'stroke-dasharray':`${fs * 0.35} ${fs * 0.25}`, 'pointer-events':'none'}, dyn);
-  const hs = clamp(Math.min(w, hh) * 0.22, fs * 0.32, fs * 0.75);
-  [['nw', x0, -y1], ['ne', x1, -y1], ['sw', x0, -y0], ['se', x1, -y0]].forEach(([c, x, y]) => {
-    E('circle', {cx:x, cy:y, r:hs * 1.1, fill:'transparent', 'data-role':'handle', 'data-c':c, class:'hdl ' + c, style:'stroke:none'}, dyn);
-    E('rect', {x:x - hs / 2, y:y - hs / 2, width:hs, height:hs, rx:hs * 0.2, class:'hdl ' + c, 'stroke-width':fs * 0.08, 'data-role':'handle', 'data-c':c}, dyn);
-  });
-  // naden benoemen
-  const seam = (x, anchor, txt) => { const t = E('text', {x, y:fs * 1.25, 'text-anchor':anchor, 'font-size':fs * 0.7, class:'dlbl', 'stroke-width':fs * 0.2, 'pointer-events':'none'}, dyn); t.textContent = txt; };
-  seam(0, 'start', side === 'L' ? '← voornaad' : '← achternaad'); seam(d.W, 'end', side === 'L' ? 'achternaad →' : 'voornaad →');
-}
-function renderStage(){
-  const svg = $('#stage'), side = curSide(), vb = viewBox(), key = [side, S.zoom, S.car, S.dims.W, S.dims.H].join('|');
-  if (svg.dataset.key !== key){
-    svg.innerHTML = ''; svg.setAttribute('viewBox', vb.join(' ')); drawCar(svg, side); E('g', {id:'dyn'}, svg);
-    svg.dataset.key = key; $('#stagewrap').style.aspectRatio = `${vb[2]} / ${vb[3]}`;
-  }
-  drawLogoLayer(svg.querySelector('#dyn'), side, vb);
-}
-
-/* ============================== slepen en schalen ============================== */
-let drag = null;
-function svgPt(e){ const svg = $('#stage'), pt = svg.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY; return pt.matrixTransform(svg.getScreenCTM().inverse()); }
-function onDown(e){
-  if (!S.logo) return;
-  const role = e.target.closest('[data-role]'); if (!role) return;
-  const p = placeOf(curSide()), pt = svgPt(e);
-  e.preventDefault(); $('#stage').setPointerCapture(e.pointerId);
-  if (role.dataset.role === 'handle') drag = {mode:'size', p0:{...p}};
-  else drag = {mode:'move', p0:{...p}, dx:pt.x - p.u, dy:-pt.y - p.v};
-}
-function onMove(e){
-  if (!drag) return;
-  const pt = svgPt(e), d = S.dims, a = S.logo.aspect; let p = {...drag.p0};
-  if (drag.mode === 'move'){
-    p.u = pt.x - drag.dx; p.v = -pt.y - drag.dy;
-    drag.snapX = Math.abs(p.u - d.W / 2) < 16; if (drag.snapX) p.u = d.W / 2;
-    const mid = midV(d); drag.snapY = Math.abs(p.v - mid) < 16; if (drag.snapY) p.v = mid;
-  } else {
-    const w = Math.max(2 * Math.abs(pt.x - p.u), 2 * Math.abs(-pt.y - p.v) * a);
-    p.w = clamp(Math.round(w), 20, d.W * 1.2);
-  }
-  setPlace(p); renderStage(); renderPlaceInputs(); renderChecks();
-}
-function onUp(){ if (!drag) return; drag = null; renderStage(); afterPlaceChange(); }
-function afterPlaceChange(){ renderPlaceInputs(); renderChecks(); renderExport(); scheduleThin(); save(); }
-
-/* ============================== dunne delen ============================== */
-let thinT = null;
-function scheduleThin(){ clearTimeout(thinT); thinT = setTimeout(runThin, 380); }
-async function logoCanvas(pxW, pxH, pad){
-  const L = S.logo, c = canvas(pxW + 2 * pad, pxH + 2 * pad), g = c.getContext('2d');
-  if (L.kind === 'svg'){ const im = await loadImg(svgDataURL(svgSized(L.svg, pxW, pxH))); g.drawImage(im, pad, pad, pxW, pxH); }
-  else if (L.kind === 'pdf'){ await renderPdfCrop(L, g, pxW, pad); }
-  else { const im = await loadImg(L.raster.url); g.drawImage(im, pad, pad, pxW, pxH); }
-  return c;
-}
-async function runThin(){
-  const L = S.logo; if (!L || L.kind === 'raster'){ S.thin = null; renderChecks(); return; }
-  const p = placeOf(curSide()), w = p.w, hh = hOf(p);
-  const key = L.name + '|' + Math.round(w) + '|' + S.job.soort + '|' + (L.svg ? L.svg.length : 0);
-  if (S.thin && S.thin.key === key) return;
-  try {
-    const mmpp = Math.max(0.12, w / 2400, hh / 2400), pw = Math.round(w / mmpp), ph = Math.round(hh / mmpp), pad = 3;
-    const c = await logoCanvas(pw, ph, pad), W = c.width, H = c.height, d = c.getContext('2d').getImageData(0, 0, W, H).data;
-    const mask = new Uint8Array(W * H); let ink = 0; for (let i = 0; i < W * H; i++) if (d[i * 4 + 3] >= 128){ mask[i] = 1; ink++; }
-    if (!ink){ S.thin = null; return; }
-    const dIn = edt(mask, W, H);
-    const tests = S.job.soort === 'snij' ? [1, 2] : [0.5];
-    const res = [], masks = [], ov = canvas(W, H), og = ov.getContext('2d'), oid = og.createImageData(W, H);
-    for (const t of tests){ const {thin, cnt} = thinMask(mask, W, H, t / mmpp, dIn); res.push({t, frac:cnt / ink, cnt}); masks.push(thin); }
-    // eerst de ruimste toets (oranje), daarna de strengste (rood) eroverheen
-    for (let k = tests.length - 1; k >= 0; k--){
-      const r = res[k]; if (!(r.cnt > 25 && r.frac > 0.002)) continue;
-      const strong = k === 0, m = masks[k];
-      for (let i = 0; i < W * H; i++) if (m[i]){ const o = i * 4; oid.data[o] = strong ? 230 : 255; oid.data[o + 1] = strong ? 20 : 150; oid.data[o + 2] = strong ? 40 : 0; oid.data[o + 3] = 255; }
-    }
-    og.putImageData(oid, 0, 0);
-    const crop = canvas(pw, ph); crop.getContext('2d').drawImage(ov, pad, pad, pw, ph, 0, 0, pw, ph);
-    const any = res.some(r => r.cnt > 25 && r.frac > 0.002);
-    S.thin = {key, w:Math.round(w), res, overlay: any ? crop.toDataURL('image/png') : null};
-  } catch (e) { console.warn('dunne delen', e); S.thin = null; }
-  renderStage(); renderChecks();
-}
-
-/* ============================== kleuraandeel ============================== */
-async function computeShares(){
-  const L = S.logo; if (!L) return;
-  try {
-    const long = 420, pw = L.aspect >= 1 ? long : Math.round(long * L.aspect), ph = L.aspect >= 1 ? Math.round(long / L.aspect) : long;
-    const c = await logoCanvas(pw, ph, 0), d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
-    let cols = L.kind === 'svg' ? L.colors.slice() : null;
-    if (!cols || !cols.length){ // PDF of pixel: kleuren schatten
-      const P = {w:c.width, h:c.height, d}; const smp = coreSamples(P, d); if (!smp.n) return;
-      const k = autoK(smp.lab); const km = kmeans(smp.lab, k, 7);
-      cols = km.centers.map((cl, i) => avgRGBForCluster(smp, km.assign, i));
-    }
-    const labs = cols.map(hexLab), cnt = new Array(cols.length).fill(0); let tot = 0;
-    for (let i = 0; i < c.width * c.height; i++){ if (d[i * 4 + 3] < 200) continue; const l = rgb2lab(d[i * 4], d[i * 4 + 1], d[i * 4 + 2]); let bi = 0, bd = 1e9; for (let k = 0; k < labs.length; k++){ const dd = dE(l, labs[k]); if (dd < bd){ bd = dd; bi = k; } } cnt[bi]++; tot++; }
-    S.shares = cols.map((hx, i) => ({hex:hx, pct: tot ? cnt[i] / tot : 0})).filter(x => x.pct > 0.0005 || L.kind === 'svg').sort((a, b) => b.pct - a.pct);
-    S.sharesEstimated = L.kind !== 'svg';
-  } catch (e) { console.warn('kleuren', e); }
-  renderLogoInfo(); renderChecks(); renderExport();
-}
-
 /* ============================== omzetten (potrace) ============================== */
-const TR = {L:null, P:null, km:{}, k:'auto', bg:'overal', alpha:1, noise:0.00008, colors:null, labels:null, svg:null, darkbg:false, run:0, off:new Set()};
+const TR = {L:null, item:null, P:null, km:{}, k:'auto', bg:'overal', alpha:1, noise:0.00008, colors:null, labels:null, svg:null, darkbg:false, run:0, off:new Set()};
 function coreSamples(P, d){ // pixels waarvan de buren dezelfde kleur hebben (geen randjes)
   const {w, h} = P, step = Math.max(1, Math.floor(Math.sqrt(w * h / 70000))), lab = [], rgb = [];
   const L = (i) => rgb2lab(d[i * 4], d[i * 4 + 1], d[i * 4 + 2]);
@@ -901,8 +737,8 @@ function autoK(X){
 function avgRGBForCluster(smp, assign, ci){ let r = 0, g = 0, b = 0, c = 0; for (let i = 0; i < smp.n; i++) if (assign[i] === ci){ r += smp.rgb[i * 3]; g += smp.rgb[i * 3 + 1]; b += smp.rgb[i * 3 + 2]; c++; } if (!c) return '#888888'; let hx = toHex(r / c, g / c, b / c); const l = hexLab(hx); if (dE(l, [100, 0, 0]) < 5) hx = '#ffffff'; else if (dE(l, [0, 0, 0]) < 6) hx = '#000000'; return hx; }
 
 async function traceSource(L){ return L.raster.src || L.raster.url; }
-async function openTrace(L){
-  TR.L = L; TR.km = {}; TR.colors = null; TR.svg = null; TR.off = new Set();
+async function openTrace(L, it){
+  TR.L = L; TR.item = it || cur(); TR.km = {}; TR.colors = null; TR.svg = null; TR.off = new Set();
   $('#c-trace').classList.remove('hidden');
   const im = await loadImg(await traceSource(L));
   const sw = im.naturalWidth, sh = im.naturalHeight, long = Math.max(sw, sh);
@@ -991,396 +827,1205 @@ function renderTraceColors(){
     box.append(h('div', {class:'crow' + (off ? ' off' : '')},
       h('span', {class:'sq', style:`background:${c.hex}`}),
       h('span', null, colorName(c.hex)), h('span', {class:'hx'}, c.hex),
-      h('span', {class:'pc'}, (c.pct * 100).toFixed(c.pct < 0.01 ? 1 : 0) + '%'),
+      h('span', {class:'pc'}, (c.pct * 100).toFixed(c.pct < 0.01 ? 1 : 0).replace('.', ',') + '%'),
       h('button', {type:'button', onclick:() => { off ? TR.off.delete(c.hex) : TR.off.add(c.hex); retrace(false); }}, off ? 'Terugzetten' : 'Weglaten')));
   }
 }
 async function useTrace(){
   if (!TR.svg) return;
   try {
+    const it = TR.item; if (!it || !S.items.includes(it)){ toast('Deze sticker bestaat niet meer'); return; }
     const n = await normalizeSvg(TR.svg), src = TR.L;
     const L = {kind:'svg', name:src.name, ...n, origin:'omgezet', traceSrc:src.raster.src || src.raster.url};
-    $('#c-trace').classList.add('hidden');
-    setLogo(L, false); toast('Logo omgezet naar vector');
+    $('#c-trace').classList.add('hidden'); TR.item = null;
+    S.active = it.id; setItemL(it, L); toast('Logo omgezet naar vector');
     $('#c-stage').scrollIntoView({behavior:'smooth', block:'start'});
   } catch (e) { toast(e.message); }
 }
 
+/* ============================== bestand openen ============================== */
+async function onFile(file){
+  showErr(null);
+  if (!file) return;
+  let it = cur();
+  if (!it || it.type !== 'logo') it = addItem('logo');
+  setLogoBusy(true);
+  try {
+    const buf = new Uint8Array(await file.arrayBuffer()), name = file.name || 'logo';
+    const ext = (name.split('.').pop() || '').toLowerCase();
+    const head = new TextDecoder('latin1').decode(buf.subarray(0, Math.min(buf.length, 4096)));
+    let L;
+    if (head.includes('%PDF-')){ L = await importPdf(buf, name); }
+    else if (/<svg[\s>]/i.test(new TextDecoder().decode(buf.subarray(0, Math.min(buf.length, 65536)))) || ext === 'svg'){
+      const text = new TextDecoder().decode(buf);
+      const n = await normalizeSvg(text, {dropBg:true});
+      if (n.flags.rasterInside && n.flags.shapes === 0){
+        const href = (text.match(/(?:xlink:)?href\s*=\s*["'](data:image\/[^"']+)["']/i) || [])[1];
+        if (!href) throw new Error('Dit SVG-bestand bevat alleen een plaatje dat niet ingesloten is.');
+        L = await importRasterURL(href, name, 'Dit SVG-bestand bevat alleen een ingesloten plaatje, geen echte vectoren.');
+      } else { L = {kind:'svg', name, ...n, origin:'bestand'}; if (text.length < 1.5e6) L.srcText = text; }
+    }
+    else if (head.startsWith('%!PS') || ext === 'eps' || ext === 'ai'){
+      throw new Error('Dit is een EPS- of oud Illustrator-bestand. Dat kan de browser niet openen. Vraag de klant om een PDF of SVG, of open het in Illustrator en kies "Opslaan als PDF". Het EPS-bestand zelf kun je wel gewoon naar het stickerbedrijf sturen.');
+    }
+    else if ((file.type || '').startsWith('image/') || ['png','jpg','jpeg','webp','gif','bmp'].includes(ext)){
+      L = await importRasterURL(await blobToDataURL(file), name);
+    }
+    else throw new Error('Dit bestandstype ken ik niet. Gebruik SVG, PDF, AI, PNG of JPG.');
+    if (!S.items.includes(it)) return;
+    setItemL(it, L, {fresh:!it.L});
+    if (L.kind === 'raster') openTrace(L, it);
+  } catch (e) {
+    console.error(e); showErr(e.message || String(e));
+  } finally { setLogoBusy(false); $('#file').value = ''; }
+}
+function showErr(msg){ const el = $('#logo-err'); el.textContent = msg || ''; el.classList.toggle('hidden', !msg); }
+function setLogoBusy(on){ const d = $('#drop'), it = cur(); d.style.opacity = on ? .5 : 1; d.querySelector('b').textContent = on ? 'Bezig met lezen…' : (it && it.L ? 'Ander logo kiezen' : 'Sleep het logo hierheen'); }
+
+/* ============================== stickers ============================== */
+// Elke sticker: een logo (bestand), een tekst (bijv. de website) of een QR-code, met een eigen plek, soort en kleuren.
+// Plek per aanzicht: L/R = deur (u vanaf de linkernaad in beeld, v boven de onderrand); F/B = voor/achter
+// (u = vanaf het midden van de auto, + = rechts in beeld; v = boven de grond).
+const ASSUME = {logo:2.5, tekst:7, qr:1};
+const cur = () => S.items.find(i => i.id === S.active) || null;
+const itemNo = it => S.items.indexOf(it) + 1;
+const isDoor = v => v === 'L' || v === 'R';
+const otherSide = s => s === 'L' ? 'R' : 'L';
+const viewsOf = it => it.where === 'LR' ? ['L', 'R'] : [it.where];
+const onView = (it, v) => !!it && viewsOf(it).includes(v);
+const aspectOf = it => it.L ? it.L.aspect : ASSUME[it.type];
+const itemsOn = v => S.items.filter(it => it.L && placeOf(it, v));
+const firstLine = it => (it.text.value || '').split('\n').map(s => s.trim()).filter(Boolean)[0] || '';
+function itemLabel(it){
+  if (it.type === 'tekst') return firstLine(it) || 'nog geen tekst';
+  if (it.type === 'qr') return it.qr.value.trim().replace(/^https?:\/\//, '') || 'nog geen link';
+  return it.L ? it.L.name : 'nog geen bestand';
+}
+function newItem(type){
+  const prev = [...S.items].reverse().find(i => i.type === type);
+  const doorTaken = S.items.some(i => i.type === 'logo' && i.where !== 'F' && i.where !== 'B');
+  return {id:'i' + Math.random().toString(36).slice(2, 9), type, L:null, rev:0,
+    text:{value:'', font:prev ? prev.text.font : 'montserrat', color:prev ? prev.text.color : '#111111'},
+    qr:{value:'', color:'#111111', bg:true},
+    where: type === 'logo' && !doorTaken ? 'LR' : 'B', linked:true, place:{},
+    soort: prev ? prev.soort : (type === 'qr' ? 'print' : 'snij'), foil:{}, shares:null, sharesEstimated:false, thin:null};
+}
+function addItem(type){
+  const it = newItem(type), first = !S.items.some(i => i.type === type); S.items.push(it); S.active = it.id; ensurePlaces(it, true);
+  if (!onView(it, S.view)) S.view = viewsOf(it)[0];
+  if (type === 'tekst' && first){ // op de ruit leest wit het best
+    const v = viewsOf(it)[0], apply = () => { const p = placeOf(it, v); if (p && !it.L && onGlass(v, p)){ it.text.color = '#ffffff'; if (S.active === it.id) renderEditor(); } };
+    if (isDoor(v) || ZONE[v]) apply(); else { loadZone(v); if (_zoneJob[v]) _zoneJob[v].then(apply); }
+  }
+  hideTraceFor(it); renderAll(); save();
+  return it;
+}
+function removeItem(it){
+  if ((it.L || it.text.value.trim() || it.qr.value.trim()) && !confirm(`Sticker ${itemNo(it)} (${TYPES[it.type]}) verwijderen?`)) return;
+  const i = S.items.indexOf(it); S.items.splice(i, 1);
+  const nx = S.items[Math.max(0, i - 1)] || null; S.active = nx ? nx.id : null;
+  if (nx && !onView(nx, S.view)) S.view = viewsOf(nx)[0];
+  if (TR.item === it){ $('#c-trace').classList.add('hidden'); TR.run++; }
+  renderAll(); save();
+}
+function selectItem(id, keepView){
+  const it = S.items.find(i => i.id === id); if (!it) return;
+  S.active = id; if (!keepView && !onView(it, S.view)) S.view = viewsOf(it)[0];
+  hideTraceFor(it); showErr(null); renderAll(); save();
+}
+function hideTraceFor(it){ if (TR.item && TR.item !== it){ $('#c-trace').classList.add('hidden'); TR.run++; TR.item = null; } }
+// Nieuwe vorm (logo, tekst of QR) in een sticker zetten.
+function setItemL(it, L, opts = {}){
+  const prevA = aspectOf(it), prevLines = (it.L && it.L.lines) || 1;
+  it.L = L; it.thin = null; it.shares = null; it.rev = (it.rev || 0) + 1;
+  if (L){
+    if (opts.fresh) ensurePlaces(it, true);
+    else if (Math.abs(prevA - L.aspect) > 0.0005){
+      const vs = it.where === 'LR' && it.linked ? ['L'] : viewsOf(it);
+      for (const v of vs){ const p = placeOf(it, v); if (!p) continue; const q = {...p};
+        if (opts.keepHeight) q.w = p.w / prevA * L.aspect * ((L.lines || 1) / prevLines); // lettergrootte gelijk houden
+        setPlace(it, fitPlace(it, q, v), v); }
+    }
+  }
+  renderAll(); if (L){ computeShares(it); scheduleThin(it); } save();
+}
+
+/* ============================== tekst naar vector ============================== */
+const _font = {};
+function getFont(id){
+  const f = FONTS.find(x => x.id === id) || FONTS[0];
+  return _font[f.id] || (_font[f.id] = (async () => {
+    await loadScript(CDN.opentype);
+    const r = await fetch(f.url); if (!r.ok) throw new Error('Lettertype kon niet geladen worden');
+    return window.opentype.parse(await r.arrayBuffer());
+  })().catch(e => { delete _font[f.id]; throw e; }));
+}
+async function textToSvg(t){
+  const lines = (t.value || '').replace(/\r/g, '').split('\n').map(s => s.trim()).filter(Boolean);
+  if (!lines.length) return null;
+  const font = await getFont(t.font), size = 100, lh = size * 1.22, missing = new Set();
+  for (const s of lines) for (const ch of s) if (ch.trim() && font.charToGlyphIndex(ch) === 0) missing.add(ch);
+  let d = '';
+  lines.forEach((s, i) => {
+    const bb = font.getPath(s, 0, 0, size, {kerning:true}).getBoundingBox();
+    d += font.getPath(s, -(bb.x1 + bb.x2) / 2, i * lh, size, {kerning:true}).toPathData(2);
+  });
+  if (!d.trim()) return null;
+  return {svg:`<svg xmlns="${NS}" viewBox="-2000 -200 4000 ${Math.round(lines.length * lh + 400)}"><path fill="${t.color}" d="${d}"/></svg>`, missing:[...missing], lines:lines.length};
+}
+const _gen = {};
+function regen(it, delay = 150){
+  clearTimeout(_gen[it.id]);
+  _gen[it.id] = setTimeout(async () => {
+    const run = it._run = (it._run || 0) + 1;
+    try {
+      let L = null;
+      if (it.type === 'tekst'){
+        const r = await textToSvg(it.text);
+        if (r){ const n = await normalizeSvg(r.svg); L = {kind:'svg', name:firstLine(it), ...n, origin:'tekst', missing:r.missing, lines:r.lines}; }
+        $('#tx-err').classList.add('hidden');
+      } else if (it.type === 'qr'){
+        const r = it.qr.value.trim() ? await qrToSvg(it.qr) : null;
+        if (r){ const n = await normalizeSvg(r.svg); L = {kind:'svg', name:'QR-code', ...n, origin:'qr', qrN:r.n, qrQuiet:r.quiet}; }
+      }
+      if (run !== it._run || !S.items.includes(it)) return;
+      setItemL(it, L, {fresh:!it.L, keepHeight:it.type === 'tekst'});
+    } catch (e) {
+      console.error(e);
+      if (it.type === 'tekst'){ const el = $('#tx-err'); el.textContent = e.message || String(e); el.classList.remove('hidden'); }
+      else toast(e.message || String(e));
+    }
+  }, delay);
+}
+
+/* ============================== QR-code ============================== */
+// De donkere blokjes worden samengevoegd tot nette contouren (geen losse vierkantjes), zodat de plotter in één keer kan snijden.
+function gridOutline(dark, n, off){
+  const out = new Map(), key = (x, y) => x + ',' + y, add = (a, b) => { const k = key(a[0], a[1]); if (!out.has(k)) out.set(k, []); out.get(k).push(b); };
+  const D = (r, c) => r >= 0 && c >= 0 && r < n && c < n && dark(r, c);
+  for (let r = 0; r < n; r++) for (let c = 0; c < n; c++){
+    if (!D(r, c)) continue;
+    if (!D(r - 1, c)) add([c, r], [c + 1, r]);
+    if (!D(r, c + 1)) add([c + 1, r], [c + 1, r + 1]);
+    if (!D(r + 1, c)) add([c + 1, r + 1], [c, r + 1]);
+    if (!D(r, c - 1)) add([c, r + 1], [c, r]);
+  }
+  let d = '';
+  for (;;){
+    let start = null; for (const [k, l] of out) if (l.length){ start = k.split(',').map(Number); break; }
+    if (!start) break;
+    const pts = [start]; let p = start, dir = null;
+    for (let guard = 0; guard < 100000; guard++){
+      const l = out.get(key(p[0], p[1])); if (!l || !l.length) break;
+      let bi = 0;
+      if (l.length > 1 && dir){ // bij een kruispunt rechtsaf: zo blijven schuin rakende blokjes losse vormen
+        const pref = [[-dir[1], dir[0]], dir, [dir[1], -dir[0]]];
+        let best = 9; l.forEach((q, i) => { const dd = [q[0] - p[0], q[1] - p[1]]; const r = pref.findIndex(x => x[0] === dd[0] && x[1] === dd[1]); if (r >= 0 && r < best){ best = r; bi = i; } });
+      }
+      const q = l.splice(bi, 1)[0]; dir = [q[0] - p[0], q[1] - p[1]]; p = q;
+      if (p[0] === start[0] && p[1] === start[1]) break;
+      pts.push(p);
+    }
+    const s = pts.filter((q, i) => { const a = pts[(i - 1 + pts.length) % pts.length], b = pts[(i + 1) % pts.length]; return !((a[0] === q[0] && q[0] === b[0]) || (a[1] === q[1] && q[1] === b[1])); });
+    d += 'M' + s.map(q => (q[0] + off) + ' ' + (q[1] + off)).join('L') + 'Z';
+  }
+  return d;
+}
+async function qrToSvg(q){
+  await loadScript(CDN.qrcode);
+  const Q = window.qrcode; Q.stringToBytes = Q.stringToBytesFuncs['UTF-8'];
+  const qr = Q(0, 'M'); qr.addData(q.value.trim(), 'Byte'); qr.make();
+  const n = qr.getModuleCount(), quiet = q.bg ? 2 : 0, N = n + 2 * quiet;
+  const d = gridOutline((r, c) => qr.isDark(r, c), n, quiet);
+  const bg = q.bg ? `<rect x="0" y="0" width="${N}" height="${N}" rx="0.7" fill="#ffffff"/>` : '';
+  return {svg:`<svg xmlns="${NS}" viewBox="0 0 ${N} ${N}">${bg}<path fill="${q.color}" d="${d}"/></svg>`, n, quiet};
+}
+
+/* ============================== aanzichten en vlakken ============================== */
+// De auto: renders uit het gekochte 3D-model ("Fiat Topolino 2024", Behr Bros, 3DExport), orthografisch op ware schaal.
+// topolino-X.webp = auto met witte lak; topolino-X-lak.webp = glans (rgb) + lakmasker (alfa).
+// zone-X.png (voor/achter, 2 px per cm): rood = lak, blauw = glas, groen = hoe recht het vlak naar je toe staat, alfa = auto.
+// Het modelbestand zelf staat hier niet (licentie): alleen deze beelden.
+const VIEW = {
+  L:{base:'belettering/topolino-L.webp', lak:'belettering/topolino-L-lak.webp', x:-799, y:-1282, w:2640, h:1640, sh:[540, 293, 1360, 46]},
+  R:{base:'belettering/topolino-R.webp', lak:'belettering/topolino-R-lak.webp', x:-761, y:-1282, w:2640, h:1640, sh:[540, 293, 1360, 46]},
+  F:{base:'belettering/topolino-F.webp', lak:'belettering/topolino-F-lak.webp', zone:'belettering/zone-F.png', x:-820, y:-1580, w:1640, h:1640, sh:[0, 4, 800, 40]},
+  B:{base:'belettering/topolino-B.webp', lak:'belettering/topolino-B-lak.webp', zone:'belettering/zone-B.png', x:-820, y:-1580, w:1640, h:1640, sh:[0, 4, 800, 40]}
+};
+const AUTO_VB = [-880, -1340, 2860, 1720], FB_VB = [-880, -1600, 1760, 1690];
+// Vaste obstakels die niet in het 3D-model zitten.
+const OBST = {B:[{k:'kenteken', x0:-215, x1:215, y0:498, y1:798}]};
+// Standaardplekken voor/achter (W en H = ruimte in echte mm).
+const SPOTS = {
+  F:[{k:'paneel', u:0, v:505, W:860, H:130}],
+  B:[{k:'ruit', u:0, v:1192, W:860, H:250}, {k:'onder', u:0, v:440, W:760, H:96}, {k:'rechts', u:330, v:648, W:190, H:210}, {k:'links', u:-330, v:648, W:190, H:210}]
+};
+const SPOT_PREF = {logo:['ruit','onder','paneel'], tekst:['ruit','onder','paneel'], qr:['rechts','links','ruit','paneel']};
+const ZONE = {}, _zoneJob = {};
+function loadZone(v){
+  if (!VIEW[v].zone || ZONE[v] || _zoneJob[v]) return;
+  _zoneJob[v] = (async () => {
+    const r = await fetch(VIEW[v].zone); if (!r.ok) throw new Error('zone ' + r.status);
+    const bm = await createImageBitmap(await r.blob(), {colorSpaceConversion:'none', premultiplyAlpha:'none'});
+    const c = canvas(bm.width, bm.height), g = c.getContext('2d', {willReadFrequently:true}); g.drawImage(bm, 0, 0);
+    ZONE[v] = {w:c.width, h:c.height, d:g.getImageData(0, 0, c.width, c.height).data};
+    renderStage(); renderPlaceInputs(); renderChecks(); renderItems(); renderExport();
+  })().catch(e => { console.warn('vlakken', e); delete _zoneJob[v]; });
+}
+function zonePx(v, u, vv){ const Z = ZONE[v], V = VIEW[v], s = Z.w / V.w; return [Math.floor((u - V.x) * s), Math.floor((-vv - V.y) * s)]; }
+function zoneAt(v, u, vv){ const Z = ZONE[v]; if (!Z) return null; const [x, y] = zonePx(v, u, vv); if (x < 0 || y < 0 || x >= Z.w || y >= Z.h) return {off:true}; const o = (y * Z.w + x) * 4, d = Z.d; return {off:d[o + 3] < 128, paint:d[o] > 127, glass:d[o + 2] > 127, g:d[o + 1]}; }
+// Hoe schuin het vlak staat: 1 = recht naar je toe, 0,85 = de achterruit. Een sticker op een schuin vlak lijkt in beeld lager.
+function kAt(v, p){
+  if (isDoor(v) || !p) return 1; if (!ZONE[v]){ loadZone(v); return 1; }
+  const gs = [];
+  for (let i = -3; i <= 3; i++) for (let j = -3; j <= 3; j++){ const z = zoneAt(v, p.u + i * 8, p.v + j * 8); if (z && !z.off && (z.paint || z.glass)) gs.push(z.g); }
+  if (gs.length < 10) return 1;
+  gs.sort((a, b) => a - b); const k = gs[gs.length >> 1] / 255;
+  return k > 0.95 ? 1 : Math.max(0.6, Math.round(k * 100) / 100);
+}
+function onGlass(v, p){ if (isDoor(v)) return false; const z = zoneAt(v, p.u, p.v); return !!(z && z.glass); }
+// Onderrand van de ruit recht onder een punt (null als het punt niet op glas zit).
+function glassBelow(v, u, vv){
+  if (isDoor(v) || !ZONE[v]) return null; const Z = ZONE[v], V = VIEW[v], s = Z.w / V.w;
+  let [x, y] = zonePx(v, u, vv + 1); if (x < 0 || x >= Z.w) return null;
+  const isG = py => py >= 0 && py < Z.h && Z.d[(py * Z.w + x) * 4 + 3] > 127 && Z.d[(py * Z.w + x) * 4 + 2] > 127;
+  if (!isG(y)) return null;
+  while (y < Z.h - 1 && isG(y + 1)) y++;
+  return -(V.y + (y + 1) / s);
+}
+function zoneStats(v, r){
+  const Z = ZONE[v]; if (!Z) return null; const V = VIEW[v], s = Z.w / V.w;
+  const px0 = Math.floor((r.x0 - V.x) * s), px1 = Math.ceil((r.x1 - V.x) * s), py0 = Math.floor((-r.y1 - V.y) * s), py1 = Math.ceil((-r.y0 - V.y) * s);
+  const step = Math.max(1, Math.floor(Math.sqrt(Math.max(1, (px1 - px0) * (py1 - py0)) / 20000)));
+  let n = 0, paint = 0, glass = 0, other = 0, off = 0; const gp = [];
+  for (let y = py0; y < py1; y += step) for (let x = px0; x < px1; x += step){
+    n++;
+    if (x < 0 || y < 0 || x >= Z.w || y >= Z.h){ off++; continue; }
+    const o = (y * Z.w + x) * 4;
+    if (Z.d[o + 3] < 128) off++; else if (Z.d[o] > 127){ paint++; gp.push(Z.d[o + 1]); } else if (Z.d[o + 2] > 127) glass++; else other++;
+  }
+  n = Math.max(1, n); gp.sort((a, b) => a - b);
+  const obst = (OBST[v] || []).filter(q => r.x0 < q.x1 && r.x1 > q.x0 && r.y0 < q.y1 && r.y1 > q.y0).map(q => q.k);
+  return {paint:paint / n, glass:glass / n, other:other / n, off:off / n, g10:gp.length ? gp[Math.floor(gp.length * 0.1)] : 255, gMed:gp.length ? gp[gp.length >> 1] : 255, obst};
+}
+
+/* ============================== plaatsing ============================== */
+const mirrorP = p => p ? {...p, u:S.dims.W - p.u} : p;
+function placeOf(it, v){
+  if (!it || !onView(it, v)) return null;
+  if (isDoor(v) && it.where === 'LR' && (it.linked || !it.place[v])) return it.place[v] || mirrorP(it.place[otherSide(v)]) || null;
+  return it.place[v] || null;
+}
+function setPlace(it, p, v){
+  it.place[v] = {u:p.u, v:p.v, w:p.w};
+  if (isDoor(v) && it.where === 'LR' && it.linked) it.place[otherSide(v)] = mirrorP(it.place[v]);
+}
+const hReal = (it, p) => p.w / aspectOf(it);
+function rectOf(it, v, p){ const k = kAt(v, p), hh = hReal(it, p) * k; return {x0:p.u - p.w / 2, x1:p.u + p.w / 2, y0:p.v - hh / 2, y1:p.v + hh / 2, hh, k}; }
+const frontGap = (side, p) => side === 'L' ? p.u - p.w / 2 : S.dims.W - (p.u + p.w / 2);
+const rearGap = (side, p) => side === 'L' ? S.dims.W - (p.u + p.w / 2) : p.u - p.w / 2;
+function overlapsOthers(it, v, p, gap = 10){
+  const a = rectOf(it, v, p);
+  return S.items.some(o => o !== it && o.L && placeOf(o, v) && (b => a.x0 < b.x1 + gap && a.x1 > b.x0 - gap && a.y0 < b.y1 + gap && a.y1 > b.y0 - gap)(rectOf(o, v, placeOf(o, v))));
+}
+function ensurePlaces(it, fresh){
+  for (const v of viewsOf(it)){
+    if (it.where === 'LR' && it.linked && v === 'R' && it.place.L){ it.place.R = mirrorP(it.place.L); continue; }
+    if (!fresh && it.place[v]) continue;
+    setPlace(it, defaultPlace(it, v), v);
+  }
+}
+function defaultPlace(it, v){
+  const a = aspectOf(it), cands = [], nl = it.type === 'tekst' ? Math.max(1, it.text.value.split('\n').filter(x => x.trim()).length) : 1;
+  if (isDoor(v)){
+    const d = S.dims, m = d.marge, mid = midV(d);
+    if (it.type === 'qr'){ const w = 150, rear = v === 'L' ? d.W - m - 40 - w / 2 : m + 40 + w / 2; cands.push({u:rear, v:mid, w}, {u:d.W - rear, v:mid, w}); }
+    else if (it.type === 'tekst'){ const w = Math.min(Math.min(55 * nl, 300) * a, d.W - 2 * m - 60), h2 = w / a; cands.push({u:d.W / 2, v:mid, w}, {u:d.W / 2, v:m + 25 + h2 / 2, w}, {u:d.W / 2, v:GREEP.v0 - 15 - h2 / 2, w}); }
+    else cands.push({u:d.W / 2, v:mid, w:Math.min(maxPlace(a).w * 0.8, 600)});
+  } else {
+    for (const s of SPOT_PREF[it.type].map(k => SPOTS[v].find(x => x.k === k)).filter(Boolean)){
+      const w = it.type === 'qr' ? Math.min(160, s.W, s.H) : it.type === 'tekst' ? Math.min(s.W * 0.95, Math.min(s.H, 70 * nl) * a) : Math.min(s.W, s.H * a) * 0.85;
+      cands.push({u:s.u, v:s.v, w:Math.round(w)});
+    }
+  }
+  return cands.find(c => !overlapsOthers(it, v, c)) || cands[0];
+}
+function maxPlace(a){
+  // het vlak onder de lijn, onder greep, knipperlicht en vlaggetje, over de volle breedte
+  const d = S.dims, m = d.marge, h = (GREEP.v0 - 10) - m, w = Math.min(h * a, d.W - 2 * m);
+  return {w, v:midV(d), u:d.W / 2};
+}
+function fitPlace(it, p, v){
+  const a = aspectOf(it);
+  if (isDoor(v)){ const d = S.dims, w = Math.min(p.w, d.W - 2 * d.marge, (d.H - 2) * a); return {u:clamp(p.u, w / 2, d.W - w / 2), v:clamp(p.v, w / a / 2, d.H - w / a / 2), w}; }
+  const w = Math.min(p.w, 1400, 1100 * a); return {u:clamp(p.u, -780 + w / 2, 780 - w / 2), v:clamp(p.v, 20, 1450), w};
+}
+// Voor/achter: de grootste sticker die op deze plek nog helemaal op hetzelfde vlak (lak of ruit) past.
+function fbFits(it, v, p, kind){
+  const r = rectOf(it, v, p), st = zoneStats(v, r), m = 15, sm = zoneStats(v, {x0:r.x0 - m, x1:r.x1 + m, y0:r.y0 - m, y1:r.y1 + m});
+  if (!st || st.off > 0 || st.other > 0.002 || st.obst.length || sm.obst.length || sm.off > 0.002 || sm.other > 0.004) return false;
+  if (kind === 'glass') return st.glass >= 0.995 && sm.paint < 0.01;
+  return st.paint >= 0.995 && sm.glass < 0.01 && st.g10 >= 150 && st.gMed - st.g10 <= 28;
+}
+function fbMax(it, v, p){
+  const z = zoneAt(v, p.u, p.v); if (!z || z.off || !(z.paint || z.glass)) return null;
+  const kind = z.glass ? 'glass' : 'paint'; let lo = 0, hi = 1500;
+  for (let i = 0; i < 16; i++){ const mid = (lo + hi) / 2; if (fbFits(it, v, {...p, w:mid}, kind)) lo = mid; else hi = mid; }
+  return lo >= 20 ? Math.floor(lo * 0.98) : null;
+}
+
+/* ============================== tekenen ============================== */
+const _img = {}; const img = url => _img[url] || (_img[url] = loadImg(url).catch(e => { delete _img[url]; throw e; }));
+const _tint = new Map(), _tintUrl = new Map();
+// Auto in een lakkleur: wit beeld × kleur binnen het lakmasker, glans erover.
+function tintedCar(v, color){
+  const key = v + color;
+  if (_tint.has(key)) return _tint.get(key);
+  const job = (async () => {
+    const C = VIEW[v], [b, l] = await Promise.all([img(C.base), img(C.lak)]);
+    const W = b.naturalWidth, H = b.naturalHeight, c = canvas(W, H), g = c.getContext('2d');
+    g.drawImage(b, 0, 0);
+    const t = canvas(W, H), tg = t.getContext('2d'); tg.fillStyle = color; tg.fillRect(0, 0, W, H); tg.globalCompositeOperation = 'destination-in'; tg.drawImage(l, 0, 0);
+    g.globalCompositeOperation = 'multiply'; g.drawImage(t, 0, 0);
+    g.globalCompositeOperation = 'lighter'; g.globalAlpha = 0.16; g.drawImage(t, 0, 0); g.globalAlpha = 1;
+    g.globalCompositeOperation = 'screen'; g.drawImage(l, 0, 0);
+    g.globalCompositeOperation = 'destination-in'; g.drawImage(b, 0, 0);
+    const url = await new Promise(res => c.toBlob(bl => res(URL.createObjectURL(bl)), 'image/webp', 0.9));
+    _tintUrl.set(key, url);
+    return {url, canvas:c};
+  })();
+  _tint.set(key, job);
+  job.catch(() => _tint.delete(key));
+  if (_tint.size > 10){ const [k0, v0] = _tint.entries().next().value; _tint.delete(k0); _tintUrl.delete(k0); v0.then(t => URL.revokeObjectURL(t.url)).catch(() => {}); }
+  return job;
+}
+function viewBox(v){ const d = S.dims; return !isDoor(v) ? FB_VB : S.zoom === 'deur' ? [-230, -(d.H + 260), d.W + 460, d.H + 600] : AUTO_VB; }
+function logoHref(L){ return L.kind === 'svg' ? svgDataURL(L.svg) : L.kind === 'pdf' ? L.preview : L.raster.url; }
+// Vaste laag: schaduw op de grond en de auto in de gekozen kleur.
+function drawCar(svg, v){
+  const C = VIEW[v], defs = E('defs', null, svg), color = S.car, key = v + color, [cx, cy, rx, ry] = C.sh;
+  const rg = E('radialGradient', {id:'gsh'}, defs);
+  E('stop', {offset:0, 'stop-color':'#000', 'stop-opacity':0.3}, rg); E('stop', {offset:1, 'stop-color':'#000', 'stop-opacity':0}, rg);
+  E('ellipse', {cx, cy, rx, ry, fill:'url(#gsh)'}, svg);
+  const im = E('image', {href:_tintUrl.get(key) || C.base, x:C.x, y:C.y, width:C.w, height:C.h, preserveAspectRatio:'none'}, svg);
+  if (!_tintUrl.has(key)) tintedCar(v, color).then(t => { if (im.isConnected && S.car === color) im.setAttribute('href', t.url); }).catch(e => console.warn('autokleur', e));
+}
+// Eén sticker in beeld, met de schaduw en glans van de auto eroverheen.
+function drawSticker(parent, it, v, active, fs){
+  const p = placeOf(it, v), r = rectOf(it, v, p), w = p.w, hh = r.hh, href = logoHref(it.L), V = VIEW[v];
+  const g = E('g', {'data-role':'logo', 'data-id':it.id, style:'cursor:' + (active ? 'move' : 'pointer')}, parent);
+  E('rect', {x:r.x0, y:-r.y1, width:w, height:hh, fill:'transparent', 'pointer-events':'all'}, g);
+  E('image', {href, x:r.x0, y:-r.y1, width:w, height:hh, preserveAspectRatio:'none'}, g);
+  if (!active) E('rect', {x:r.x0, y:-r.y1, width:w, height:hh, rx:fs * 0.1, class:'oth', 'stroke-width':fs * 0.05, 'stroke-dasharray':`${fs * 0.25} ${fs * 0.2}`, 'pointer-events':'none'}, parent);
+  if (!(drag && drag.id === it.id)){
+    const glass = onGlass(v, p), mid = 'lmk' + it.id;
+    const mk = E('mask', {id:mid, maskUnits:'userSpaceOnUse', x:r.x0, y:-r.y1, width:w, height:hh, style:'mask-type:alpha'}, E('defs', null, parent));
+    E('image', {href, x:r.x0, y:-r.y1, width:w, height:hh, preserveAspectRatio:'none'}, mk);
+    E('image', {href:V.base, x:V.x, y:V.y, width:V.w, height:V.h, preserveAspectRatio:'none', mask:`url(#${mid})`, opacity:glass ? 0.18 : 0.5, style:'mix-blend-mode:multiply', 'pointer-events':'none'}, parent);
+    if (!glass) E('image', {href:V.lak, x:V.x, y:V.y, width:V.w, height:V.h, preserveAspectRatio:'none', mask:`url(#${mid})`, opacity:0.55, style:'mix-blend-mode:screen', 'pointer-events':'none'}, parent);
+  }
+  return r;
+}
+function othersKey(v){
+  return [S.active, v, ZONE[v] ? 1 : 0, ...S.items.filter(it => it.id !== S.active && it.L && placeOf(it, v)).map(it => it.id + ':' + it.rev + ':' + JSON.stringify(placeOf(it, v)))].join('|');
+}
+function drawOthers(g, v, vb){ g.innerHTML = ''; const fs = vb[2] / 44; for (const it of itemsOn(v)) if (it.id !== S.active) drawSticker(g, it, v, false, fs); }
+// Losse laag: de actieve sticker met maten en grepen (wordt bij elke beweging opnieuw getekend).
+function drawActive(dyn, v, vb){
+  dyn.innerHTML = '';
+  const d = S.dims, fs = vb[2] / 44, it = cur(), door = isDoor(v);
+  const msg = (t1, t2) => { const cx = vb[0] + vb[2] / 2, cy = vb[1] + vb[3] * 0.1; const a = E('text', {x:cx, y:cy, 'text-anchor':'middle', 'font-size':fs * 0.95, class:'dlbl', 'stroke-width':fs * 0.25}, dyn); a.textContent = t1; if (t2){ const b = E('text', {x:cx, y:cy + fs * 1.35, 'text-anchor':'middle', 'font-size':fs * 0.75, class:'dlbl', 'stroke-width':fs * 0.22}, dyn); b.textContent = t2; } };
+  if (!it || !onView(it, v)){
+    if (!itemsOn(v).length) msg(`Nog geen sticker op de ${VIEWNAME[v]}`, it ? `Kies bij de sticker links: Plek op de auto → ${v === 'F' ? 'Voor' : v === 'B' ? 'Achter' : v === 'L' ? 'Links' : 'Rechts'}` : 'Voeg links een sticker toe');
+    else if (it) msg('Klik op een sticker om hem te kiezen');
+    return;
+  }
+  const p = placeOf(it, v);
+  if (!it.L){
+    const r = rectOf(it, v, p);
+    E('rect', {x:r.x0, y:-r.y1, width:p.w, height:r.hh, rx:Math.min(18, r.hh / 4), class:'ph', 'stroke-width':fs * 0.08, 'stroke-dasharray':`${fs * 0.4} ${fs * 0.3}`}, dyn);
+    const t = E('text', {x:p.u, y:-p.v, 'text-anchor':'middle', 'dominant-baseline':'middle', 'font-size':Math.min(fs * 0.9, r.hh * 0.32, p.w / 14), class:'phtxt'}, dyn);
+    t.textContent = it.type === 'logo' ? 'Sleep hier het logo naartoe' : it.type === 'tekst' ? 'Typ links de tekst' : 'Vul links de link in';
+    return;
+  }
+  const r = drawSticker(dyn, it, v, true, fs), w = p.w, hh = r.hh, x0 = r.x0, x1 = r.x1, y0 = r.y0, y1 = r.y1;
+  if (it.thin && it.thin.overlay && it.thin.w === Math.round(w)) E('image', {href:it.thin.overlay, x:x0, y:-y1, width:w, height:hh, preserveAspectRatio:'none', 'pointer-events':'none'}, dyn);
+  const dash = `${fs * 0.3} ${fs * 0.2}`;
+  if (door && drag){ // hulplijnen: rand van de deur en de lijn (vouw)
+    E('rect', {x:0, y:-d.H, width:d.W, height:d.H, rx:30, class:'zone', 'stroke-width':fs * 0.06, 'stroke-dasharray':dash, 'pointer-events':'none'}, dyn);
+    E('line', {x1:0, x2:d.W, y1:-d.crU, y2:-d.crU, class:'zone', 'stroke-width':fs * 0.06, 'stroke-dasharray':dash, 'pointer-events':'none'}, dyn);
+  }
+  if (!door) E('line', {x1:0, x2:0, y1:0, y2:-1500, class:'zone', 'stroke-width':fs * 0.05, 'stroke-dasharray':dash, 'pointer-events':'none'}, dyn);
+  if (drag && drag.snapX) E('line', door ? {x1:d.W / 2, x2:d.W / 2, y1:-d.H, y2:0} : {x1:0, x2:0, y1:-1500, y2:0}, dyn).setAttribute('class', 'guide');
+  if (drag && drag.snapY) E('line', {x1:0, x2:d.W, y1:-midV(d), y2:-midV(d), class:'guide'}, dyn);
+  dyn.querySelectorAll('line.guide').forEach(l => { l.setAttribute('stroke-width', 4); l.setAttribute('stroke-dasharray', '16 10'); });
+  // maatlijnen
+  const dims = E('g', {'pointer-events':'none'}, dyn), lw = fs * 0.07, tk = fs * 0.35;
+  const label = (x, y, txt, big) => { const t = E('text', {x, y, 'text-anchor':'middle', 'dominant-baseline':'middle', 'font-size':big ? fs * 1.05 : fs * 0.9, class:'dlbl', 'stroke-width':fs * 0.28}, dims); t.textContent = txt; };
+  const dimH = (xa, xb, y, txt) => { if (xb - xa < 2) return; E('line', {x1:xa, x2:xb, y1:y, y2:y, class:'dim', 'stroke-width':lw}, dims); for (const x of [xa, xb]) E('line', {x1:x, x2:x, y1:y - tk, y2:y + tk, class:'dim', 'stroke-width':lw}, dims); label((xa + xb) / 2, y - fs * 0.75, txt); };
+  const dimV = (x, ya, yb, txt) => { if (yb - ya < 2) return; E('line', {x1:x, x2:x, y1:-ya, y2:-yb, class:'dim', 'stroke-width':lw}, dims); for (const y of [ya, yb]) E('line', {x1:x - tk, x2:x + tk, y1:-y, y2:-y, class:'dim', 'stroke-width':lw}, dims); label(x + fs * 1.9, -(ya + yb) / 2, txt); };
+  if (door){ dimH(0, x0, -p.v, mm(x0)); dimH(x1, d.W, -p.v, mm(d.W - x1)); dimV(p.u, 0, y0, mm(y0)); }
+  else {
+    const ge = glassBelow(v, p.u, y0);
+    if (ge != null) dimV(p.u, ge, y0, mm((y0 - ge) / r.k)); else dimV(p.u, 0, y0, mm(y0));
+    if (Math.abs(p.u) >= 1){ const ya = -y0 + fs * 1.3; dimH(Math.min(0, p.u), Math.max(0, p.u), ya, mm(Math.abs(p.u)) + ' uit midden'); }
+  }
+  label(p.u, -y1 - fs * 0.85, `${mm(w)} × ${mm(hReal(it, p))} mm`, true);
+  // selectie en hoekgrepen
+  E('rect', {x:x0, y:-y1, width:w, height:hh, class:'sel', 'stroke-width':fs * 0.07, 'stroke-dasharray':`${fs * 0.35} ${fs * 0.25}`, 'pointer-events':'none'}, dyn);
+  const hs = clamp(Math.min(w, hh) * 0.22, fs * 0.32, fs * 0.75);
+  [['nw', x0, -y1], ['ne', x1, -y1], ['sw', x0, -y0], ['se', x1, -y0]].forEach(([c, x, y]) => {
+    E('circle', {cx:x, cy:y, r:hs * 1.1, fill:'transparent', 'data-role':'handle', 'data-c':c, class:'hdl ' + c, style:'stroke:none'}, dyn);
+    E('rect', {x:x - hs / 2, y:y - hs / 2, width:hs, height:hs, rx:hs * 0.2, class:'hdl ' + c, 'stroke-width':fs * 0.08, 'data-role':'handle', 'data-c':c}, dyn);
+  });
+  if (door){ // naden benoemen
+    const seam = (x, anchor, txt) => { const t = E('text', {x, y:fs * 1.25, 'text-anchor':anchor, 'font-size':fs * 0.7, class:'dlbl', 'stroke-width':fs * 0.2, 'pointer-events':'none'}, dyn); t.textContent = txt; };
+    if (S.zoom === 'deur'){ seam(0, 'start', v === 'L' ? '← voornaad' : '← achternaad'); seam(d.W, 'end', v === 'L' ? 'achternaad →' : 'voornaad →'); }
+  }
+}
+function renderStage(){
+  const svg = $('#stage'), v = S.view, vb = viewBox(v), key = [v, isDoor(v) ? S.zoom : '', S.car, S.dims.W, S.dims.H].join('|');
+  if (!isDoor(v)) loadZone(v);
+  if (svg.dataset.key !== key){
+    svg.innerHTML = ''; svg.setAttribute('viewBox', vb.join(' ')); drawCar(svg, v); E('g', {id:'oth'}, svg); E('g', {id:'dyn'}, svg);
+    svg.dataset.key = key; svg.dataset.okey = ''; $('#stagewrap').style.aspectRatio = `${vb[2]} / ${vb[3]}`;
+  }
+  const ok = othersKey(v);
+  if (svg.dataset.okey !== ok){ drawOthers(svg.querySelector('#oth'), v, vb); svg.dataset.okey = ok; }
+  drawActive(svg.querySelector('#dyn'), v, vb);
+}
+
+/* ============================== slepen en schalen ============================== */
+let drag = null;
+function svgPt(e){ const svg = $('#stage'), pt = svg.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY; return pt.matrixTransform(svg.getScreenCTM().inverse()); }
+function onDown(e){
+  const role = e.target.closest('[data-role]'); if (!role) return;
+  if (role.dataset.role === 'logo' && role.dataset.id !== S.active){ selectItem(role.dataset.id, true); }
+  const it = cur(), v = S.view; if (!it || !it.L) return;
+  const p = placeOf(it, v); if (!p) return; const pt = svgPt(e);
+  e.preventDefault(); $('#stage').setPointerCapture(e.pointerId);
+  if (role.dataset.role === 'handle') drag = {mode:'size', id:it.id, p0:{...p}};
+  else drag = {mode:'move', id:it.id, p0:{...p}, dx:pt.x - p.u, dy:-pt.y - p.v};
+}
+function onMove(e){
+  if (!drag) return;
+  const it = cur(); if (!it || it.id !== drag.id || !it.L){ drag = null; return; }
+  const v = S.view, door = isDoor(v), pt = svgPt(e), d = S.dims, a = it.L.aspect; let p = {...drag.p0};
+  if (drag.mode === 'move'){
+    p.u = pt.x - drag.dx; p.v = -pt.y - drag.dy;
+    const cx = door ? d.W / 2 : 0; drag.snapX = Math.abs(p.u - cx) < (door ? 16 : 12); if (drag.snapX) p.u = cx;
+    drag.snapY = false; if (door){ const mid = midV(d); drag.snapY = Math.abs(p.v - mid) < 16; if (drag.snapY) p.v = mid; }
+  } else {
+    const k = kAt(v, p), w = Math.max(2 * Math.abs(pt.x - p.u), 2 * Math.abs(-pt.y - p.v) * a / k);
+    p.w = clamp(Math.round(w), 20, door ? d.W * 1.2 : 1500);
+  }
+  setPlace(it, p, v); renderStage(); renderPlaceInputs(); renderChecks();
+}
+function onUp(){ if (!drag) return; drag = null; renderStage(); afterPlaceChange(); }
+function afterPlaceChange(){ renderPlaceInputs(); renderChecks(); renderItems(); renderExport(); scheduleThin(cur()); save(); }
+
+/* ============================== dunne delen ============================== */
+const thinT = {};
+function scheduleThin(it){ if (!it) return; clearTimeout(thinT[it.id]); thinT[it.id] = setTimeout(() => runThin(it), 380); }
+async function logoCanvas(L, pxW, pxH, pad = 0){
+  const c = canvas(pxW + 2 * pad, pxH + 2 * pad), g = c.getContext('2d');
+  if (L.kind === 'svg'){ const im = await loadImg(svgDataURL(svgSized(L.svg, pxW, pxH))); g.drawImage(im, pad, pad, pxW, pxH); }
+  else if (L.kind === 'pdf'){ await renderPdfCrop(L, g, pxW, pad); }
+  else { const im = await loadImg(L.raster.url); g.drawImage(im, pad, pad, pxW, pxH); }
+  return c;
+}
+// Kleinste breedte waarop de sticker gemaakt wordt (strengste toets).
+function thinWidth(it){ let w = Infinity; for (const v of viewsOf(it)){ const p = placeOf(it, v); if (p) w = Math.min(w, p.w); } return isFinite(w) ? w : null; }
+async function runThin(it){
+  const L = it.L; if (!L || L.kind === 'raster' || !S.items.includes(it)){ it.thin = null; renderChecks(); renderItems(); return; }
+  const w = thinWidth(it); if (!w) return; const hh = w / L.aspect;
+  const key = [it.rev, Math.round(w), it.soort].join('|');
+  if (it.thin && it.thin.key === key) return;
+  try {
+    const mmpp = Math.max(0.12, w / 2400, hh / 2400), pw = Math.round(w / mmpp), ph = Math.round(hh / mmpp), pad = 3;
+    const c = await logoCanvas(L, pw, ph, pad), W = c.width, H = c.height, d = c.getContext('2d').getImageData(0, 0, W, H).data;
+    const mask = new Uint8Array(W * H); let ink = 0; for (let i = 0; i < W * H; i++) if (d[i * 4 + 3] >= 128){ mask[i] = 1; ink++; }
+    if (!ink){ it.thin = null; return; }
+    const dIn = edt(mask, W, H);
+    const tests = it.soort === 'snij' ? [1, 2] : [0.5];
+    const res = [], masks = [], ov = canvas(W, H), og = ov.getContext('2d'), oid = og.createImageData(W, H);
+    for (const t of tests){ const {thin, cnt} = thinMask(mask, W, H, t / mmpp, dIn); res.push({t, frac:cnt / ink, cnt}); masks.push(thin); }
+    // eerst de ruimste toets (oranje), daarna de strengste (rood) eroverheen
+    for (let k = tests.length - 1; k >= 0; k--){
+      const r = res[k]; if (!(r.cnt > 25 && r.frac > 0.002)) continue;
+      const strong = k === 0, m = masks[k];
+      for (let i = 0; i < W * H; i++) if (m[i]){ const o = i * 4; oid.data[o] = strong ? 230 : 255; oid.data[o + 1] = strong ? 20 : 150; oid.data[o + 2] = strong ? 40 : 0; oid.data[o + 3] = 255; }
+    }
+    og.putImageData(oid, 0, 0);
+    const crop = canvas(pw, ph); crop.getContext('2d').drawImage(ov, pad, pad, pw, ph, 0, 0, pw, ph);
+    const any = res.some(r => r.cnt > 25 && r.frac > 0.002);
+    if (it.L !== L) return;
+    it.thin = {key, w:Math.round(w), res, overlay: any ? crop.toDataURL('image/png') : null};
+  } catch (e) { console.warn('dunne delen', e); it.thin = null; }
+  renderStage(); renderChecks(); renderItems();
+}
+
+/* ============================== kleuraandeel ============================== */
+async function computeShares(it){
+  const L = it.L; if (!L) return;
+  try {
+    const long = 420, pw = L.aspect >= 1 ? long : Math.round(long * L.aspect), ph = L.aspect >= 1 ? Math.round(long / L.aspect) : long;
+    const c = await logoCanvas(L, pw, ph, 0), d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
+    let cols = L.kind === 'svg' ? L.colors.slice() : null;
+    if (!cols || !cols.length){ // PDF of pixel: kleuren schatten
+      const P = {w:c.width, h:c.height, d}; const smp = coreSamples(P, d); if (!smp.n) return;
+      const k = autoK(smp.lab); const km = kmeans(smp.lab, k, 7);
+      cols = km.centers.map((cl, i) => avgRGBForCluster(smp, km.assign, i));
+    }
+    const labs = cols.map(hexLab), cnt = new Array(cols.length).fill(0); let tot = 0;
+    for (let i = 0; i < c.width * c.height; i++){ if (d[i * 4 + 3] < 200) continue; const l = rgb2lab(d[i * 4], d[i * 4 + 1], d[i * 4 + 2]); let bi = 0, bd = 1e9; for (let k = 0; k < labs.length; k++){ const dd = dE(l, labs[k]); if (dd < bd){ bd = dd; bi = k; } } cnt[bi]++; tot++; }
+    if (it.L !== L) return;
+    it.shares = cols.map((hx, i) => ({hex:hx, pct: tot ? cnt[i] / tot : 0})).filter(x => x.pct > 0.0005 || L.kind === 'svg').sort((a, b) => b.pct - a.pct);
+    it.sharesEstimated = L.kind !== 'svg';
+  } catch (e) { console.warn('kleuren', e); }
+  renderEditor(); renderChecks(); renderItems(); renderExport();
+}
+
 /* ============================== kleur weglaten (SVG) ============================== */
 async function dropColor(hex){
-  const L = S.logo; if (!L || L.kind !== 'svg') return;
-  if (!L.svgOrig) L.svgOrig = L.svg;
+  const it = cur(), L = it && it.L; if (!L || L.kind !== 'svg') return;
+  const orig = L.svgOrig || L.svg;
   const doc = new DOMParser().parseFromString(L.svg, 'image/svg+xml');
   for (const el of doc.querySelectorAll(SHAPES)){
     if (el.getAttribute('fill') === hex) el.setAttribute('fill', 'none');
     if (el.getAttribute('stroke') === hex) el.setAttribute('stroke', 'none');
     if (el.getAttribute('fill') === 'none' && (!el.getAttribute('stroke') || el.getAttribute('stroke') === 'none') && !/^(text|tspan)$/i.test(el.tagName)) el.remove();
   }
-  try { const n = await normalizeSvg(new XMLSerializer().serializeToString(doc.documentElement)); Object.assign(L, n); setLogo(L, false); }
+  try { const n = await normalizeSvg(new XMLSerializer().serializeToString(doc.documentElement)); setItemL(it, {...L, ...n, svgOrig:orig}); }
   catch (e) { toast('Dan blijft er niets over van het logo'); }
 }
-async function restoreColors(){ const L = S.logo; if (!L || !L.svgOrig) return; const n = await normalizeSvg(L.svgOrig); n.flags.bgRemoved = L.flags.bgRemoved; Object.assign(L, n); delete L.svgOrig; setLogo(L, false); }
-async function restoreBg(){ const L = S.logo; if (!L || !L.srcText) return; const n = await normalizeSvg(L.srcText, {dropBg:false}); Object.assign(L, n); delete L.svgOrig; setLogo(L, false); }
+async function restoreColors(){ const it = cur(), L = it && it.L; if (!L || !L.svgOrig) return; const n = await normalizeSvg(L.svgOrig); n.flags.bgRemoved = L.flags.bgRemoved; const nl = {...L, ...n}; delete nl.svgOrig; setItemL(it, nl); }
+async function restoreBg(){ const it = cur(), L = it && it.L; if (!L || !L.srcText) return; const n = await normalizeSvg(L.srcText, {dropBg:false}); const nl = {...L, ...n}; delete nl.svgOrig; setItemL(it, nl); }
 
 /* ============================== controles ============================== */
-const ZONE_TXT = {greep:'raakt de deurgreep. Maak het logo kleiner of schuif het naar beneden of naar het midden.', blink:'raakt het zijknipperlicht op de deur.', badge:'raakt het Italiaanse vlaggetje op de deur.'};
+const ZONE_TXT = {greep:'raakt de deurgreep. Maak de sticker kleiner of schuif hem naar beneden of naar het midden.', blink:'raakt het zijknipperlicht op de deur.', badge:'raakt het Italiaanse vlaggetje op de deur.'};
 const cap = t => t.charAt(0).toUpperCase() + t.slice(1);
-function placeChecks(p, side){
-  const d = S.dims, m = d.marge, hh = hOf(p), x0 = p.u - p.w / 2, x1 = p.u + p.w / 2, y0 = p.v - hh / 2, y1 = p.v + hh / 2, out = [];
-  if (x0 < m || x1 > d.W - m || y0 < m || y1 > d.H - m) out.push(['bad', `te dicht bij de rand van de deur. Houd minimaal ${m} mm vrij tot de naden, de onderrand en het raam.`]);
-  else out.push(['ok', 'past op de deur.']);
-  const hit = (q, c) => x0 < q.u1 + c && x1 > q.u0 - c && y0 < q.v1 + c && y1 > q.v0 - c;
-  for (const z of zonesFor(d, side)) if (hit(z, 10)) out.push(['bad', ZONE_TXT[z.k]]);
-  if (y0 < d.crU - 3 && y1 > d.crU + 3) out.push(['warn', 'loopt over de lijn (vouw) in de deur. Folie sluit daar minder strak aan; liever helemaal onder de lijn.']);
-  if (y1 > d.crU + 60) out.push(['warn', 'komt boven de lijn, waar de deur bol naar het raam loopt. Folie plakt daar slecht.']);
+const RANK = {bad:3, warn:2, ok:1, info:0};
+function placeChecks(it, v){
+  const p = placeOf(it, v), r = rectOf(it, v, p), out = [];
+  if (isDoor(v)){
+    const d = S.dims, m = d.marge, {x0, x1, y0, y1} = r;
+    if (x0 < m || x1 > d.W - m || y0 < m || y1 > d.H - m) out.push(['bad', `te dicht bij de rand van de deur. Houd minimaal ${m} mm vrij tot de naden, de onderrand en het raam.`]);
+    else out.push(['ok', 'past op de deur.']);
+    const hit = (q, c) => x0 < q.u1 + c && x1 > q.u0 - c && y0 < q.v1 + c && y1 > q.v0 - c;
+    for (const z of zonesFor(d, v)) if (hit(z, 10)) out.push(['bad', ZONE_TXT[z.k]]);
+    if (y0 < d.crU - 3 && y1 > d.crU + 3) out.push(['warn', 'loopt over de lijn (vouw) in de deur. Folie sluit daar minder strak aan; liever helemaal onder de lijn.']);
+    if (y1 > d.crU + 60) out.push(['warn', 'komt boven de lijn, waar de deur bol naar het raam loopt. Folie plakt daar slecht.']);
+    return out;
+  }
+  const st = zoneStats(v, r);
+  if (!st){ loadZone(v); return [['info', 'plek wordt gecontroleerd…']]; }
+  const m = 15, sm = zoneStats(v, {x0:r.x0 - m, x1:r.x1 + m, y0:r.y0 - m, y1:r.y1 + m}), part = v === 'F' ? 'voorkant' : 'achterkant';
+  let bad = false;
+  if (st.off > 0.01){ out.push(['bad', 'steekt buiten de auto uit.']); bad = true; }
+  else if (st.other > 0.005){ out.push(['bad', 'raakt een onderdeel dat geen lak of ruit is (lamp, FIAT-letters, bumperstrip, spiegel of rubber rond de ruit).']); bad = true; }
+  if (st.obst.includes('kenteken')){ out.push(['bad', 'valt over de plek van de kentekenplaat.']); bad = true; }
+  if (st.glass > 0.03 && st.paint > 0.03){ out.push(['bad', 'ligt deels op de ruit en deels op de lak. Kies één van beide.']); bad = true; }
+  const glass = st.glass > 0.5;
+  if (glass && v === 'F'){ out.push(['bad', 'zit op de voorruit. Daar mag geen belettering in het zicht van de bestuurder.']); bad = true; }
+  if (!bad){
+    out.push(['ok', glass ? 'past op de achterruit.' : `past op de lak van de ${part}.`]);
+    if (sm.off > 0.002 || sm.other > 0.004 || sm.obst.length || (glass ? sm.paint > 0.01 : sm.glass > 0.01)) out.push(['warn', `zit minder dan ${m} mm van een rand, lamp of onderdeel. Liever iets meer ruimte.`]);
+  }
+  if (glass && v === 'B') out.push(['info', 'op de achterruit. Kan prima met twee buitenspiegels; houd wel genoeg zicht via de binnenspiegel.' + (it.soort === 'print' ? ' Bij print op glas: kies geperforeerde raamfolie, dan kijk je er van binnen doorheen.' : '')]);
+  if (!glass && st.paint > 0.5){
+    if (st.g10 < 150) out.push(['warn', 'loopt over een sterke bolling of rand. Folie kan daar plooien of loslaten.']);
+    else if (st.gMed - st.g10 > 28) out.push(['warn', 'ligt op een gebogen deel. Plakken is lastiger; gesneden folie (losse letters) gaat daar het best.']);
+  }
   return out;
 }
-function allChecks(){
-  const L = S.logo, out = []; if (!L) return out;
-  const cut = S.job.soort === 'snij', f = L.flags || {};
-  if (L.kind === 'raster'){
-    const p = placeOf(curSide()), dpi = L.raster.w / (p.w / 25.4);
-    out.push([cut ? 'bad' : (dpi < 100 ? 'bad' : dpi < 150 ? 'warn' : 'ok'), cut ? 'Pixelbestand. Voor gesneden folie eerst omzetten naar vector (stap 2).' : `Pixelbestand: ${Math.round(dpi)} dpi op dit formaat (${dpi < 150 ? 'te weinig, minimaal 150' : 'genoeg voor print'}). Een vectorbestand blijft beter.`]);
-  } else {
-    if (f.rasterInside) out.push([cut ? 'bad' : 'warn', 'Er zit ook een plaatje (pixels) in dit bestand. Dat deel kan niet gesneden worden.']);
-    else out.push(['ok', L.origin === 'omgezet' ? 'Vector, door de tool omgezet. Laat de klant het resultaat goedkeuren.' : 'Echt vectorbestand.']);
-    if (f.text) out.push(['warn', L.kind === 'pdf' ? 'Bevat tekst met een ingesloten lettertype. Meestal geen probleem; vraag anders een versie met "tekst omgezet naar contouren".' : 'Bevat losse tekst, niet omgezet naar contouren. Bij het stickerbedrijf kan het lettertype verspringen: vraag de klant om een versie met tekst als contouren.']);
-    if (f.gradient) out.push([cut ? 'bad' : 'ok', cut ? 'Bevat een kleurverloop. Dat kan niet uit folie gesneden worden: kies "Geprinte sticker".' : 'Bevat een kleurverloop: kan alleen geprint worden (staat goed).']);
-    if (L.kind === 'pdf' && f.pages > 1) out.push(['info', `De PDF heeft ${f.pages} pagina's; alleen pagina 1 wordt gebruikt.`]);
+function checksFor(it){
+  const out = [], L = it.L, cut = it.soort === 'snij';
+  if (!L){ out.push(['info', it.type === 'logo' ? 'Kies eerst een logobestand.' : it.type === 'tekst' ? 'Typ eerst de tekst.' : 'Vul eerst de link of tekst voor de QR-code in.']); return out; }
+  const f = L.flags || {};
+  if (it.type === 'logo'){
+    if (L.kind === 'raster'){
+      const w = thinWidth(it) || 300, dpi = L.raster.w / (w / 25.4);
+      out.push([cut ? 'bad' : (dpi < 100 ? 'bad' : dpi < 150 ? 'warn' : 'ok'), cut ? 'Pixelbestand. Voor gesneden folie eerst omzetten naar vector (stap 2).' : `Pixelbestand: ${Math.round(dpi)} dpi op dit formaat (${dpi < 150 ? 'te weinig, minimaal 150' : 'genoeg voor print'}). Een vectorbestand blijft beter.`]);
+    } else {
+      if (f.rasterInside) out.push([cut ? 'bad' : 'warn', 'Er zit ook een plaatje (pixels) in dit bestand. Dat deel kan niet gesneden worden.']);
+      else out.push(['ok', L.origin === 'omgezet' ? 'Vector, door de tool omgezet. Laat de klant het resultaat goedkeuren.' : 'Echt vectorbestand.']);
+      if (f.text) out.push(['warn', L.kind === 'pdf' ? 'Bevat tekst met een ingesloten lettertype. Meestal geen probleem; vraag anders een versie met "tekst omgezet naar contouren".' : 'Bevat losse tekst, niet omgezet naar contouren. Bij het stickerbedrijf kan het lettertype verspringen: vraag de klant om een versie met tekst als contouren.']);
+      if (f.gradient) out.push([cut ? 'bad' : 'ok', cut ? 'Bevat een kleurverloop. Dat kan niet uit folie gesneden worden: kies "Geprinte sticker".' : 'Bevat een kleurverloop: kan alleen geprint worden (staat goed).']);
+      if (L.kind === 'pdf' && f.pages > 1) out.push(['info', `De PDF heeft ${f.pages} pagina's; alleen pagina 1 wordt gebruikt.`]);
+    }
   }
-  if (S.shares && cut){ const n = S.shares.length; out.push([n > 3 ? 'warn' : 'ok', `${n} kleur${n === 1 ? '' : 'en'} = ${n} ${n === 1 ? 'laag' : 'lagen'} folie${S.sharesEstimated ? ' (geschat)' : ''}.${n > 3 ? ' Veel lagen is duur en lastig plakken; overweeg print.' : ''}`]); }
-  if (S.shares){ const car = hexLab(S.car); const low = S.shares.filter(c => c.pct > 0.15 && dE(hexLab(c.hex), car) < 14); if (low.length) out.push(['warn', `De kleur ${colorName(low[0].hex)} valt bijna weg tegen deze autokleur.`]); }
-  const sds = S.job.deuren === 'LR' ? ['L', 'R'] : [S.job.deuren], res = sds.map(sd => placeChecks(placeOf(sd), sd));
+  if (it.type === 'tekst'){
+    out.push(['ok', `Tekst wordt aangeleverd als contouren (lettertype ${(FONTS.find(x => x.id === it.text.font) || FONTS[0]).name.split(' ·')[0]}), dus het stickerbedrijf heeft het lettertype niet nodig.`]);
+    if (L.missing && L.missing.length) out.push(['warn', `Deze tekens zitten niet in het lettertype en vallen weg: ${L.missing.join(' ')}`]);
+  }
+  const glassAny = viewsOf(it).some(v => placeOf(it, v) && onGlass(v, placeOf(it, v)));
+  if (it.type === 'qr'){
+    const w = thinWidth(it) || 0, N = (L.qrN || 25) + 2 * (L.qrQuiet || 0), mod = w / N, lim = cut ? [2.5, 3] : [1.5, 2];
+    out.push([mod < lim[0] ? 'bad' : mod < lim[1] ? 'warn' : 'ok', `Blokjes van ${mod.toFixed(1).replace('.', ',')} mm (${L.qrN} × ${L.qrN}). ${mod < lim[1] ? (cut ? 'Te klein om netjes te snijden: maak de code groter of kies print.' : 'Klein: maak de code groter.') : 'Goed te ' + (cut ? 'snijden.' : 'printen.')}`]);
+    out.push(['info', `Scanbaar tot ongeveer ${String(Math.max(0.3, Math.round(w * 10 / 100) / 10)).replace('.', ',')} m afstand. Test de code: scan hem op het scherm met je telefoon.`]);
+    if (it.qr.value.trim().length > 120) out.push(['warn', 'Lange inhoud maakt de code druk en de blokjes klein. Gebruik liever een korte link.']);
+    if (!it.qr.bg){
+      if (glassAny) out.push(['bad', 'Op de ruit heeft een QR-code een witte achtergrond nodig, anders scant hij niet.']);
+      else { const cl = hexLab(S.car)[0], ql = hexLab(it.qr.color)[0]; if (ql > cl - 35) out.push(['bad', 'De code is niet donker genoeg tegen deze autokleur en scant dan slecht. Zet de witte achtergrond aan.']); }
+    }
+    if (it.qr.bg && cut) out.push(['info', 'Met witte achtergrond bestaat de sticker uit twee lagen folie (wit + kleur). Als geprinte sticker is het één laag.']);
+  }
+  const sh = it.shares;
+  if (sh && cut && it.type !== 'qr'){ const n = sh.length; out.push([n > 3 ? 'warn' : 'ok', `${n} kleur${n === 1 ? '' : 'en'} = ${n} ${n === 1 ? 'laag' : 'lagen'} folie${it.sharesEstimated ? ' (geschat)' : ''}.${n > 3 ? ' Veel lagen is duur en lastig plakken; overweeg print.' : ''}`]); }
+  if (sh && it.type !== 'qr'){
+    const big = sh.filter(c => c.pct > 0.15);
+    if (glassAny){ const dark = big.filter(c => hexLab(c.hex)[0] < 45); if (dark.length) out.push(['warn', `De kleur ${colorName(dark[0].hex)} is slecht te zien op de donkere ruit. Wit of een lichte kleur leest beter.`]); }
+    else { const car = hexLab(S.car), low = big.filter(c => dE(hexLab(c.hex), car) < 14); if (low.length) out.push(['warn', `De kleur ${colorName(low[0].hex)} valt bijna weg tegen deze autokleur.`]); }
+  }
+  // plek
+  const vs = viewsOf(it).filter(v => placeOf(it, v)), res = vs.map(v => placeChecks(it, v));
   if (res.length === 2 && JSON.stringify(res[0]) !== JSON.stringify(res[1])) res.forEach((r, i) => r.forEach(([k, t]) => out.push([k, (i ? 'Rechterdeur: ' : 'Linkerdeur: ') + t])));
-  else res[0].forEach(([k, t]) => out.push([k, cap(t)]));
-  if (S.thin && S.thin.res){
-    for (const r of S.thin.res){
+  else if (res.length) res[0].forEach(([k, t]) => out.push([k, cap(t)]));
+  for (const v of vs){
+    for (const o of S.items){
+      if (o === it || !o.L || !placeOf(o, v)) continue;
+      const a = rectOf(it, v, placeOf(it, v)), b = rectOf(o, v, placeOf(o, v));
+      if (a.x0 < b.x1 && a.x1 > b.x0 && a.y0 < b.y1 && a.y1 > b.y0){ const t = `Overlapt met sticker ${itemNo(o)} (${TYPES[o.type].toLowerCase()})${vs.length > 1 ? ' op de ' + VIEWNAME[v] : ''}.`; if (!out.some(x => x[1] === t)) out.push(['warn', t]); }
+    }
+  }
+  if (it.thin && it.thin.res){
+    for (const r of it.thin.res){
       if (r.cnt > 25 && r.frac > 0.002){
-        const strong = r.t === S.thin.res[0].t;
-        out.push([strong ? (cut ? 'bad' : 'warn') : 'warn', `${(r.frac * 100).toFixed(r.frac < 0.01 ? 1 : 0)}% van het logo is dunner dan ${String(r.t).replace('.', ',')} mm (${strong ? 'rood' : 'oranje'} in de tekening). ${cut ? (strong ? 'Zo dun valt folie eraf: maak het logo groter.' : 'Kan, maar lastig plakken en minder sterk.') : 'Wordt mogelijk onscherp.'}`]);
+        const strong = r.t === it.thin.res[0].t;
+        out.push([strong ? (cut ? 'bad' : 'warn') : 'warn', `${(r.frac * 100).toFixed(r.frac < 0.01 ? 1 : 0).replace('.', ',')}% van de sticker is dunner dan ${String(r.t).replace('.', ',')} mm (${strong ? 'rood' : 'oranje'} in de tekening). ${cut ? (strong ? 'Zo dun valt folie eraf: maak de sticker groter.' : 'Kan, maar lastig plakken en minder sterk.') : 'Wordt mogelijk onscherp.'}`]);
       }
     }
-    if (!S.thin.res.some(r => r.cnt > 25 && r.frac > 0.002)) out.push(['ok', `Geen te dunne delen (getest op ${S.thin.res.map(r => String(r.t).replace('.', ',') + ' mm').join(' en ')}).`]);
+    if (!it.thin.res.some(r => r.cnt > 25 && r.frac > 0.002)) out.push(['ok', `Geen te dunne delen (getest op ${it.thin.res.map(r => String(r.t).replace('.', ',') + ' mm').join(' en ')}).`]);
   }
   return out;
 }
+const worst = it => checksFor(it).reduce((a, [k]) => RANK[k] > RANK[a] ? k : a, 'info');
 function renderChecks(){
   const ul = $('#checks'); ul.innerHTML = '';
-  if (!S.logo){ ul.append(h('li', {class:'info'}, h('span', {class:'ic'}, 'i'), h('span', null, 'Kies eerst een logo in stap 2.'))); return; }
-  const icons = {ok:'✓', warn:'!', bad:'✕', info:'i'};
-  for (const [k, t] of allChecks()) ul.append(h('li', {class:k}, h('span', {class:'ic'}, icons[k]), h('span', null, t)));
+  const it = cur(), icons = {ok:'✓', warn:'!', bad:'✕', info:'i'};
+  if (!it){ ul.append(h('li', {class:'info'}, h('span', {class:'ic'}, 'i'), h('span', null, 'Voeg in stap 2 een sticker toe.'))); return; }
+  for (const [k, t] of checksFor(it)) ul.append(h('li', {class:k}, h('span', {class:'ic'}, icons[k]), h('span', null, t)));
+  const rest = S.items.filter(o => o !== it && o.L && worst(o) === 'bad');
+  if (rest.length) ul.append(h('li', {class:'info'}, h('span', {class:'ic'}, 'i'), h('span', null, `Let op: ook sticker ${rest.map(itemNo).join(' en ')} heeft nog een probleem (zie de lijst in stap 2).`)));
 }
 
 /* ============================== UI renderen ============================== */
 function segSet(sel, v){ $$(sel + ' button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === String(v)))); }
+function whereTxt(it, v, p){
+  if (isDoor(v)) return v === 'L' ? 'linkerdeur' : 'rechterdeur';
+  const r = rectOf(it, v, p);
+  return glassBelow(v, p.u, r.y0) != null ? (v === 'B' ? 'achterruit' : 'voorruit') : VIEWNAME[v];
+}
+function placeSummary(it){
+  if (it.where === 'LR'){ const u = stickerUnits(it); return u.length === 1 ? 'beide deuren' : 'beide deuren (verschillend)'; }
+  const p = placeOf(it, it.where); return p ? whereTxt(it, it.where, p) : '';
+}
 function renderJob(){
   $('#f-klant').value = S.job.klant; $('#f-order').value = S.job.order; $('#f-kenteken').value = S.job.kenteken; $('#f-opm').value = S.job.opm;
-  segSet('#s-soort', S.job.soort); segSet('#s-deuren', S.job.deuren);
-  $('#s-side').classList.toggle('hidden', S.job.deuren !== 'LR');
-  segSet('#s-side', curSide()); segSet('#s-zoom', S.zoom);
-  $('#linkwrap').classList.toggle('hidden', S.job.deuren !== 'LR');
-  $('#f-linked').checked = S.linked;
+  for (const b of $$('#s-view button')){ const v = b.dataset.v, n = S.items.filter(it => onView(it, v)).length; b.innerHTML = ''; b.append({L:'Links', R:'Rechts', F:'Voor', B:'Achter'}[v]); if (n) b.append(h('span', {class:'cnt'}, String(n))); }
+  segSet('#s-view', S.view); segSet('#s-zoom', S.zoom);
+  $('#s-zoom').classList.toggle('hidden', !isDoor(S.view));
+  const it = cur();
+  $('#linkwrap').classList.toggle('hidden', !(it && it.where === 'LR' && isDoor(S.view)));
+  $('#f-linked').checked = !!(it && it.linked);
   $$('#cars button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === S.car)));
   for (const k of ['W','H','crU','marge']) $('#d-' + k).value = S.dims[k];
 }
-function renderLogoInfo(){
-  const box = $('#logo-info'), L = S.logo;
+function thumbOf(it){
+  const light = it.shares && it.shares[0] && hexLab(it.shares[0].hex)[0] > 80; // lichte stickers op een donkere ondergrond tonen
+  if (it.L) return h('div', {class:'ti checker' + (light ? ' dark' : '')}, h('img', {src:logoHref(it.L), alt:''}));
+  return h('div', {class:'ti'}, it.type === 'logo' ? 'Logo' : it.type === 'tekst' ? 'Aa' : 'QR');
+}
+function renderItems(){
+  const box = $('#items'); box.innerHTML = '';
+  $('#no-items').classList.toggle('hidden', S.items.length > 0);
+  for (const it of S.items){
+    const v0 = viewsOf(it)[0], p = placeOf(it, v0), st = it.L ? worst(it) : 'info';
+    const size = it.L && p ? `${mm(p.w)} × ${mm(hReal(it, p))} mm` : '';
+    box.append(h('button', {type:'button', class:'item', 'aria-current':String(it.id === S.active), onclick:() => selectItem(it.id)},
+      thumbOf(it),
+      h('span', {class:'tx'}, h('span', {class:'t1'}, h('span', {class:'nr'}, itemNo(it) + '.'), TYPES[it.type], h('span', {class:'muted', style:'font-weight:600'}, ' · ' + itemLabel(it))),
+        h('span', {class:'t2'}, [size, it.L ? placeSummary(it) : WHERE_SHORT[it.where].toLowerCase(), it.soort === 'snij' ? 'folie' : 'print'].filter(Boolean).join(' · '))),
+      h('span', {class:'st ' + st, title:{ok:'In orde', warn:'Let op', bad:'Probleem', info:'Nog niet af'}[st]}, {ok:'✓', warn:'!', bad:'✕', info:'…'}[st])));
+  }
+}
+function renderEditor(){
+  const it = cur(), ed = $('#editor');
+  ed.classList.toggle('hidden', !it); if (!it) return;
+  $('#ed-title').textContent = `Sticker ${itemNo(it)} · ${TYPES[it.type]}`;
+  for (const t of ['logo','tekst','qr']) $('#ed-' + t).classList.toggle('hidden', it.type !== t);
+  segSet('#s-where', it.where); segSet('#s-soort', it.soort);
+  if (it.type === 'logo') renderLogoInfo(it);
+  if (it.type === 'tekst'){
+    const ta = $('#tx-val'); if (document.activeElement !== ta) ta.value = it.text.value;
+    $('#tx-font').value = it.text.font; swatchSet('#tx-col', it.text.color);
+  }
+  if (it.type === 'qr'){
+    const qi = $('#qr-val'); if (document.activeElement !== qi) qi.value = it.qr.value;
+    swatchSet('#qr-col', it.qr.color); $('#qr-bg').checked = it.qr.bg;
+    const pv = $('#qr-prev'); pv.innerHTML = '';
+    if (it.L) pv.append(h('img', {src:logoHref(it.L), alt:'QR-code'}));
+    const p = placeOf(it, viewsOf(it)[0]);
+    $('#qr-info').textContent = it.L && p ? `${it.L.qrN} × ${it.L.qrN} blokjes. Op ${mm(p.w)} mm is één blokje ${(p.w / (it.L.qrN + 2 * it.L.qrQuiet)).toFixed(1).replace('.', ',')} mm. Scan de code hiernaast met je telefoon om te testen.` : 'Vul een link in, bijvoorbeeld de website van de klant.';
+  }
+  renderColors(it);
+}
+function renderLogoInfo(it){
+  const box = $('#logo-info'), L = it.L;
   box.classList.toggle('hidden', !L); $('#drop').querySelector('b').textContent = L ? 'Ander logo kiezen' : 'Sleep het logo hierheen';
-  if (!L){ box.innerHTML = ''; return; }
-  box.innerHTML = '';
+  box.innerHTML = ''; if (!L) return;
   const kindChip = L.kind === 'svg' ? (L.origin === 'omgezet' ? ['ok', 'Vector (omgezet)'] : ['ok', 'Vector · SVG']) : L.kind === 'pdf' ? (L.flags.rasterInside ? ['warn', 'PDF · deels pixels'] : ['ok', 'Vector · PDF']) : ['bad', 'Pixelbestand'];
   const thumb = h('div', {class:'thumb checker'}, h('img', {src:logoHref(L), alt:''}));
   box.append(h('div', {class:'logo-head mt'}, thumb, h('div', {style:'min-width:0'}, h('div', {class:'nm'}, L.name), h('div', {class:'chips'}, h('span', {class:'chip ' + kindChip[0]}, kindChip[1]), L.kind === 'raster' ? h('span', {class:'chip'}, `${L.raster.w} × ${L.raster.h} px`) : null))));
   if (L.note) box.append(h('p', {class:'small', style:'margin:10px 0 0'}, L.note));
   if (L.kind === 'svg' && L.flags && L.flags.bgRemoved) box.append(h('p', {class:'small', style:'margin:10px 0 0'}, 'Witte achtergrondvlak van het logo weggehaald. ', L.srcText ? h('a', {href:'#', onclick:e => { e.preventDefault(); restoreBg(); }}, 'Toch terugzetten') : null));
   if (L.kind === 'raster'){
-    box.append(h('p', {class:'small', style:'margin:10px 0 0'}, S.job.soort === 'snij' ? 'Voor gesneden folie heeft het stickerbedrijf een vectorbestand nodig. Zet het logo om, of vraag de klant om een SVG, PDF of AI.' : 'Voor print kan een groot pixelbestand, maar een vectorbestand is altijd scherper.'));
-    box.append(h('div', {class:'btns mt'}, h('button', {class:'btn', type:'button', onclick:() => openTrace(L)}, 'Omzetten naar vector')));
+    box.append(h('p', {class:'small', style:'margin:10px 0 0'}, it.soort === 'snij' ? 'Voor gesneden folie heeft het stickerbedrijf een vectorbestand nodig. Zet het logo om, of vraag de klant om een SVG, PDF of AI.' : 'Voor print kan een groot pixelbestand, maar een vectorbestand is altijd scherper.'));
+    box.append(h('div', {class:'btns mt'}, h('button', {class:'btn', type:'button', onclick:() => openTrace(L, it)}, 'Omzetten naar vector')));
   }
   if (L.origin === 'omgezet' && L.traceSrc) box.append(h('div', {class:'btns mt'}, h('button', {class:'btn sec sm', type:'button', onclick:() => reopenTrace()}, 'Omzetten aanpassen')));
-  if (S.shares && S.shares.length){
-    const cl = h('div', {class:'colors'});
-    box.append(h('div', {class:'lbl mt'}, S.sharesEstimated ? 'Kleuren (geschat) en foliekleur' : 'Kleuren en foliekleur'), cl);
-    const list = S.shares.slice(0, 10);
-    for (const c of list){
-      const inp = h('input', {type:'text', value:S.foil[c.hex] || '', placeholder:'Foliekleur, bijv. ' + colorName(c.hex), oninput:e => { S.foil[c.hex] = e.target.value; renderExport(); save(); }});
-      cl.append(h('div', {class:'crow'}, h('span', {class:'sq', style:`background:${c.hex}`}), h('span', {class:'hx'}, c.hex), inp,
-        h('span', {class:'pc'}, (c.pct * 100).toFixed(c.pct < 0.01 ? 1 : 0) + '%'),
-        L.kind === 'svg' && S.shares.length > 1 ? h('button', {type:'button', title:'Deze kleur niet plakken', onclick:() => dropColor(c.hex)}, 'Weglaten') : null));
-    }
-    if (S.shares.length > 10) cl.append(h('div', {class:'small muted'}, `+ ${S.shares.length - 10} kleuren meer: dit lijkt een foto of illustratie, kies dan "Geprinte sticker".`));
-    if (L.svgOrig) box.append(h('div', {class:'btns mt'}, h('button', {class:'btn sec sm', type:'button', onclick:restoreColors}, 'Weggelaten kleuren terugzetten')));
-  }
+  if (L.svgOrig) box.append(h('div', {class:'btns mt'}, h('button', {class:'btn sec sm', type:'button', onclick:restoreColors}, 'Weggelaten kleuren terugzetten')));
 }
-async function reopenTrace(){ const L = S.logo; if (!L || !L.traceSrc) return; await openTrace({kind:'raster', name:L.name, raster:{url:L.traceSrc, src:L.traceSrc}}); }
+function renderColors(it){
+  const box = $('#ed-colors'); box.innerHTML = '';
+  if (!it.L || !it.shares || !it.shares.length) return;
+  const cl = h('div', {class:'colors'});
+  box.append(h('div', {class:'lbl mt'}, it.sharesEstimated ? 'Kleuren (geschat) en foliekleur' : 'Kleuren en foliekleur'), cl);
+  for (const c of it.shares.slice(0, 10)){
+    const inp = h('input', {type:'text', value:it.foil[c.hex] || '', placeholder:'Foliekleur, bijv. ' + colorName(c.hex), oninput:e => { it.foil[c.hex] = e.target.value; renderExport(); save(); }});
+    cl.append(h('div', {class:'crow'}, h('span', {class:'sq', style:`background:${c.hex}`}), h('span', {class:'hx'}, c.hex), inp,
+      h('span', {class:'pc'}, (c.pct * 100).toFixed(c.pct < 0.01 ? 1 : 0).replace('.', ',') + '%'),
+      it.type === 'logo' && it.L.kind === 'svg' && it.shares.length > 1 ? h('button', {type:'button', title:'Deze kleur niet plakken', onclick:() => dropColor(c.hex)}, 'Weglaten') : null));
+  }
+  if (it.shares.length > 10) cl.append(h('div', {class:'small muted'}, `+ ${it.shares.length - 10} kleuren meer: dit lijkt een foto of illustratie, kies dan "Geprinte sticker".`));
+}
+async function reopenTrace(){ const it = cur(), L = it && it.L; if (!L || !L.traceSrc) return; await openTrace({kind:'raster', name:L.name, raster:{url:L.traceSrc, src:L.traceSrc}}, it); }
+function buildSwatches(sel, list, onPick){
+  const box = $(sel); let t;
+  for (const [n, c] of list) box.append(h('button', {type:'button', title:n, 'aria-label':n, 'data-v':c, style:`background:${c}`, onclick:() => onPick(c)}));
+  box.append(h('input', {type:'color', title:'Eigen kleur', 'aria-label':'Eigen kleur', oninput:e => { clearTimeout(t); const v = e.target.value; t = setTimeout(() => onPick(v), 180); }}));
+}
+function swatchSet(sel, val){ $$(sel + ' button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === val))); const ci = $(sel + ' input'); if (document.activeElement !== ci) ci.value = val; }
+// Plaatsvelden onder de auto: deur (vanaf de naden) of voor/achter (vanaf het midden en de grond of de ruit).
+function placeMode(){ const it = cur(), v = S.view; if (!it || !it.L || !onView(it, v)) return null; return {it, v, p:placeOf(it, v)}; }
 function renderPlaceInputs(){
-  const on = !!S.logo; $('#place').querySelectorAll('input,button').forEach(x => x.disabled = !on);
-  if (!on){ ['w','h','b','l','r'].forEach(k => { if (document.activeElement !== $('#p-' + k)) $('#p-' + k).value = ''; }); return; }
-  const side = curSide(), p = placeOf(side), hh = hOf(p);
-  const vals = {w:p.w, h:hh, b:p.v - hh / 2, l:frontGap(side, p), r:rearGap(side, p)};
+  const door = isDoor(S.view), pm = placeMode();
+  $('#fld-r').classList.toggle('hidden', !door);
+  $('#b-hc').textContent = door ? 'Midden op de deur' : 'Midden op de auto';
+  $('#b-vc').textContent = door ? 'Midden onder de lijn' : 'Standaardplek';
+  $('#place').querySelectorAll('input,button').forEach(x => x.disabled = !pm);
+  if (!pm){ $('#lbl-b').textContent = door ? 'Boven onderrand deur' : 'Onderkant boven de grond'; $('#lbl-l').textContent = door ? 'Vanaf voornaad' : 'Uit het midden (+ = rechts)'; ['w','h','b','l','r'].forEach(k => { if (document.activeElement !== $('#p-' + k)) $('#p-' + k).value = ''; }); return; }
+  const {it, v, p} = pm, r = rectOf(it, v, p);
+  let vals;
+  if (door){ $('#lbl-b').textContent = 'Boven onderrand deur'; $('#lbl-l').textContent = 'Vanaf voornaad'; vals = {w:p.w, h:hReal(it, p), b:r.y0, l:frontGap(v, p), r:rearGap(v, p)}; }
+  else {
+    const ge = glassBelow(v, p.u, r.y0);
+    $('#lbl-b').textContent = ge != null ? 'Boven onderrand ruit (langs glas)' : 'Onderkant boven de grond';
+    $('#lbl-l').textContent = 'Uit het midden (+ = rechts)';
+    vals = {w:p.w, h:hReal(it, p), b:ge != null ? (r.y0 - ge) / r.k : r.y0, l:p.u};
+  }
   for (const k in vals){ const el = $('#p-' + k); if (document.activeElement !== el) el.value = Math.round(vals[k]); }
 }
 function onPlaceInput(k, val){
-  if (!S.logo || !isFinite(val)) return;
-  const side = curSide(), p = {...placeOf(side)}, a = S.logo.aspect, d = S.dims;
-  const atFront = (fg) => { p.u = side === 'L' ? fg + p.w / 2 : d.W - fg - p.w / 2; };
-  const atRear = (rg) => { p.u = side === 'L' ? d.W - rg - p.w / 2 : rg + p.w / 2; };
-  if (k === 'w' || k === 'h'){ const fg = frontGap(side, p), b = p.v - p.w / a / 2; p.w = clamp(k === 'w' ? val : val * a, 10, d.W * 1.2); atFront(fg); p.v = b + p.w / a / 2; }
-  if (k === 'b') p.v = val + p.w / a / 2;
-  if (k === 'l') atFront(val);
-  if (k === 'r') atRear(val);
-  setPlace(p); renderStage(); renderChecks(); renderExport(); scheduleThin(); save();
-  if (k === 'w' || k === 'h') renderPlaceInputsExcept(k); else renderPlaceInputsExcept(k);
+  const pm = placeMode(); if (!pm || !isFinite(val)) return;
+  const {it, v} = pm, p = {...pm.p}, a = it.L.aspect, d = S.dims;
+  if (isDoor(v)){
+    const atFront = fg => { p.u = v === 'L' ? fg + p.w / 2 : d.W - fg - p.w / 2; };
+    const atRear = rg => { p.u = v === 'L' ? d.W - rg - p.w / 2 : rg + p.w / 2; };
+    if (k === 'w' || k === 'h'){ const fg = frontGap(v, p), b = p.v - p.w / a / 2; p.w = clamp(k === 'w' ? val : val * a, 10, d.W * 1.2); atFront(fg); p.v = b + p.w / a / 2; }
+    if (k === 'b') p.v = val + p.w / a / 2;
+    if (k === 'l') atFront(val);
+    if (k === 'r') atRear(val);
+  } else {
+    const r = rectOf(it, v, p), ge = glassBelow(v, p.u, r.y0), base = ge != null ? ge : 0, kk = r.k;
+    const bottom = r.y0;
+    if (k === 'w' || k === 'h'){ p.w = clamp(k === 'w' ? val : val * a, 10, 1500); p.v = bottom + p.w / a * kk / 2; }
+    if (k === 'b') p.v = base + (ge != null ? val * kk : val) + p.w / a * kk / 2;
+    if (k === 'l') p.u = val;
+  }
+  setPlace(it, p, v); renderStage(); renderChecks(); renderItems(); renderExport(); scheduleThin(it); save();
+  renderPlaceInputsExcept(k);
 }
-function renderPlaceInputsExcept(k){ const keep = $('#p-' + k); const v = keep.value; renderPlaceInputs(); keep.value = v; }
+function renderPlaceInputsExcept(k){ const keep = $('#p-' + k); const val = keep.value; renderPlaceInputs(); keep.value = val; }
 
-function exportName(ext, extra){ const base = ['S45', slug(S.job.klant) || slug(S.job.order) || slug(S.logo && S.logo.name.replace(/\.[^.]+$/, '')) || 'logo'].join('_'); return base + (extra ? '_' + extra : '') + '.' + ext; }
-function stickerSize(){ const p = placeOf(curSide()); return {w:p.w, h:hOf(p)}; }
-function stickerList(){
-  if (!S.logo) return [];
-  const d = S.job.deuren;
-  if (d !== 'LR') return [{sides:[d], p:placeOf(d)}];
-  const a = placeOf('L'), b = placeOf('R');
+/* ============================== exporteren ============================== */
+// Productie-eenheden per sticker: bij beide deuren één bestand ×2 als de maten gelijk zijn.
+function stickerUnits(it){
+  if (!it.L) return [];
+  if (it.where !== 'LR'){ const p = placeOf(it, it.where); return p ? [{sides:[it.where], p}] : []; }
+  const a = placeOf(it, 'L'), b = placeOf(it, 'R'); if (!a || !b) return [];
   if (Math.round(a.w) !== Math.round(b.w)) return [{sides:['L'], p:a}, {sides:['R'], p:b}];
   const same = Math.abs(frontGap('L', a) - frontGap('R', b)) < 1 && Math.abs(a.v - b.v) < 1;
   return [{sides:['L','R'], p:a, posDiff:!same}];
 }
+const allUnits = () => S.items.flatMap(it => stickerUnits(it).map(u => ({it, ...u})));
 const sideTxt = s => s.length === 2 ? 'linker- en rechterdeur' : s[0] === 'L' ? 'linkerdeur' : 'rechterdeur';
-function foilTxt(){ if (!S.shares) return ''; return S.shares.slice(0, 8).map(c => (S.foil[c.hex] || colorName(c.hex)) + ` (${c.hex})`).join(', '); }
-function renderExport(){
-  const L = S.logo, sum = $('#sum'); sum.innerHTML = '';
-  const can = !!L;
-  $('#x-werk').disabled = !can; $('#x-voorbeeld').disabled = !can;
-  $('#x-sticker').disabled = !can || (L.kind === 'raster' && S.job.soort === 'snij');
-  $('#x-svg').disabled = !can || L.kind !== 'svg';
-  $('#x-svg').classList.toggle('hidden', !!L && L.kind !== 'svg');
-  if (!L){ sum.append(h('dt', null, 'Logo'), h('dd', {class:'muted'}, 'nog niet gekozen')); $('#mail').value = ''; return; }
-  const list = stickerList();
-  const plek = (p, sd) => `${mm(p.v - hOf(p) / 2)} mm boven onderrand, ${mm(frontGap(sd, p))} mm achter de voornaad`;
-  for (const s of list){
-    const hh = hOf(s.p);
-    sum.append(h('dt', null, 'Formaat'), h('dd', null, `${mm(s.p.w)} × ${mm(hh)} mm (b × h)`));
-    sum.append(h('dt', null, 'Aantal'), h('dd', null, `${s.sides.length}× · ${sideTxt(s.sides)}`));
-    if (s.posDiff){ sum.append(h('dt', null, 'Plek links'), h('dd', null, plek(placeOf('L'), 'L')), h('dt', null, 'Plek rechts'), h('dd', null, plek(placeOf('R'), 'R'))); }
-    else sum.append(h('dt', null, 'Plek'), h('dd', null, plek(s.p, s.sides[0])));
-  }
-  sum.append(h('dt', null, 'Soort'), h('dd', null, S.job.soort === 'snij' ? 'Gesneden folie' : 'Geprinte sticker'));
-  if (S.shares) sum.append(h('dt', null, 'Kleuren'), h('dd', null, foilTxt() || '–'));
-  // mailtekst
-  const who = [S.job.klant, S.job.order ? 'order ' + S.job.order : '', S.job.kenteken].filter(Boolean).join(' · ');
-  const lines = ['Hoi,', '', `Graag de volgende belettering maken${who ? ' voor ' + who : ''}:`, ''];
-  for (const s of list) lines.push(`- ${s.sides.length}× logo ${mm(s.p.w)} × ${mm(hOf(s.p))} mm (breedte × hoogte), voor de ${sideTxt(s.sides)} van een ${MODEL}`);
-  lines.push(`- Soort: ${S.job.soort === 'snij' ? 'gesneden folie' : 'geprinte sticker, contour gesneden en gelamineerd'}`);
-  if (S.shares) lines.push(`- Kleuren: ${foilTxt()}`);
-  if (S.job.opm) lines.push(`- Opmerking: ${S.job.opm}`);
-  lines.push('', `In de bijlage het logo op ware grootte (1:1) en de werktekening met de plaats op de deur.`, '', 'Groet,', 'Spéciale45');
-  $('#mail').value = lines.join('\n');
+const unitWhere = (it, u) => isDoor(u.sides[0]) ? sideTxt(u.sides) : whereTxt(it, u.sides[0], u.p);
+const sizeOf = (it, p) => ({w:+p.w.toFixed(1), h:+(p.w / it.L.aspect).toFixed(1)});
+function baseName(){ return 'S45_' + (slug(S.job.klant) || slug(S.job.order) || 'belettering'); }
+function exportName(ext, extra){ return baseName() + (extra ? '_' + extra : '') + '.' + ext; }
+function unitFile(it, u, ext){
+  const s = sizeOf(it, u.p), many = stickerUnits(it).length > 1;
+  return exportName(ext, `${itemNo(it)}-${slug(TYPES[it.type]).toLowerCase()}_${Math.round(s.w)}x${Math.round(s.h)}mm` + (many ? '_' + (u.sides[0] === 'L' ? 'links' : 'rechts') : ''));
 }
-function renderAll(){ renderJob(); renderLogoInfo(); renderStage(); renderPlaceInputs(); renderChecks(); renderExport(); }
-
-/* ============================== exporteren ============================== */
-async function logoPNG(longPx){ const L = S.logo, pw = L.aspect >= 1 ? longPx : Math.round(longPx * L.aspect), ph = L.aspect >= 1 ? Math.round(longPx / L.aspect) : longPx; const c = await logoCanvas(pw, ph, 0); return c.toDataURL('image/png'); }
-async function exportSticker(){
-  const L = S.logo; if (!L) return;
-  const btn = $('#x-sticker'); btn.disabled = true; const old = btn.textContent; btn.textContent = 'Bezig…';
-  try {
-    for (const s of stickerList()){
-      const w = +s.p.w.toFixed(1), hh = +hOf(s.p).toFixed(1), tag = `${Math.round(w)}x${Math.round(hh)}mm` + (stickerList().length > 1 ? '_' + s.sides[0] : '');
-      const title = `Logo ${S.job.klant || ''} ${Math.round(w)} x ${Math.round(hh)} mm (1:1)`.replace(/\s+/g, ' ');
-      if (L.kind === 'pdf'){
-        const {PDFDocument} = await getPdfLib();
-        const src = await PDFDocument.load(L.pdf.bytes, {ignoreEncryption:true});
-        const out = await PDFDocument.create();
-        const c = L.pdf.crop, emb = await out.embedPage(src.getPage(0), {left:c.left, bottom:c.bottom, right:c.right, top:c.top});
-        const pw = w * 72 / 25.4, ph = hh * 72 / 25.4, page = out.addPage([pw, ph]);
-        page.drawPage(emb, {x:0, y:0, width:pw, height:ph});
-        out.setTitle(title); out.setCreator('Spéciale45 belettering'); out.setProducer('Spéciale45');
-        download(new Blob([await out.save()], {type:'application/pdf'}), exportName('pdf', tag));
-      } else {
-        const jsPDF = await getJsPDF();
-        const doc = new jsPDF({orientation: w >= hh ? 'landscape' : 'portrait', unit:'mm', format:[w, hh], compress:true});
-        if (L.kind === 'svg'){
-          const holder = document.createElement('div'); holder.style.cssText = 'position:absolute;left:-20000px;top:0;visibility:hidden';
-          holder.innerHTML = svgSized(L.svg, w + 'mm', hh + 'mm'); document.body.appendChild(holder);
-          try { await doc.svg(holder.firstElementChild, {x:0, y:0, width:w, height:hh}); } finally { holder.remove(); }
-        } else {
-          doc.addImage(L.raster.url, 'PNG', 0, 0, w, hh, undefined, 'NONE');
-        }
-        doc.setProperties({title, creator:'Spéciale45 belettering'});
-        download(doc.output('blob'), exportName('pdf', tag));
-      }
-    }
-    toast('Stickerbestand gedownload');
-  } catch (e) { console.error(e); toast('Maken mislukt: ' + (e.message || e)); }
+const canPdf = it => !(it.L.kind === 'raster' && it.soort === 'snij');
+function foilTxt(it){ if (!it.shares) return ''; return it.shares.slice(0, 8).map(c => (it.foil[c.hex] || colorName(c.hex)) + ` (${c.hex})`).join(', '); }
+const soortTxt = it => it.soort === 'snij' ? 'gesneden folie' : 'geprinte sticker, contour gesneden en gelamineerd';
+function posText(it, v, p){
+  const r = rectOf(it, v, p);
+  if (isDoor(v)) return `onderkant ${mm(r.y0)} mm boven de onderrand van de deur, ${mm(frontGap(v, p))} mm achter de voornaad en ${mm(rearGap(v, p))} mm voor de achternaad${Math.abs(p.u - S.dims.W / 2) < 1 ? ' (midden van de deur)' : ''}`;
+  const ge = glassBelow(v, p.u, r.y0), side = Math.abs(p.u) < 1 ? 'midden op de auto' : `${mm(Math.abs(p.u))} mm ${p.u > 0 ? 'rechts' : 'links'} van het midden (gezien vanaf de ${VIEWNAME[v]})`;
+  return ge != null ? `onderkant ${mm((r.y0 - ge) / r.k)} mm boven de onderrand van de ${v === 'B' ? 'achterruit' : 'voorruit'} (langs het glas gemeten), ${side}` : `onderkant ${mm(r.y0)} mm boven de grond, ${side}`;
+}
+function itemTitle(it){
+  if (it.type === 'tekst') return `Tekst "${firstLine(it).slice(0, 40)}"`;
+  if (it.type === 'qr') return 'QR-code';
+  return 'Logo';
+}
+function renderExport(){
+  const box = $('#sum'); box.innerHTML = '';
+  const units = allUnits(), any = units.length > 0;
+  for (const id of ['x-zip','x-sticker','x-werk','x-voorbeeld']) $('#' + id).disabled = !any;
+  if (!any){ box.append(h('p', {class:'small muted', style:'margin:0'}, 'Nog geen sticker klaar.')); $('#mail').value = ''; return; }
+  for (const {it, sides, p, posDiff} of units){
+    const s = sizeOf(it, p), u = {sides, p};
+    const pos = posDiff ? `links: ${posText(it, 'L', placeOf(it, 'L'))}; rechts: ${posText(it, 'R', placeOf(it, 'R'))}` : posText(it, sides[0], p);
+    box.append(h('div', {class:'unit'},
+      h('div', {class:'u1'}, h('b', null, `${itemNo(it)}. ${itemTitle(it)}`), h('span', null, `${mm(s.w)} × ${mm(s.h)} mm`), h('span', {class:'muted'}, `${sides.length}× · ${unitWhere(it, u)}`)),
+      h('div', {class:'u2'}, cap(soortTxt(it)) + (it.shares ? ' · ' + foilTxt(it) : '')),
+      h('div', {class:'u2'}, cap(pos)),
+      h('div', {class:'ub'},
+        h('button', {class:'btn sec sm', type:'button', disabled:!canPdf(it), onclick:() => dlOne(it, u, 'pdf')}, 'PDF'),
+        it.L.kind === 'svg' ? h('button', {class:'btn sec sm', type:'button', onclick:() => dlOne(it, u, 'svg')}, 'SVG') : null)));
+  }
+  $('#mail').value = mailText();
+}
+function mailText(){
+  const who = [S.job.klant, S.job.order ? 'order ' + S.job.order : '', S.job.kenteken].filter(Boolean).join(' · ');
+  const lines = ['Hoi,', '', `Graag de volgende belettering maken${who ? ' voor ' + who : ''}, voor een ${MODEL}:`, ''];
+  for (const {it, sides, p} of allUnits()){
+    const s = sizeOf(it, p), extra = it.type === 'qr' ? ` (link: ${it.qr.value.trim()})` : '';
+    lines.push(`${itemNo(it)}. ${sides.length}× ${itemTitle(it)}${extra}, ${mm(s.w)} × ${mm(s.h)} mm (breedte × hoogte), op de ${unitWhere(it, {sides, p})}`);
+    lines.push(`   ${cap(soortTxt(it))}${it.shares ? '; kleuren: ' + foilTxt(it) : ''}`);
+  }
+  if (S.job.opm) lines.push('', `Opmerking: ${S.job.opm}`);
+  lines.push('', 'In de bijlage de stickerbestanden op ware grootte (1:1) en de werktekening met de plaats op de auto.', '', 'Groet,', 'Spéciale45');
+  return lines.join('\n');
+}
+async function itemPNG(it, longPx){ const L = it.L, pw = L.aspect >= 1 ? longPx : Math.round(longPx * L.aspect), ph = L.aspect >= 1 ? Math.round(longPx / L.aspect) : longPx; const c = await logoCanvas(L, pw, ph, 0); return c.toDataURL('image/png'); }
+async function stickerPDF(it, u){
+  const L = it.L, {w, h:hh} = sizeOf(it, u.p);
+  const title = `${itemTitle(it)} ${S.job.klant || ''} ${Math.round(w)} x ${Math.round(hh)} mm (1:1)`.replace(/\s+/g, ' ');
+  if (L.kind === 'pdf'){
+    const {PDFDocument} = await getPdfLib();
+    const src = await PDFDocument.load(L.pdf.bytes, {ignoreEncryption:true}), out = await PDFDocument.create();
+    const c = L.pdf.crop, emb = await out.embedPage(src.getPage(0), {left:c.left, bottom:c.bottom, right:c.right, top:c.top});
+    const pw = w * 72 / 25.4, ph = hh * 72 / 25.4, page = out.addPage([pw, ph]);
+    page.drawPage(emb, {x:0, y:0, width:pw, height:ph});
+    out.setTitle(title); out.setCreator('Spéciale45 belettering'); out.setProducer('Spéciale45');
+    return new Blob([await out.save()], {type:'application/pdf'});
+  }
+  const jsPDF = await getJsPDF();
+  const doc = new jsPDF({orientation: w >= hh ? 'landscape' : 'portrait', unit:'mm', format:[w, hh], compress:true});
+  if (L.kind === 'svg'){
+    const holder = document.createElement('div'); holder.style.cssText = 'position:absolute;left:-20000px;top:0;visibility:hidden';
+    holder.innerHTML = svgSized(L.svg, w + 'mm', hh + 'mm'); document.body.appendChild(holder);
+    try { await doc.svg(holder.firstElementChild, {x:0, y:0, width:w, height:hh}); } finally { holder.remove(); }
+  } else doc.addImage(L.raster.url, 'PNG', 0, 0, w, hh, undefined, 'NONE');
+  doc.setProperties({title, creator:'Spéciale45 belettering'});
+  return doc.output('blob');
+}
+function stickerSVG(it, u){
+  const {w, h:hh} = sizeOf(it, u.p), doc = new DOMParser().parseFromString(it.L.svg, 'image/svg+xml'), r = doc.documentElement;
+  r.setAttribute('width', w + 'mm'); r.setAttribute('height', hh + 'mm');
+  return new Blob(['<?xml version="1.0" encoding="UTF-8"?>\n' + new XMLSerializer().serializeToString(r)], {type:'image/svg+xml'});
+}
+async function dlOne(it, u, ext){
+  try { download(ext === 'pdf' ? await stickerPDF(it, u) : stickerSVG(it, u), unitFile(it, u, ext)); }
+  catch (e){ console.error(e); toast('Maken mislukt: ' + (e.message || e)); }
+}
+async function stickerFiles(){
+  const files = [];
+  for (const {it, sides, p} of allUnits()){
+    const u = {sides, p};
+    if (canPdf(it)) files.push({name:unitFile(it, u, 'pdf'), blob:await stickerPDF(it, u)});
+    if (it.L.kind === 'svg') files.push({name:unitFile(it, u, 'svg'), blob:stickerSVG(it, u)});
+  }
+  return files;
+}
+async function zipBlob(files){ await loadScript(CDN.jszip); const z = new window.JSZip(); for (const f of files) z.file(f.name, f.blob); return z.generateAsync({type:'blob', compression:'DEFLATE'}); }
+async function busy(btn, fn){
+  const old = btn.textContent; btn.disabled = true; btn.textContent = 'Bezig…';
+  try { await fn(); } catch (e) { console.error(e); toast('Maken mislukt: ' + (e.message || e)); }
   finally { btn.textContent = old; renderExport(); }
 }
-function exportSVG(){
-  const L = S.logo; if (!L || L.kind !== 'svg') return;
-  for (const s of stickerList()){
-    const w = +s.p.w.toFixed(1), hh = +hOf(s.p).toFixed(1), tag = `${Math.round(w)}x${Math.round(hh)}mm` + (stickerList().length > 1 ? '_' + s.sides[0] : '');
-    const doc = new DOMParser().parseFromString(L.svg, 'image/svg+xml'), r = doc.documentElement;
-    r.setAttribute('width', w + 'mm'); r.setAttribute('height', hh + 'mm');
-    download(new Blob(['<?xml version="1.0" encoding="UTF-8"?>\n' + new XMLSerializer().serializeToString(r)], {type:'image/svg+xml'}), exportName('svg', tag));
-  }
+async function exportStickers(){
+  const files = await stickerFiles();
+  if (!files.length) throw new Error('Geen stickerbestand te maken (pixelbestand voor gesneden folie?)');
+  const pdfs = files.filter(f => f.name.endsWith('.pdf'));
+  if (pdfs.length === 1 && files.length <= 2){ download(pdfs[0].blob, pdfs[0].name); toast('Stickerbestand gedownload'); return; }
+  download(await zipBlob(files), exportName('zip', 'stickers')); toast('Stickerbestanden gedownload (zip)');
+}
+async function exportZip(){
+  const files = await stickerFiles();
+  files.push({name:exportName('pdf', 'werktekening'), blob:await werkBlob()});
+  files.push({name:exportName('jpg', 'voorbeeld'), blob:await voorbeeldBlob()});
+  files.push({name:exportName('txt', 'mailtekst'), blob:new Blob([mailText().replace(/\n/g, '\r\n')], {type:'text/plain;charset=utf-8'})});
+  download(await zipBlob(files), exportName('zip')); toast('Alles gedownload (zip)');
 }
 let _logoBlack;
-async function brandBlack(){ if (_logoBlack) return _logoBlack; try { const r = await fetch('logo-zwart.png'); const bl = await r.blob(); const url = await blobToDataURL(bl); const im = await loadImg(url); _logoBlack = {url, ar: im.naturalWidth / im.naturalHeight}; } catch (e) { _logoBlack = null; } return _logoBlack; }
-async function exportWerk(){
-  const L = S.logo; if (!L) return;
-  const btn = $('#x-werk'); btn.disabled = true; const old = btn.textContent; btn.textContent = 'Bezig…';
-  try {
-    const jsPDF = await getJsPDF(), doc = new jsPDF({orientation:'landscape', unit:'mm', format:'a4', compress:true});
-    const png = await logoPNG(1400), brand = await brandBlack(), d = S.dims, SC = 8, list = stickerList();
-    const datum = new Date().toLocaleDateString('nl-NL', {day:'numeric', month:'long', year:'numeric'});
-    const pages = S.job.deuren !== 'LR' ? [[S.job.deuren]] : (list.length === 2 || list[0].posDiff ? [['L'], ['R']] : [['L','R']]);
-    pages.forEach((sides, pi) => {
-      if (pi) doc.addPage();
-      const side = sides[0], p = placeOf(side), hh = hOf(p);
-      // kop
-      if (brand) doc.addImage(brand.url, 'PNG', 12, 8, 9 * brand.ar, 9);
-      doc.setFont('helvetica', 'bold'); doc.setFontSize(15); doc.setTextColor(20); doc.text('Werktekening belettering', 285, 14, {align:'right'});
-      doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(60);
-      const meta = [S.job.klant && 'Klant: ' + S.job.klant, S.job.order && 'Order: ' + S.job.order, S.job.kenteken && 'Kenteken: ' + S.job.kenteken, MODEL, datum].filter(Boolean).join('   ·   ');
-      doc.text(meta, 12, 24); doc.setDrawColor(30); doc.setLineWidth(0.3); doc.line(12, 27, 285, 27);
-      // tekening 1:8
-      const ox = 22, oy = 172, P = (u, v) => [ox + u / SC, oy - v / SC];
-      doc.setFontSize(8.5); doc.setTextColor(40);
-      doc.text(sides.length === 2 ? 'Linkerdeur, van buitenaf gezien. Rechterdeur: gespiegeld, zelfde maten vanaf de voornaad.' : (side === 'L' ? 'Linkerdeur, van buitenaf gezien' : 'Rechterdeur, van buitenaf gezien'), ox, 34);
-      // raamdeel
-      doc.setFillColor(70); doc.setDrawColor(70); let [x, y] = P(0, d.top); doc.rect(x, y, d.W / SC, (d.top - d.H) / SC, 'F');
-      doc.setFillColor(232, 238, 241); [x, y] = P(42, d.top - 62); doc.rect(x, y, (d.W - 86) / SC, (d.top - d.H - 98) / SC, 'F');
-      // paneel
-      doc.setFillColor(247, 247, 245); doc.setDrawColor(20); doc.setLineWidth(0.35); [x, y] = P(0, d.H); doc.roundedRect(x, y, d.W / SC, d.H / SC, 2, 2, 'FD');
-      doc.setDrawColor(150); doc.setLineWidth(0.25);
-      doc.line(...P(0, d.crU), ...P(d.W, d.crU));
-      doc.setDrawColor(20); doc.setLineWidth(0.25); doc.ellipse(...P(0, 552), 100 / SC, 48 / SC, 'S'); doc.circle(...P(-63, 560), 22 / SC, 'S');
-      for (const z of zonesFor(d, side)){
-        if (z.k === 'blink'){ doc.setDrawColor(190, 110, 20); [x, y] = P(z.u0, z.v1); doc.roundedRect(x, y, (z.u1 - z.u0) / SC, (z.v1 - z.v0) / SC, 1.5, 1.5, 'S'); }
-        if (z.k === 'badge'){ const bw = (z.u1 - z.u0) / 3; [[46, 139, 58], [200, 200, 200], [208, 32, 42]].forEach((c, i) => { doc.setFillColor(...c); [x, y] = P(z.u0 + i * bw, 541); doc.rect(x, y, bw / SC, 6 / SC, 'F'); }); }
-      }
-      // logo
-      [x, y] = P(p.u - p.w / 2, p.v + hh / 2); doc.addImage(png, 'PNG', x, y, p.w / SC, hh / SC, undefined, 'FAST');
-      // maatlijnen
-      const x0 = p.u - p.w / 2, x1 = p.u + p.w / 2, y0 = p.v - hh / 2;
-      doc.setDrawColor(20); doc.setLineWidth(0.2); doc.setTextColor(20); doc.setFontSize(8.5);
-      const tick = (xa, ya) => doc.line(xa - 0.9, ya + 0.9, xa + 0.9, ya - 0.9);
-      const dimH = (ua, ub, yy, txt, ext) => { const [xa] = P(ua, 0), [xb] = P(ub, 0); if (xb - xa < 0.3) return; doc.line(xa, yy, xb, yy); tick(xa, yy); tick(xb, yy); if (ext) for (const [uu, vv] of ext){ const [ex, ey] = P(uu, vv); doc.setDrawColor(150); doc.line(ex, ey + 0.8, ex, yy + 1.5); doc.setDrawColor(20); } doc.text(txt, (xa + xb) / 2, yy - 1.2, {align:'center'}); };
-      const yA = oy + 7, yB = oy + 14;
-      dimH(0, x0, yA, mm(x0), [[0, 0], [x0, y0]]); dimH(x0, x1, yA, mm(p.w), [[x1, y0]]); dimH(x1, d.W, yA, mm(d.W - x1), [[d.W, 0]]);
-      doc.setTextColor(110); dimH(0, d.W, yB, `deur ${mm(d.W)} (naad tot naad)`); doc.setTextColor(20);
-      const xV = ox + d.W / SC + 7;
-      const dimV = (va, vb, txt, ext) => { const [, ya] = P(0, va), [, yb] = P(0, vb); doc.line(xV, ya, xV, yb); tick(xV, ya); tick(xV, yb); for (const [uu, vv] of ext){ const [ex, ey] = P(uu, vv); doc.setDrawColor(150); doc.line(ex + 0.8, ey, xV + 1.5, ey); doc.setDrawColor(20); } doc.text(txt, xV + 1.6, (ya + yb) / 2 + 1, {align:'left'}); };
-      dimV(0, y0, mm(y0), [[d.W, 0], [x1, y0]]); dimV(y0, y0 + hh, mm(hh), [[x1, y0 + hh]]);
-      doc.setFontSize(7.5); doc.setTextColor(110);
-      doc.text(side === 'L' ? 'voornaad' : 'achternaad', ox, oy + 19); doc.text(side === 'L' ? 'achternaad' : 'voornaad', ox + d.W / SC, oy + 19, {align:'right'});
-      doc.text(side === 'L' ? '<- voorkant auto' : 'voorkant auto ->', ox + d.W / SC / 2, oy + 19, {align:'center'});
-      doc.text('onderrand deur', ox - 1, oy + 0.8, {align:'right'});
-      // rechterkolom
-      const cx = 188; let cy = 40;
-      doc.setTextColor(110); doc.setFontSize(8); doc.text('STICKER', cx, cy); cy += 7;
-      doc.setTextColor(20); doc.setFont('helvetica', 'bold'); doc.setFontSize(18); doc.text(`${mm(p.w)} × ${mm(hh)} mm`, cx, cy); cy += 5;
-      doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(90); doc.text('breedte × hoogte, buitenmaten logo', cx, cy); cy += 8;
-      const rowT = (k, v) => { doc.setFontSize(8.5); doc.setTextColor(110); doc.text(k, cx, cy); doc.setTextColor(20); const lines = doc.splitTextToSize(v, 66); doc.text(lines, cx + 27, cy); cy += 4.6 * lines.length + 1.6; };
-      rowT('Aantal', `${sides.length}× (${sideTxt(sides)})`);
-      rowT('Soort', S.job.soort === 'snij' ? 'Gesneden folie' : 'Geprinte sticker, contour gesneden');
-      rowT('Positie', `onderkant logo ${mm(y0)} mm boven onderrand deur; ${mm(frontGap(side, p))} mm achter de voornaad en ${mm(rearGap(side, p))} mm voor de achternaad${Math.abs(p.u - d.W / 2) < 1 ? ' (midden van de deur)' : ''}`);
-      rowT('Bestand', exportName(L.kind === 'svg' ? 'pdf / .svg' : 'pdf', `${Math.round(p.w)}x${Math.round(hh)}mm`) + ' — ware grootte 1:1');
-      if (S.shares){
-        doc.setFontSize(8.5); doc.setTextColor(110); doc.text('Kleuren', cx, cy);
-        for (const c of S.shares.slice(0, 8)){ const rgb = parseColor(c.hex); doc.setFillColor(rgb[0], rgb[1], rgb[2]); doc.setDrawColor(120); doc.setLineWidth(0.15); doc.rect(cx + 27, cy - 3, 3.4, 3.4, 'FD'); doc.setTextColor(20); doc.text(`${S.foil[c.hex] || colorName(c.hex)}  ${c.hex}`, cx + 32, cy); cy += 5; }
-        cy += 1.6;
-      }
-      if (S.job.opm) rowT('Opmerking', S.job.opm);
-      // voet
-      doc.setFontSize(7); doc.setTextColor(120);
-      doc.text(`Alle maten in mm. Tekening op schaal 1:${SC} bij afdrukken op 100% (A4). Deurmal ${MODEL} van Spéciale45, gemeten uit het 3D-model (±1 cm): controleer de deur vóór het plakken.`, 12, 203);
-      doc.text(`Pagina ${pi + 1} van ${pages.length}`, 285, 203, {align:'right'});
-    });
-    doc.setProperties({title:'Werktekening belettering ' + (S.job.klant || ''), creator:'Spéciale45 belettering'});
-    download(doc.output('blob'), exportName('pdf', 'werktekening'));
-    toast('Werktekening gedownload');
-  } catch (e) { console.error(e); toast('Maken mislukt: ' + (e.message || e)); }
-  finally { btn.textContent = old; btn.disabled = false; }
+async function brandBlack(){ if (_logoBlack !== undefined) return _logoBlack; try { const r = await fetch('logo-zwart.png'); const bl = await r.blob(); const url = await blobToDataURL(bl); const im = await loadImg(url); _logoBlack = {url, ar: im.naturalWidth / im.naturalHeight}; } catch (e) { _logoBlack = null; } return _logoBlack; }
+
+// ---- werktekening ----
+function werkPages(){
+  const L = itemsOn('L'), R = itemsOn('R'), out = [];
+  const same = L.length && L.length === R.length && L.every(it => { const a = placeOf(it, 'L'), b = placeOf(it, 'R'); return R.includes(it) && b && Math.round(a.w) === Math.round(b.w) && Math.abs(frontGap('L', a) - frontGap('R', b)) < 1 && Math.abs(a.v - b.v) < 1; });
+  if (same) out.push({door:true, sides:['L','R'], items:L});
+  else { if (L.length) out.push({door:true, sides:['L'], items:L}); if (R.length) out.push({door:true, sides:['R'], items:R}); }
+  for (const v of ['F','B']){ const its = itemsOn(v); if (its.length) out.push({door:false, view:v, items:its}); }
+  return out;
 }
-// Eén kant van de auto met het logo erop, als canvas (voor het klantvoorbeeld).
-async function sceneCanvas(side, Wpx){
-  const [VX0, VY0, VW, VH] = AUTO_VB, k = Wpx / VW, Hpx = Math.round(VH * k), c = canvas(Wpx, Hpx), g = c.getContext('2d'), C = CAR_IMG[side];
+function pdfBadge(doc, x, y, n){ doc.setFillColor(20, 20, 20); doc.circle(x, y, 2.1, 'F'); doc.setTextColor(255); doc.setFont('helvetica', 'bold'); doc.setFontSize(7.5); doc.text(String(n), x, y + 0.95, {align:'center'}); doc.setFont('helvetica', 'normal'); doc.setTextColor(20); }
+function pdfFrame(doc, x, y, w, hh){ doc.setDrawColor(30, 111, 217); doc.setLineWidth(0.15); doc.setLineDashPattern([0.8, 0.6], 0); doc.rect(x, y, w, hh, 'S'); doc.setLineDashPattern([], 0); doc.setDrawColor(20); doc.setLineWidth(0.2); }
+function pdfLabel(doc, txt, x, y, align = 'left'){ const w = doc.getTextWidth(txt), xs = align === 'center' ? x - w / 2 : align === 'right' ? x - w : x; doc.setFillColor(255, 255, 255); doc.rect(xs - 0.6, y - 2.5, w + 1.2, 3.3, 'F'); doc.text(txt, x, y, {align}); }
+// Rechterkolom: per sticker maat, aantal, soort, plek, kleuren en bestandsnaam.
+function pdfItemBlock(doc, it, v, count, cx, cy){
+  const p = placeOf(it, v), s = sizeOf(it, p), u = stickerUnits(it).find(x => x.sides.includes(v)) || {sides:[v], p};
+  pdfBadge(doc, cx + 2.1, cy - 1.1, itemNo(it));
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(10); doc.setTextColor(20); doc.text(doc.splitTextToSize(itemTitle(it), 88)[0], cx + 6, cy);
+  cy += 6.2; doc.setFontSize(14); doc.text(`${mm(s.w)} × ${mm(s.h)} mm`, cx, cy); doc.setFont('helvetica', 'normal'); cy += 5;
+  const rowT = (k, val) => { doc.setFontSize(8.2); doc.setTextColor(110); doc.text(k, cx, cy); doc.setTextColor(20); const lines = doc.splitTextToSize(val, 74); doc.text(lines, cx + 20, cy); cy += 3.7 * lines.length + 1.1; };
+  rowT('Aantal', `${count}× (${isDoor(v) ? (count === 2 ? 'linker- en rechterdeur' : sideTxt([v])) : whereTxt(it, v, p)})`);
+  rowT('Soort', cap(soortTxt(it)));
+  if (it.type === 'qr') rowT('Inhoud', it.qr.value.trim());
+  rowT('Positie', posText(it, v, p));
+  if (it.shares){
+    doc.setFontSize(8.2); doc.setTextColor(110); doc.text('Kleuren', cx, cy);
+    for (const c of it.shares.slice(0, 4)){ const rgb = parseColor(c.hex); doc.setFillColor(rgb[0], rgb[1], rgb[2]); doc.setDrawColor(120); doc.setLineWidth(0.15); doc.rect(cx + 20, cy - 2.8, 3.2, 3.2, 'FD'); doc.setTextColor(20); doc.text(`${it.foil[c.hex] || colorName(c.hex)}  ${c.hex}`, cx + 25, cy); cy += 4.4; }
+    if (it.shares.length > 4){ doc.setTextColor(110); doc.text(`+ ${it.shares.length - 4} kleuren`, cx + 20, cy); cy += 4.4; }
+    cy += 0.6;
+  }
+  rowT('Bestand', unitFile(it, u, 'pdf'));
+  return cy + 4.5;
+}
+function werkDoor(doc, pg, pngs){
+  const d = S.dims, SC = 8, side = pg.sides[0], ox = 22, oy = 176, P = (u, v) => [ox + u / SC, oy - v / SC];
+  doc.setFontSize(9); doc.setTextColor(40);
+  doc.text(pg.sides.length === 2 ? 'Linkerdeur, van buitenaf gezien. Rechterdeur: gespiegeld, zelfde maten vanaf de voornaad.' : (side === 'L' ? 'Linkerdeur, van buitenaf gezien' : 'Rechterdeur, van buitenaf gezien'), 12, 33);
+  // raamdeel
+  doc.setFillColor(70); doc.setDrawColor(70); let [x, y] = P(0, d.top); doc.rect(x, y, d.W / SC, (d.top - d.H) / SC, 'F');
+  doc.setFillColor(232, 238, 241); [x, y] = P(42, d.top - 62); doc.rect(x, y, (d.W - 86) / SC, (d.top - d.H - 98) / SC, 'F');
+  // paneel
+  doc.setFillColor(247, 247, 245); doc.setDrawColor(20); doc.setLineWidth(0.35); [x, y] = P(0, d.H); doc.roundedRect(x, y, d.W / SC, d.H / SC, 2, 2, 'FD');
+  doc.setDrawColor(150); doc.setLineWidth(0.25); doc.line(...P(0, d.crU), ...P(d.W, d.crU));
+  doc.setDrawColor(20); doc.setLineWidth(0.25); doc.ellipse(...P(0, 552), 100 / SC, 48 / SC, 'S'); doc.circle(...P(-63, 560), 22 / SC, 'S');
+  for (const z of zonesFor(d, side)){
+    if (z.k === 'blink'){ doc.setDrawColor(190, 110, 20); [x, y] = P(z.u0, z.v1); doc.roundedRect(x, y, (z.u1 - z.u0) / SC, (z.v1 - z.v0) / SC, 1.5, 1.5, 'S'); }
+    if (z.k === 'badge'){ const bw = (z.u1 - z.u0) / 3; [[46, 139, 58], [200, 200, 200], [208, 32, 42]].forEach((c, i) => { doc.setFillColor(...c); [x, y] = P(z.u0 + i * bw, 541); doc.rect(x, y, bw / SC, 6 / SC, 'F'); }); }
+  }
+  const [, ty] = P(0, d.top); doc.setFontSize(7.5); doc.setTextColor(110);
+  doc.text(side === 'L' ? 'voornaad' : 'achternaad', ox, ty - 1.6); doc.text(side === 'L' ? 'achternaad' : 'voornaad', ox + d.W / SC, ty - 1.6, {align:'right'});
+  doc.text(side === 'L' ? '<- voorkant auto' : 'voorkant auto ->', ox + d.W / SC / 2, ty - 1.6, {align:'center'});
+  doc.text('onderrand deur', ox - 1, oy + 0.8, {align:'right'});
+  // stickers
+  const its = pg.items, full = its.length <= 3;
+  its.forEach(it => { const p = placeOf(it, side), r = rectOf(it, side, p); [x, y] = P(r.x0, r.y1); doc.addImage(pngs.get(it.id), 'PNG', x, y, p.w / SC, r.hh / SC, undefined, 'FAST'); pdfFrame(doc, x, y, p.w / SC, r.hh / SC); });
+  doc.setDrawColor(20); doc.setLineWidth(0.2); doc.setTextColor(20); doc.setFontSize(8.2);
+  const tick = (xa, ya) => doc.line(xa - 0.9, ya + 0.9, xa + 0.9, ya - 0.9);
+  const ext = (uu, vv, yy) => { const [ex, ey] = P(uu, vv); doc.setDrawColor(160); doc.setLineWidth(0.12); doc.line(ex, ey + 0.8, ex, yy + 1.4); doc.setDrawColor(20); doc.setLineWidth(0.2); };
+  const dimH = (ua, ub, yy, txt) => { const [xa] = P(ua, 0), [xb] = P(ub, 0); if (xb - xa < 0.3) return; doc.line(xa, yy, xb, yy); tick(xa, yy); tick(xb, yy); doc.text(txt, (xa + xb) / 2, yy - 1.1, {align:'center'}); };
+  its.forEach((it, i) => {
+    const p = placeOf(it, side), r = rectOf(it, side, p), n = itemNo(it);
+    [x, y] = P(r.x0, r.y1); pdfBadge(doc, x - 1.2, y - 1.2, n);
+    if (!full) return;
+    // hoogte: van de onderrand tot de onderkant van de sticker
+    const xs = ox + p.u / SC + i * 4, [, ya] = P(0, 0), [, yb] = P(0, r.y0);
+    if (r.y0 > 2){ doc.line(xs, ya, xs, yb); tick(xs, ya); tick(xs, yb); doc.setFontSize(8); pdfLabel(doc, mm(r.y0), xs + 1.2, (ya + yb) / 2 + 1); }
+    // breedte-rij
+    const yy = oy + 6 + i * 6;
+    if (its.length > 1) pdfBadge(doc, ox - 5, yy - 0.4, n);
+    ext(0, 0, yy); ext(r.x0, r.y0, yy); ext(r.x1, r.y0, yy); ext(d.W, 0, yy);
+    doc.setFontSize(8.2); dimH(0, r.x0, yy, mm(r.x0)); dimH(r.x0, r.x1, yy, mm(p.w)); dimH(r.x1, d.W, yy, mm(d.W - r.x1));
+  });
+  doc.setTextColor(110); dimH(0, d.W, oy + 6 + (full ? its.length : 0) * 6, `deur ${mm(d.W)} (naad tot naad)`); doc.setTextColor(20);
+  let cy = 40; const cx = 188;
+  doc.setTextColor(110); doc.setFontSize(8); doc.text(its.length === 1 ? 'STICKER' : 'STICKERS', cx, cy); cy += 7;
+  for (const it of its) cy = pdfItemBlock(doc, it, side, pg.sides.length, cx, cy);
+  return cy;
+}
+async function fbBackground(v){
+  const t = await tintedCar(v, '#e4e4e4'), V = VIEW[v], src = t.canvas, fx = src.width / V.w, fy = src.height / V.h, ppm = 0.55;
+  const c = canvas(1640 * ppm, 1580 * ppm), g = c.getContext('2d'); g.fillStyle = '#ffffff'; g.fillRect(0, 0, c.width, c.height);
+  g.drawImage(src, (-820 - V.x) * fx, (-1560 - V.y) * fy, 1640 * fx, 1580 * fy, 0, 0, c.width, c.height);
+  return c.toDataURL('image/jpeg', 0.85);
+}
+async function werkFB(doc, pg, pngs){
+  const v = pg.view, SC = 12, x0 = 20, y0 = 36, ox = x0 + 820 / SC, oy = y0 + 1560 / SC, P = (u, vv) => [ox + u / SC, oy - vv / SC];
+  doc.setFontSize(9); doc.setTextColor(40); doc.text(v === 'F' ? 'Voorkant, recht van voren gezien' : 'Achterkant, recht van achteren gezien', 12, 33);
+  doc.addImage(await fbBackground(v), 'JPEG', x0, y0, 1640 / SC, 1580 / SC, undefined, 'FAST');
+  doc.setDrawColor(120); doc.setLineWidth(0.15); doc.setLineDashPattern([1.2, 1], 0); doc.line(...P(0, -10), ...P(0, 1540)); doc.setLineDashPattern([], 0);
+  doc.setDrawColor(60); doc.setLineWidth(0.3); doc.line(...P(-820, 0), ...P(820, 0));
+  doc.setFontSize(7.5); doc.setTextColor(110); doc.text('midden', ox, y0 + 2.5, {align:'center'}); doc.text('grond', x0, oy - 1);
+  const its = pg.items, tick = (xa, ya) => doc.line(xa - 0.9, ya + 0.9, xa + 0.9, ya - 0.9);
+  let glassNote = false;
+  its.forEach((it, i) => {
+    const p = placeOf(it, v), r = rectOf(it, v, p), n = itemNo(it); let x, y;
+    [x, y] = P(r.x0, r.y1); doc.addImage(pngs.get(it.id), 'PNG', x, y, p.w / SC, r.hh / SC, undefined, 'FAST'); pdfFrame(doc, x, y, p.w / SC, r.hh / SC);
+    pdfBadge(doc, x - 1.2, y - 1.2, n);
+    const ge = glassBelow(v, p.u, r.y0), base = ge != null ? ge : 0; if (ge != null) glassNote = true;
+    const xs = ox + p.u / SC + i * 4, [, ya] = P(0, base), [, yb] = P(0, r.y0);
+    doc.setDrawColor(20); doc.setLineWidth(0.2); doc.setTextColor(20);
+    if (r.y0 - base > 2){ doc.line(xs, ya, xs, yb); tick(xs, ya); tick(xs, yb); doc.setFontSize(8); pdfLabel(doc, mm((r.y0 - base) / (ge != null ? r.k : 1)), xs + 1.2, (ya + yb) / 2 + 1); }
+    const yy = oy + 6 + i * 6;
+    if (its.length > 1) pdfBadge(doc, x0 + 2, yy - 0.4, n);
+    if (Math.abs(p.u) >= 1){
+      const [xa] = P(Math.min(0, p.u), 0), [xb] = P(Math.max(0, p.u), 0);
+      doc.setDrawColor(160); doc.setLineWidth(0.12); doc.line(ox + p.u / SC, P(0, r.y0)[1] + 0.8, ox + p.u / SC, yy + 1.4); doc.line(ox, oy + 0.8, ox, yy + 1.4);
+      doc.setDrawColor(20); doc.setLineWidth(0.2); doc.line(xa, yy, xb, yy); tick(xa, yy); tick(xb, yy); doc.setFontSize(8.2); doc.text(`${mm(Math.abs(p.u))} ${p.u > 0 ? 'rechts' : 'links'} van midden`, (xa + xb) / 2, yy - 1.1, {align:'center'});
+    } else { doc.setFontSize(8.2); doc.text('midden op de auto', ox, yy, {align:'center'}); }
+  });
+  if (glassNote){ doc.setFontSize(7.5); doc.setTextColor(110); doc.text('Maten op de ruit: langs het glas gemeten, vanaf de onderrand van de ruit.', x0, oy + 6 + its.length * 6 + 1); }
+  let cy = 40; const cx = 188;
+  doc.setTextColor(110); doc.setFontSize(8); doc.text(its.length === 1 ? 'STICKER' : 'STICKERS', cx, cy); cy += 7;
+  for (const it of its) cy = pdfItemBlock(doc, it, v, 1, cx, cy);
+  return cy;
+}
+async function werkBlob(){
+  const pages = werkPages(); if (!pages.length) throw new Error('Nog geen stickers geplaatst');
+  const jsPDF = await getJsPDF(), doc = new jsPDF({orientation:'landscape', unit:'mm', format:'a4', compress:true});
+  const brand = await brandBlack(), datum = new Date().toLocaleDateString('nl-NL', {day:'numeric', month:'long', year:'numeric'});
+  const pngs = new Map(); for (const it of S.items) if (it.L) pngs.set(it.id, await itemPNG(it, 1200));
+  for (let pi = 0; pi < pages.length; pi++){
+    const pg = pages[pi]; if (pi) doc.addPage();
+    if (brand) doc.addImage(brand.url, 'PNG', 12, 8, 9 * brand.ar, 9);
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(15); doc.setTextColor(20); doc.text('Werktekening belettering', 285, 14, {align:'right'});
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(60);
+    doc.text([S.job.klant && 'Klant: ' + S.job.klant, S.job.order && 'Order: ' + S.job.order, S.job.kenteken && 'Kenteken: ' + S.job.kenteken, MODEL, datum].filter(Boolean).join('   ·   '), 12, 24);
+    doc.setDrawColor(30); doc.setLineWidth(0.3); doc.line(12, 27, 285, 27);
+    const cy = pg.door ? werkDoor(doc, pg, pngs) : await werkFB(doc, pg, pngs);
+    if (S.job.opm && cy < 190){ doc.setFontSize(8.2); doc.setTextColor(110); doc.text('Opmerking', 188, cy); doc.setTextColor(20); doc.text(doc.splitTextToSize(S.job.opm, 74), 208, cy); }
+    doc.setFontSize(7); doc.setTextColor(120);
+    doc.text(`Alle maten in mm. Tekening op schaal 1:${pg.door ? 8 : 12} bij afdrukken op 100% (A4). Maten van de ${MODEL} uit het 3D-model (±1 cm): controleer vóór het plakken.`, 12, 205);
+    doc.text(`Pagina ${pi + 1} van ${pages.length}`, 285, 205, {align:'right'});
+  }
+  doc.setProperties({title:'Werktekening belettering ' + (S.job.klant || ''), creator:'Spéciale45 belettering'});
+  return doc.output('blob');
+}
+async function exportWerk(){ download(await werkBlob(), exportName('pdf', 'werktekening')); toast('Werktekening gedownload'); }
+
+// ---- klantvoorbeeld ----
+// Eén kant van de auto met de stickers erop, als canvas.
+async function sceneCanvas(v, Wpx){
+  const [VX0, VY0, VW, VH] = isDoor(v) ? AUTO_VB : FB_VB, k = Wpx / VW, Hpx = Math.round(VH * k), c = canvas(Wpx, Hpx), g = c.getContext('2d'), V = VIEW[v], [cx, cy, rx, ry] = V.sh;
   g.fillStyle = '#f2efe9'; g.fillRect(0, 0, Wpx, Hpx);
-  g.save(); g.translate((540 - VX0) * k, (293 - VY0) * k); g.scale(1, 46 / 1360);
-  const gr = g.createRadialGradient(0, 0, 0, 0, 0, 1360 * k); gr.addColorStop(0, 'rgba(0,0,0,.3)'); gr.addColorStop(1, 'rgba(0,0,0,0)');
-  g.fillStyle = gr; g.beginPath(); g.arc(0, 0, 1360 * k, 0, Math.PI * 2); g.fill(); g.restore();
-  const t = await tintedCar(side, S.car);
-  g.drawImage(t.canvas, (C.x - VX0) * k, (IMG_Y - VY0) * k, IMG_W * k, IMG_H * k);
-  const p = placeOf(side), hh = hOf(p), x0 = p.u - p.w / 2, y1 = p.v + hh / 2;
-  const lw = Math.max(2, Math.round(p.w * k * 2)), lh = Math.max(2, Math.round(hh * k * 2));
-  const logo = await logoCanvas(lw, lh, 0), tmp = canvas(lw, lh), tg = tmp.getContext('2d');
-  const [base, lak] = await Promise.all([img(C.base), img(C.lak)]), fx = base.naturalWidth / IMG_W, fy = base.naturalHeight / IMG_H;
-  const sx = (x0 - C.x) * fx, sy = (-y1 - IMG_Y) * fy, sw = p.w * fx, sh = hh * fy;
-  tg.drawImage(logo, 0, 0);
-  tg.globalAlpha = 0.5; tg.globalCompositeOperation = 'multiply'; tg.drawImage(base, sx, sy, sw, sh, 0, 0, lw, lh);
-  tg.globalAlpha = 0.55; tg.globalCompositeOperation = 'screen'; tg.drawImage(lak, sx, sy, sw, sh, 0, 0, lw, lh);
-  tg.globalAlpha = 1; tg.globalCompositeOperation = 'destination-in'; tg.drawImage(logo, 0, 0);
-  g.drawImage(tmp, (x0 - VX0) * k, (-y1 - VY0) * k, p.w * k, hh * k);
+  g.save(); g.translate((cx - VX0) * k, (cy - VY0) * k); g.scale(1, ry / rx);
+  const gr = g.createRadialGradient(0, 0, 0, 0, 0, rx * k); gr.addColorStop(0, 'rgba(0,0,0,.3)'); gr.addColorStop(1, 'rgba(0,0,0,0)');
+  g.fillStyle = gr; g.beginPath(); g.arc(0, 0, rx * k, 0, Math.PI * 2); g.fill(); g.restore();
+  const t = await tintedCar(v, S.car);
+  g.drawImage(t.canvas, (V.x - VX0) * k, (V.y - VY0) * k, V.w * k, V.h * k);
+  const [base, lak] = await Promise.all([img(V.base), img(V.lak)]), fx = base.naturalWidth / V.w, fy = base.naturalHeight / V.h;
+  for (const it of itemsOn(v)){
+    const p = placeOf(it, v), r = rectOf(it, v, p), glass = onGlass(v, p);
+    const lw = Math.max(2, Math.round(p.w * k * 2)), lh = Math.max(2, Math.round(r.hh * k * 2));
+    const logo = await logoCanvas(it.L, lw, lh, 0), tmp = canvas(lw, lh), tg = tmp.getContext('2d');
+    const sx = (r.x0 - V.x) * fx, sy = (-r.y1 - V.y) * fy, sw = p.w * fx, sh = r.hh * fy;
+    tg.drawImage(logo, 0, 0);
+    tg.globalAlpha = glass ? 0.18 : 0.5; tg.globalCompositeOperation = 'multiply'; tg.drawImage(base, sx, sy, sw, sh, 0, 0, lw, lh);
+    if (!glass){ tg.globalAlpha = 0.55; tg.globalCompositeOperation = 'screen'; tg.drawImage(lak, sx, sy, sw, sh, 0, 0, lw, lh); }
+    tg.globalAlpha = 1; tg.globalCompositeOperation = 'destination-in'; tg.drawImage(logo, 0, 0);
+    g.drawImage(tmp, (r.x0 - VX0) * k, (-r.y1 - VY0) * k, p.w * k, r.hh * k);
+  }
   return c;
 }
-async function exportVoorbeeld(){
-  if (!S.logo) return;
-  const btn = $('#x-voorbeeld'), old = btn.textContent; btn.disabled = true; btn.textContent = 'Bezig…';
-  try {
-    const sides = S.job.deuren === 'LR' ? ['L','R'] : [S.job.deuren], Wpx = 1800, Hpx = Math.round(Wpx * AUTO_VB[3] / AUTO_VB[2]);
-    const head = 96, foot = 74, c = canvas(Wpx, head + sides.length * (Hpx + 20) + foot), g = c.getContext('2d');
-    g.fillStyle = '#ffffff'; g.fillRect(0, 0, c.width, c.height);
-    g.fillStyle = '#1b1b1b'; g.font = '700 36px -apple-system, Segoe UI, Roboto, Arial, sans-serif'; g.fillText('Voorbeeld belettering' + (S.job.klant ? ' · ' + S.job.klant : ''), 44, 60);
-    let y = head;
-    for (const sd of sides){
-      g.drawImage(await sceneCanvas(sd, Wpx), 0, y);
-      g.fillStyle = '#555'; g.font = '600 28px -apple-system, Segoe UI, Roboto, Arial, sans-serif'; g.fillText(sd === 'L' ? 'Linkerkant' : 'Rechterkant', 44, y + 48);
-      y += Hpx + 20;
-    }
-    const brand = await brandBlack();
-    if (brand){ const im = await loadImg(brand.url); const bh = 36; g.drawImage(im, Wpx - 44 - bh * brand.ar, c.height - foot + 16, bh * brand.ar, bh); }
-    g.fillStyle = '#777'; g.font = '400 21px -apple-system, Segoe UI, Roboto, Arial, sans-serif'; g.fillText('Impressie. Kleuren en verhoudingen kunnen in het echt iets afwijken.', 44, c.height - 32);
-    c.toBlob(bl => download(bl, exportName('png', 'voorbeeld')), 'image/png');
-  } catch (e) { console.error(e); toast('Maken mislukt: ' + (e.message || e)); }
-  finally { btn.textContent = old; btn.disabled = false; }
+async function voorbeeldBlob(){
+  const used = ['L','R','F','B'].filter(v => itemsOn(v).length), sides = used.filter(isDoor), fb = used.filter(v => !isDoor(v));
+  if (!used.length) throw new Error('Nog geen stickers geplaatst');
+  const Wpx = 1800, gap = 20, Hs = Math.round(Wpx * AUTO_VB[3] / AUTO_VB[2]), Wt = (Wpx - gap) / 2, Ht = Math.round(Wt * FB_VB[3] / FB_VB[2]);
+  const head = 96, foot = 74, c = canvas(Wpx, head + sides.length * (Hs + gap) + (fb.length ? Ht + gap : 0) + foot), g = c.getContext('2d');
+  const font = (w, s) => `${w} ${s}px -apple-system, Segoe UI, Roboto, Arial, sans-serif`;
+  g.fillStyle = '#ffffff'; g.fillRect(0, 0, c.width, c.height);
+  g.fillStyle = '#1b1b1b'; g.font = font(700, 36); g.fillText('Voorbeeld belettering' + (S.job.klant ? ' · ' + S.job.klant : ''), 44, 60);
+  let y = head;
+  const name = v => ({L:'Linkerkant', R:'Rechterkant', F:'Voorkant', B:'Achterkant'})[v];
+  for (const v of sides){ g.drawImage(await sceneCanvas(v, Wpx), 0, y); g.fillStyle = '#555'; g.font = font(600, 28); g.fillText(name(v), 44, y + 48); y += Hs + gap; }
+  if (fb.length){
+    for (let i = 0; i < fb.length; i++){ const x = fb.length === 1 ? (Wpx - Wt) / 2 : i * (Wt + gap); g.drawImage(await sceneCanvas(fb[i], Wt), x, y); g.fillStyle = '#555'; g.font = font(600, 28); g.fillText(name(fb[i]), x + 32, y + 48); }
+    y += Ht + gap;
+  }
+  const brand = await brandBlack();
+  if (brand){ const im = await loadImg(brand.url); const bh = 36; g.drawImage(im, Wpx - 44 - bh * brand.ar, c.height - foot + 16, bh * brand.ar, bh); }
+  g.fillStyle = '#777'; g.font = font(400, 21); g.fillText('Impressie. Kleuren en verhoudingen kunnen in het echt iets afwijken.', 44, c.height - 32);
+  return new Promise((res, rej) => c.toBlob(bl => bl ? res(bl) : rej(new Error('Afbeelding maken mislukt')), 'image/jpeg', 0.9));
 }
+async function exportVoorbeeld(){ download(await voorbeeldBlob(), exportName('jpg', 'voorbeeld')); }
 
 /* ============================== opslaan ============================== */
+function serL(L){
+  const l = {kind:L.kind, name:L.name, aspect:L.aspect, flags:L.flags, colors:L.colors, origin:L.origin, note:L.note, missing:L.missing, lines:L.lines, qrN:L.qrN, qrQuiet:L.qrQuiet};
+  if (L.kind === 'svg'){ l.svg = L.svg; if (L.svgOrig) l.svgOrig = L.svgOrig; if (L.srcText) l.srcText = L.srcText; if (L.traceSrc && L.traceSrc.length < 1.5e6) l.traceSrc = L.traceSrc; }
+  if (L.kind === 'pdf'){ l.pdf = {b64:b64(L.pdf.bytes), crop:L.pdf.crop}; l.preview = L.preview; }
+  if (L.kind === 'raster'){ l.raster = {url:L.raster.url, w:L.raster.w, h:L.raster.h}; if (L.raster.src && L.raster.src.length < 1.5e6) l.raster.src = L.raster.src; }
+  return l;
+}
+function deL(l){ if (l && l.kind === 'pdf') l.pdf = {bytes:unb64(l.pdf.b64), crop:l.pdf.crop}; return l; }
 let saveT;
 function save(){ clearTimeout(saveT); saveT = setTimeout(() => {
   try {
-    const o = {job:S.job, place:S.place, linked:S.linked, side:S.side, zoom:S.zoom, car:S.car, dims:S.dims, dimsVer:DIMS_VERSION, foil:S.foil};
-    const L = S.logo;
-    if (L){ const l = {kind:L.kind, name:L.name, aspect:L.aspect, flags:L.flags, colors:L.colors, origin:L.origin, note:L.note};
-      if (L.kind === 'svg'){ l.svg = L.svg; if (L.svgOrig) l.svgOrig = L.svgOrig; if (L.srcText) l.srcText = L.srcText; if (L.traceSrc && L.traceSrc.length < 1.5e6) l.traceSrc = L.traceSrc; }
-      if (L.kind === 'pdf'){ l.pdf = {b64:b64(L.pdf.bytes), crop:L.pdf.crop}; l.preview = L.preview; }
-      if (L.kind === 'raster'){ l.raster = {url:L.raster.url, w:L.raster.w, h:L.raster.h}; if (L.raster.src && L.raster.src.length < 1.5e6) l.raster.src = L.raster.src; }
-      o.logo = l; }
-    let s = JSON.stringify(o); if (s.length > 4.5e6){ delete o.logo; s = JSON.stringify(o); }
+    const o = {v:2, job:S.job, active:S.active, view:S.view, zoom:S.zoom, car:S.car, dims:S.dims, dimsVer:DIMS_VERSION,
+      items:S.items.map(it => ({id:it.id, type:it.type, text:it.text, qr:it.qr, where:it.where, linked:it.linked, place:it.place, soort:it.soort, foil:it.foil, L:it.L ? serL(it.L) : null}))};
+    let s = JSON.stringify(o);
+    if (s.length > 4.5e6){ for (const x of o.items) if (x.L){ delete x.L.srcText; delete x.L.traceSrc; delete x.L.svgOrig; if (x.L.raster) delete x.L.raster.src; } s = JSON.stringify(o); }
+    if (s.length > 4.5e6){ for (const x of o.items) if (x.type === 'logo') x.L = null; s = JSON.stringify(o); }
     localStorage.setItem(KEY, s);
   } catch (e) { /* opslag vol of geblokkeerd: niet erg */ }
 }, 400); }
 function load(){
   try {
-    const o = JSON.parse(localStorage.getItem(KEY) || 'null'); if (!o) return;
-    Object.assign(S.job, o.job || {}); S.place = o.place || S.place; S.linked = o.linked !== false; S.side = o.side || 'L'; S.zoom = o.zoom || 'deur'; S.car = o.car || S.car; S.dims = o.dimsVer === DIMS_VERSION ? {...DEF, ...(o.dims || {})} : {...DEF}; S.foil = o.foil || {};
-    if (o.logo){ const l = o.logo; if (l.kind === 'pdf') l.pdf = {bytes:unb64(l.pdf.b64), crop:l.pdf.crop}; S.logo = l; }
-    if (S.linked && S.place.L) S.place.R = mirrorP(S.place.L);
-  } catch (e) {}
+    let o = JSON.parse(localStorage.getItem(KEY) || 'null');
+    if (!o){ // oude versie (één logo) omzetten
+      const old = JSON.parse(localStorage.getItem(KEY_OLD) || 'null');
+      if (old){ const it = newItem('logo'); it.where = old.job && ['L','R','LR'].includes(old.job.deuren) ? old.job.deuren : 'LR'; it.linked = old.linked !== false; it.place = old.place || {}; it.soort = (old.job && old.job.soort) || 'snij'; it.foil = old.foil || {}; it.L = old.logo || null;
+        o = {job:old.job || {}, items:[{...it}], active:it.id, view:old.side || 'L', zoom:old.zoom, car:old.car, dims:old.dims, dimsVer:old.dimsVer}; }
+    }
+    if (!o) return;
+    const j = o.job || {}; S.job = {klant:j.klant || '', order:j.order || '', kenteken:j.kenteken || '', opm:j.opm || ''};
+    S.zoom = o.zoom || 'deur'; S.car = o.car || S.car; S.dims = o.dimsVer === DIMS_VERSION ? {...DEF, ...(o.dims || {})} : {...DEF};
+    S.items = (o.items || []).map(x => { const it = newItem(x.type || 'logo'); Object.assign(it, {id:x.id || it.id, where:x.where || it.where, linked:x.linked !== false, place:x.place || {}, soort:x.soort || it.soort, foil:x.foil || {}});
+      if (x.text) it.text = {...it.text, ...x.text}; if (x.qr) it.qr = {...it.qr, ...x.qr}; it.L = deL(x.L); for (const k of Object.keys(it.place)) if (!it.place[k]) delete it.place[k]; return it; });
+    for (const it of S.items){ if (it.where === 'LR' && it.linked && it.place.L) it.place.R = mirrorP(it.place.L); ensurePlaces(it, false); }
+    S.active = S.items.some(i => i.id === o.active) ? o.active : (S.items[0] ? S.items[0].id : null);
+    S.view = ['L','R','F','B'].includes(o.view) ? o.view : 'L';
+  } catch (e) { console.warn('laden', e); }
 }
 
 /* ============================== events ============================== */
 function bind(){
-  const job = ['klant','order','kenteken','opm'];
-  for (const k of job) $('#f-' + k).addEventListener('input', e => { S.job[k] = e.target.value; renderExport(); save(); });
-  $('#s-soort').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; S.job.soort = b.dataset.v; S.thin = null; renderAll(); scheduleThin(); save(); });
-  $('#s-deuren').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; S.job.deuren = b.dataset.v; if (b.dataset.v !== 'LR') S.side = b.dataset.v; renderAll(); save(); });
-  $('#s-side').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; S.side = b.dataset.v; renderAll(); scheduleThin(); save(); });
+  for (const k of ['klant','order','kenteken','opm']) $('#f-' + k).addEventListener('input', e => { S.job[k] = e.target.value; renderExport(); save(); });
+  // stickers
+  $('#add-logo').addEventListener('click', () => { addItem('logo'); $('#drop').scrollIntoView({behavior:'smooth', block:'nearest'}); });
+  $('#add-tekst').addEventListener('click', () => { addItem('tekst'); $('#tx-val').focus(); });
+  $('#add-qr').addEventListener('click', () => { addItem('qr'); $('#qr-val').focus(); });
+  $('#ed-del').addEventListener('click', () => { const it = cur(); if (it) removeItem(it); });
+  $('#s-where').addEventListener('click', e => { const b = e.target.closest('button'), it = cur(); if (!b || !it || it.where === b.dataset.v) return;
+    it.where = b.dataset.v; ensurePlaces(it, false); if (!onView(it, S.view)) S.view = viewsOf(it)[0]; it.thin = null; renderAll(); scheduleThin(it); save(); });
+  $('#s-soort').addEventListener('click', e => { const b = e.target.closest('button'), it = cur(); if (!b || !it) return; it.soort = b.dataset.v; it.thin = null; renderAll(); scheduleThin(it); save(); });
+  const fs = $('#tx-font'); for (const f of FONTS) fs.append(h('option', {value:f.id}, f.name));
+  $('#tx-val').addEventListener('input', e => { const it = cur(); if (!it || it.type !== 'tekst') return; it.text.value = e.target.value; renderItems(); regen(it); save(); });
+  fs.addEventListener('change', e => { const it = cur(); if (!it || it.type !== 'tekst') return; it.text.font = e.target.value; regen(it, 0); save(); });
+  buildSwatches('#tx-col', FOILS, c => { const it = cur(); if (!it || it.type !== 'tekst') return; it.text.color = c; swatchSet('#tx-col', c); regen(it, 0); save(); });
+  $('#qr-val').addEventListener('input', e => { const it = cur(); if (!it || it.type !== 'qr') return; it.qr.value = e.target.value; renderItems(); regen(it, 250); save(); });
+  buildSwatches('#qr-col', QRCOLS, c => { const it = cur(); if (!it || it.type !== 'qr') return; it.qr.color = c; swatchSet('#qr-col', c); regen(it, 0); save(); });
+  $('#qr-bg').addEventListener('change', e => { const it = cur(); if (!it || it.type !== 'qr') return; it.qr.bg = e.target.checked; regen(it, 0); save(); });
+  // aanzicht
+  $('#s-view').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; S.view = b.dataset.v;
+    if (!onView(cur(), S.view)){ const o = S.items.find(it => onView(it, S.view)); if (o){ S.active = o.id; hideTraceFor(o); } }
+    renderAll(); save(); });
   $('#s-zoom').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; S.zoom = b.dataset.v; renderJob(); renderStage(); save(); });
-  $('#f-linked').addEventListener('change', e => { S.linked = e.target.checked; if (S.linked && S.place.L) S.place.R = mirrorP(S.place.L); renderAll(); save(); });
+  $('#f-linked').addEventListener('change', e => { const it = cur(); if (!it) return; it.linked = e.target.checked; if (it.linked){ const v = isDoor(S.view) ? S.view : 'L'; if (it.place[v]) it.place[otherSide(v)] = mirrorP(it.place[v]); } else ensurePlaces(it, false); renderAll(); scheduleThin(it); save(); });
   const cars = $('#cars');
-  for (const [n, c] of CARS) cars.append(h('button', {type:'button', title:n, 'aria-label':n, 'data-v':c, style:`background:${c}`, onclick:() => { S.car = c; renderJob(); renderStage(); renderChecks(); save(); }}));
-  let carT; cars.append(h('input', {type:'color', title:'Eigen kleur', 'aria-label':'Eigen autokleur', value:'#93bbae', oninput:e => { clearTimeout(carT); const v = e.target.value; carT = setTimeout(() => { S.car = v; renderJob(); renderStage(); renderChecks(); save(); }, 180); }}));
+  for (const [n, c] of CARS) cars.append(h('button', {type:'button', title:n, 'aria-label':n, 'data-v':c, style:`background:${c}`, onclick:() => { S.car = c; renderJob(); renderStage(); renderChecks(); renderItems(); save(); }}));
+  let carT; cars.append(h('input', {type:'color', title:'Eigen kleur', 'aria-label':'Eigen autokleur', value:'#93bbae', oninput:e => { clearTimeout(carT); const v = e.target.value; carT = setTimeout(() => { S.car = v; renderJob(); renderStage(); renderChecks(); renderItems(); save(); }, 180); }}));
   // bestand
   const drop = $('#drop');
   $('#file').addEventListener('change', e => onFile(e.target.files[0]));
@@ -1393,14 +2038,17 @@ function bind(){
   const st = $('#stage');
   st.addEventListener('pointerdown', onDown); st.addEventListener('pointermove', onMove); st.addEventListener('pointerup', onUp); st.addEventListener('pointercancel', onUp);
   st.addEventListener('keydown', e => {
-    if (!S.logo) return; const step = e.shiftKey ? 10 : 1, p = {...placeOf(curSide())};
+    const pm = placeMode(); if (!pm) return; const step = e.shiftKey ? 10 : 1, p = {...pm.p};
     if (e.key === 'ArrowLeft') p.u -= step; else if (e.key === 'ArrowRight') p.u += step; else if (e.key === 'ArrowUp') p.v += step; else if (e.key === 'ArrowDown') p.v -= step; else return;
-    e.preventDefault(); setPlace(p); renderStage(); afterPlaceChange();
+    e.preventDefault(); setPlace(pm.it, p, pm.v); renderStage(); afterPlaceChange();
   });
   for (const k of ['w','h','b','l','r']){ const el = $('#p-' + k); el.addEventListener('input', () => onPlaceInput(k, parseFloat(el.value))); el.addEventListener('blur', renderPlaceInputs); }
-  $('#b-hc').addEventListener('click', () => { const p = {...placeOf(curSide())}; p.u = S.dims.W / 2; setPlace(p); renderStage(); afterPlaceChange(); });
-  $('#b-vc').addEventListener('click', () => { const p = {...placeOf(curSide())}; p.v = midV(S.dims); setPlace(p); renderStage(); afterPlaceChange(); });
-  $('#b-max').addEventListener('click', () => { const m = maxPlace(S.logo.aspect); setPlace({u:m.u, v:m.v, w:Math.floor(m.w)}); renderStage(); afterPlaceChange(); });
+  $('#b-hc').addEventListener('click', () => { const pm = placeMode(); if (!pm) return; setPlace(pm.it, {...pm.p, u:isDoor(pm.v) ? S.dims.W / 2 : 0}, pm.v); renderStage(); afterPlaceChange(); });
+  $('#b-vc').addEventListener('click', () => { const pm = placeMode(); if (!pm) return; const p = isDoor(pm.v) ? {...pm.p, v:midV(S.dims)} : defaultPlace(pm.it, pm.v); setPlace(pm.it, p, pm.v); renderStage(); afterPlaceChange(); });
+  $('#b-max').addEventListener('click', () => { const pm = placeMode(); if (!pm) return;
+    if (isDoor(pm.v)){ const m = maxPlace(pm.it.L.aspect); setPlace(pm.it, {u:m.u, v:m.v, w:Math.floor(m.w)}, pm.v); }
+    else { const w = fbMax(pm.it, pm.v, pm.p); if (!w){ toast('Hier past geen sticker. Schuif hem eerst naar een vlak stuk lak of naar de ruit.'); return; } setPlace(pm.it, {...pm.p, w}, pm.v); }
+    renderStage(); afterPlaceChange(); });
   // omzetten
   $('#t-close').addEventListener('click', () => { $('#c-trace').classList.add('hidden'); TR.run++; });
   $('#t-k').addEventListener('change', e => { TR.k = e.target.value; TR.off = new Set(); retrace(true); });
@@ -1410,24 +2058,26 @@ function bind(){
   $('#t-bg').addEventListener('click', () => { TR.darkbg = !TR.darkbg; $('#t-vec').classList.toggle('dark', TR.darkbg); $('#t-orig').classList.toggle('dark', TR.darkbg); $('#t-bg').textContent = TR.darkbg ? 'Licht' : 'Donker'; });
   $('#t-use').addEventListener('click', useTrace);
   // export
-  $('#x-sticker').addEventListener('click', exportSticker);
-  $('#x-svg').addEventListener('click', exportSVG);
-  $('#x-werk').addEventListener('click', exportWerk);
-  $('#x-voorbeeld').addEventListener('click', exportVoorbeeld);
+  $('#x-zip').addEventListener('click', e => busy(e.currentTarget, exportZip));
+  $('#x-sticker').addEventListener('click', e => busy(e.currentTarget, exportStickers));
+  $('#x-werk').addEventListener('click', e => busy(e.currentTarget, exportWerk));
+  $('#x-voorbeeld').addEventListener('click', e => busy(e.currentTarget, exportVoorbeeld));
   $('#x-copy').addEventListener('click', async () => { try { await navigator.clipboard.writeText($('#mail').value); toast('Mailtekst gekopieerd'); } catch (e) { $('#mail').select(); document.execCommand('copy'); toast('Mailtekst gekopieerd'); } });
   // deurmaten
-  for (const k of ['W','H','crU','marge']) $('#d-' + k).addEventListener('change', e => { const v = parseFloat(e.target.value); if (isFinite(v) && v > 0){ S.dims[k] = v; if (k === 'H') S.dims.top = v + 350; renderAll(); scheduleThin(); save(); } });
+  for (const k of ['W','H','crU','marge']) $('#d-' + k).addEventListener('change', e => { const v = parseFloat(e.target.value); if (isFinite(v) && v > 0){ S.dims[k] = v; if (k === 'H') S.dims.top = v + 350; renderAll(); S.items.forEach(scheduleThin); save(); } });
   $('#d-reset').addEventListener('click', () => { S.dims = {...DEF}; renderAll(); save(); toast('Standaardmaten teruggezet'); });
   $('#b-reset').addEventListener('click', () => {
     if (!confirm('Alles leegmaken en met een nieuwe opdracht beginnen?')) return;
-    S.job = {klant:'', order:'', kenteken:'', soort:S.job.soort, deuren:'LR', opm:''}; S.logo = null; S.place = {L:null, R:null}; S.linked = true; S.side = 'L'; S.thin = null; S.shares = null; S.foil = {};
-    $('#c-trace').classList.add('hidden'); showErr(null); renderAll(); save();
+    S.job = {klant:'', order:'', kenteken:'', opm:''}; S.items = []; S.active = null; S.view = 'L';
+    $('#c-trace').classList.add('hidden'); TR.run++; TR.item = null; showErr(null); addItem('logo');
   });
   window.addEventListener('resize', () => renderStage());
 }
+function renderAll(){ renderJob(); renderItems(); renderEditor(); renderStage(); renderPlaceInputs(); renderChecks(); renderExport(); }
 
-load(); bind(); renderAll();
-if (S.logo){ computeShares(); scheduleThin(); }
+load(); bind(); loadZone('F'); loadZone('B');
+if (!S.items.length) addItem('logo'); else renderAll();
+for (const it of S.items){ if (it.L){ computeShares(it); scheduleThin(it); } else if (it.type !== 'logo') regen(it, 0); }
 window.__S = S; // voor testen
 })();
 </script>
