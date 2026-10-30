@@ -854,9 +854,19 @@ async function onFile(file){
     const buf = new Uint8Array(await file.arrayBuffer()), name = file.name || 'logo';
     const ext = (name.split('.').pop() || '').toLowerCase();
     const head = new TextDecoder('latin1').decode(buf.subarray(0, Math.min(buf.length, 4096)));
+    // Soort bestand bepalen aan de eerste bytes (niet aan tekst ergens in het bestand: PNG's uit bijv. Figma of
+    // Illustrator bevatten soms SVG-tekst in hun verborgen gegevens).
+    const isPNG = buf[0] === 0x89 && head.startsWith('PNG', 1), isJPG = buf[0] === 0xFF && buf[1] === 0xD8 && buf[2] === 0xFF;
+    const isGIF = head.startsWith('GIF8'), isWEBP = head.startsWith('RIFF') && head.slice(8, 12) === 'WEBP', isBMP = head.startsWith('BM') && ext === 'bmp';
+    const isHEIC = /^ftyp(heic|heix|hevc|mif1|msf1)/.test(head.slice(4, 12));
+    const isRaster = isPNG || isJPG || isGIF || isWEBP || isBMP;
+    const lead = new TextDecoder().decode(buf.subarray(0, Math.min(buf.length, 4096))).replace(/^\uFEFF/, '').trimStart();
+    const looksSvg = !isRaster && /^<(\?xml|svg[\s>]|!--|!DOCTYPE\s+svg)/i.test(lead) && /<svg[\s>]/i.test(new TextDecoder().decode(buf.subarray(0, Math.min(buf.length, 65536))));
     let L;
-    if (head.includes('%PDF-')){ L = await importPdf(buf, name); }
-    else if (/<svg[\s>]/i.test(new TextDecoder().decode(buf.subarray(0, Math.min(buf.length, 65536)))) || ext === 'svg'){
+    if (!isRaster && head.slice(0, 1024).includes('%PDF-')){ L = await importPdf(buf, name); }
+    else if (isRaster){ const mime = isPNG ? 'image/png' : isJPG ? 'image/jpeg' : isGIF ? 'image/gif' : isWEBP ? 'image/webp' : 'image/bmp'; L = await importRasterURL(await blobToDataURL(new Blob([buf], {type:mime})), name); }
+    else if (isHEIC){ throw new Error('Dit is een iPhone-foto (HEIC). Die kan de browser niet altijd openen. Sla hem op als JPG of PNG, of vraag de klant om het logo als PDF of SVG.'); }
+    else if (looksSvg || (ext === 'svg' && lead.startsWith('<'))){
       const text = new TextDecoder().decode(buf);
       const n = await normalizeSvg(text, {dropBg:true});
       if (n.flags.rasterInside && n.flags.shapes === 0){
@@ -869,8 +879,10 @@ async function onFile(file){
       throw new Error('Dit is een EPS- of oud Illustrator-bestand. Dat kan de browser niet openen. Vraag de klant om een PDF of SVG, of open het in Illustrator en kies "Opslaan als PDF". Het EPS-bestand zelf kun je wel gewoon naar het stickerbedrijf sturen.');
     }
     else if ((file.type || '').startsWith('image/') || ['png','jpg','jpeg','webp','gif','bmp'].includes(ext)){
-      L = await importRasterURL(await blobToDataURL(file), name);
+      try { L = await importRasterURL(await blobToDataURL(file), name); }
+      catch (e) { throw new Error('Deze afbeelding kan niet geopend worden. Het bestand is misschien beschadigd of heeft een verkeerde extensie. Open het en sla het opnieuw op als PNG of JPG.'); }
     }
+    else if (ext === 'svg') throw new Error('Dit SVG-bestand is beschadigd of kan niet gelezen worden.');
     else throw new Error('Dit bestandstype ken ik niet. Gebruik SVG, PDF, AI, PNG of JPG.');
     if (!S.items.includes(it)) return;
     setItemL(it, L, {fresh:!it.L});
