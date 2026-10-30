@@ -1,0 +1,1381 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#111111">
+<meta name="format-detection" content="telephone=no">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-180.png">
+<title>Belettering · Spéciale45</title>
+<style>
+  /* Belettering-tool: logo van de klant op de deur van de Topolino plaatsen en het stickerbestand + werktekening maken. */
+  :root{
+    --bg:#f4eee3; --paper:#fffdf9; --ink:#2b221b; --muted:#7a6c5d; --line:#e0d4c2; --line-strong:#c9b89f;
+    --accent:#141414; --accent-ink:#ffffff; --accent-soft:#e9e2d6; --top:#111111; --top-ink:#ffffff;
+    --ok:#2e7437; --ok-bg:#e2efdf; --warn:#a85e18; --warn-bg:#fae8d3; --bad:#a9322a; --bad-bg:#f8e1dd;
+    --shadow:0 1px 2px rgba(43,34,27,.06),0 6px 18px rgba(43,34,27,.07);
+    --stage:#ebe4d7; --dim:#1f1a15; --halo:#fffdf9; --guide:#2e7437;
+    --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    color-scheme:light;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --bg:#1b1612; --paper:#241e18; --ink:#f0e8db; --muted:#a89a89; --line:#3a3027; --line-strong:#56483b;
+      --accent:#f0e8db; --accent-ink:#141414; --accent-soft:#3a3027; --top:#0c0c0c; --top-ink:#ffffff;
+      --ok:#8fd297; --ok-bg:#1e3322; --warn:#f0b273; --warn-bg:#3d2a15; --bad:#f29a90; --bad-bg:#3f1f1b;
+      --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 18px rgba(0,0,0,.35);
+      --stage:#2e2720; --dim:#f0e8db; --halo:#241e18; --guide:#8fd297;
+      color-scheme:dark;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#1b1612; --paper:#241e18; --ink:#f0e8db; --muted:#a89a89; --line:#3a3027; --line-strong:#56483b;
+    --accent:#f0e8db; --accent-ink:#141414; --accent-soft:#3a3027; --top:#0c0c0c; --top-ink:#ffffff;
+    --ok:#8fd297; --ok-bg:#1e3322; --warn:#f0b273; --warn-bg:#3d2a15; --bad:#f29a90; --bad-bg:#3f1f1b;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 18px rgba(0,0,0,.35);
+    --stage:#2e2720; --dim:#f0e8db; --halo:#241e18; --guide:#8fd297;
+    color-scheme:dark;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:15px;line-height:1.45;-webkit-font-smoothing:antialiased}
+  button{font:inherit;cursor:pointer;color:inherit}
+  input,select,textarea{font:inherit;font-size:16px;color:var(--ink)}
+  a{color:inherit}
+  button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,a:focus-visible,#stage:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+  .top{position:sticky;top:0;z-index:20;background:var(--top);color:var(--top-ink);padding:calc(10px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) 10px max(16px,env(safe-area-inset-left,0px))}
+  .top-inner{max-width:1320px;margin:0 auto;display:flex;align-items:center;gap:14px;min-height:40px}
+  .brand{display:inline-flex;align-items:center;text-decoration:none} .brand img{height:24px;width:auto;display:block}
+  .top .titel{font-weight:700;font-size:16px;padding-left:14px;border-left:1px solid rgba(255,255,255,.3)}
+  .top .sp{flex:1}
+  .top .back{display:inline-flex;align-items:center;gap:6px;text-decoration:none;font-size:14px;font-weight:700;min-height:36px;padding:6px 14px 6px 10px;border-radius:10px;background:var(--top-ink);color:var(--top)}
+
+  .wrap{max-width:1320px;margin:0 auto;padding:16px max(16px,env(safe-area-inset-right,0px)) 72px max(16px,env(safe-area-inset-left,0px))}
+  .layout{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;align-items:start}
+  @media (min-width:1020px){
+    .layout{grid-template-columns:410px minmax(0,1fr)}
+    .layout>.card{grid-column:1}
+    .layout>.stagecard{grid-column:2;grid-row:1 / span 20;position:sticky;top:72px}
+  }
+  .card{background:var(--paper);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);overflow:hidden;min-width:0}
+  .card>.hd{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--line);font-weight:700;font-size:15.5px}
+  .card>.hd .sp{flex:1}
+  .num{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;background:var(--accent);color:var(--accent-ink);font-size:13px;font-weight:800;flex:none}
+  .card>.bd{padding:14px 16px}
+  details.card>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px;padding:12px 16px;font-weight:700}
+  details.card>summary::-webkit-details-marker{display:none}
+  details.card>summary::after{content:"▸";margin-left:auto;color:var(--muted)}
+  details.card[open]>summary::after{content:"▾"}
+  details.card[open]>summary{border-bottom:1px solid var(--line)}
+
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+  .fld{display:flex;flex-direction:column;gap:4px;margin-bottom:10px;min-width:0}
+  .fld>span{font-size:12.5px;color:var(--muted);font-weight:600}
+  .fld input,.fld select,.fld textarea{width:100%;min-height:40px;border:1px solid var(--line-strong);border-radius:9px;padding:7px 10px;background:var(--paper)}
+  .fld textarea{min-height:64px;resize:vertical}
+  .fld .unit{position:relative} .fld .unit input{padding-right:38px} .fld .unit::after{content:"mm";position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:13px;pointer-events:none}
+  .lbl{font-size:12.5px;color:var(--muted);font-weight:600;margin:2px 0 5px}
+  .seg{display:flex;gap:3px;background:var(--accent-soft);border-radius:10px;padding:3px;margin-bottom:12px}
+  .seg button{flex:1;white-space:nowrap;border:0;background:transparent;border-radius:8px;min-height:36px;padding:4px 8px;font-weight:600;font-size:14px;color:var(--ink)}
+  .seg button[aria-pressed="true"]{background:var(--paper);box-shadow:0 1px 3px rgba(0,0,0,.18)}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:42px;padding:8px 16px;border-radius:10px;border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink);font-weight:700;text-decoration:none;font-size:14.5px}
+  .btn.sec{background:transparent;color:var(--ink);border-color:var(--line-strong)}
+  .btn.sm{min-height:34px;padding:5px 11px;font-size:13.5px}
+  .btn.wide{width:100%}
+  .btn:disabled{opacity:.42;cursor:not-allowed}
+  .btns{display:flex;flex-wrap:wrap;gap:8px}
+  .muted{color:var(--muted)} .small{font-size:13px} .mt{margin-top:12px}
+  .drop{border:2px dashed var(--line-strong);border-radius:12px;padding:20px 14px;text-align:center;color:var(--muted);cursor:pointer;display:block}
+  .drop.over{border-color:var(--accent);background:var(--accent-soft)}
+  .drop b{color:var(--ink);font-size:15.5px}
+  .drop input{display:none}
+  .checker{background-color:#fff;background-image:linear-gradient(45deg,#e6e6e6 25%,transparent 25%),linear-gradient(-45deg,#e6e6e6 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#e6e6e6 75%),linear-gradient(-45deg,transparent 75%,#e6e6e6 75%);background-size:16px 16px;background-position:0 0,0 8px,8px -8px,-8px 0}
+  .checker.dark{background-color:#2a2a2a;background-image:linear-gradient(45deg,#353535 25%,transparent 25%),linear-gradient(-45deg,#353535 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#353535 75%),linear-gradient(-45deg,transparent 75%,#353535 75%)}
+  .logo-head{display:flex;gap:12px;align-items:center}
+  .thumb{width:104px;height:78px;border-radius:9px;border:1px solid var(--line);display:grid;place-items:center;flex:none;overflow:hidden}
+  .thumb img{max-width:88%;max-height:88%;display:block}
+  .logo-head .nm{font-weight:700;word-break:break-all;line-height:1.3}
+  .chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}
+  .chip{font-size:12px;font-weight:700;border-radius:999px;padding:2px 9px;background:var(--accent-soft)}
+  .chip.ok{background:var(--ok-bg);color:var(--ok)} .chip.warn{background:var(--warn-bg);color:var(--warn)} .chip.bad{background:var(--bad-bg);color:var(--bad)}
+  .chk{list-style:none;margin:10px 0 0;padding:0;display:flex;flex-direction:column;gap:6px}
+  .chk li{display:flex;gap:9px;align-items:flex-start;font-size:14px;line-height:1.38;padding:7px 10px;border-radius:9px}
+  .chk li.ok{background:var(--ok-bg)} .chk li.warn{background:var(--warn-bg)} .chk li.bad{background:var(--bad-bg)} .chk li.info{background:var(--accent-soft)}
+  .chk .ic{flex:none;width:16px;text-align:center;font-weight:900}
+  .chk li.ok .ic{color:var(--ok)} .chk li.warn .ic{color:var(--warn)} .chk li.bad .ic{color:var(--bad)} .chk li.info .ic{color:var(--muted)}
+  .colors{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+  .crow{display:flex;align-items:center;gap:8px;font-size:13.5px}
+  .crow .sq{width:22px;height:22px;border-radius:6px;border:1px solid rgba(0,0,0,.25);flex:none}
+  .crow .hx{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px;color:var(--muted)}
+  .crow .pc{margin-left:auto;color:var(--muted);font-size:12.5px;white-space:nowrap}
+  .crow input[type=text]{flex:1;min-width:0;min-height:30px;border:1px solid var(--line);border-radius:7px;padding:3px 8px;font-size:13.5px;background:var(--paper)}
+  .crow button{border:1px solid var(--line-strong);background:transparent;border-radius:7px;font-size:12px;padding:3px 8px;min-height:30px;white-space:nowrap}
+  .crow.off{opacity:.45} .crow.off .sq{background-image:linear-gradient(45deg,transparent 45%,#a9322a 45%,#a9322a 55%,transparent 55%)}
+
+  .stagecard .hd{flex-wrap:wrap;row-gap:8px}
+  .stagecard .hd .seg{margin:0;flex:none}
+  .stagecard .hd .seg button{padding:3px 12px;min-height:32px;font-size:13.5px}
+  .stagewrap{position:relative;background:var(--stage);touch-action:none;user-select:none;-webkit-user-select:none}
+  #stage{display:block;width:100%;height:auto;outline:none}
+  #stage .dim{stroke:var(--dim);fill:none}
+  #stage .dlbl{fill:var(--dim);stroke:var(--halo);paint-order:stroke;font-family:var(--font);font-weight:700}
+  #stage .sel{stroke:#1e6fd9;fill:none}
+  #stage .hdl{fill:#fff;stroke:#1e6fd9;cursor:nwse-resize}
+  #stage .hdl.ne,#stage .hdl.sw{cursor:nesw-resize}
+  #stage .guide{stroke:var(--guide)}
+  #stage .zone{fill:none;stroke:rgba(30,111,217,.6)}
+  #stage .ph{fill:rgba(255,255,255,.35);stroke:rgba(0,0,0,.45)}
+  #stage .phtxt{fill:rgba(0,0,0,.6);font-family:var(--font);font-weight:700}
+  .stagebar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:10px 16px;border-top:1px solid var(--line)}
+  .stagebar .lbl{margin:0}
+  .cars{display:flex;gap:6px;align-items:center}
+  .cars button{width:26px;height:26px;border-radius:50%;border:2px solid var(--paper);box-shadow:0 0 0 1px var(--line-strong);padding:0}
+  .cars button[aria-pressed="true"]{box-shadow:0 0 0 2px var(--accent)}
+  .cars input[type=color]{width:30px;height:30px;border:0;padding:0;background:transparent}
+  .place{padding:12px 16px 16px;border-top:1px solid var(--line)}
+  .place .grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
+  @media (max-width:700px){.place .grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+  .toggle{display:inline-flex;align-items:center;gap:8px;font-size:14px;font-weight:600}
+  .toggle input{width:20px;height:20px;accent-color:var(--ok)}
+
+  .trace-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .trace-grid figure{margin:0}
+  .trace-grid .box{aspect-ratio:4/3;border-radius:10px;border:1px solid var(--line);display:grid;place-items:center;overflow:hidden;position:relative}
+  .trace-grid .box img,.trace-grid .box canvas{max-width:92%;max-height:92%;display:block}
+  .trace-grid figcaption{font-size:12.5px;color:var(--muted);font-weight:600;margin-top:4px;display:flex;justify-content:space-between}
+  .busy{display:none;position:absolute;inset:0;place-items:center;background:rgba(255,253,249,.7);font-weight:700;font-size:13px;color:#333}
+  .busy.on{display:grid}
+  .sum{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:14px;margin:0}
+  .sum dt{color:var(--muted);font-weight:600}
+  .sum dd{margin:0;font-weight:600}
+  .mail{width:100%;min-height:170px;border:1px solid var(--line-strong);border-radius:9px;padding:9px 11px;background:var(--paper);font-size:13.5px;line-height:1.45;resize:vertical}
+  .err{background:var(--bad-bg);color:var(--bad);border-radius:9px;padding:8px 11px;font-size:14px;font-weight:600;margin-top:10px}
+  .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--accent);color:var(--accent-ink);padding:10px 16px;border-radius:10px;font-weight:700;font-size:14px;box-shadow:0 6px 20px rgba(0,0,0,.25);z-index:50;opacity:0;transition:opacity .2s;pointer-events:none;max-width:90vw}
+  .toast.on{opacity:1}
+  .hidden{display:none!important}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="top-inner">
+    <a class="brand" href="./" aria-label="Orderpagina Spéciale45"><img src="logo-wit.png" alt="Spéciale45"></a>
+    <span class="titel">Belettering</span>
+    <span class="sp"></span>
+    <a class="back" href="./">‹ Orderpagina</a>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="layout">
+
+    <!-- 1. Opdracht -->
+    <section class="card" id="c-job">
+      <div class="hd"><span class="num">1</span>Opdracht<span class="sp"></span><button class="btn sec sm" id="b-reset" type="button">Nieuwe opdracht</button></div>
+      <div class="bd">
+        <div class="row">
+          <label class="fld"><span>Klant</span><input id="f-klant" autocomplete="off" placeholder="Bijv. Bakkerij Jansen"></label>
+          <label class="fld"><span>Ordernummer</span><input id="f-order" inputmode="numeric" autocomplete="off" placeholder="Bijv. 20250583"></label>
+        </div>
+        <div class="row">
+          <label class="fld"><span>Kenteken</span><input id="f-kenteken" autocomplete="off" placeholder="Optioneel"></label>
+          <label class="fld"><span>Model</span><select id="f-model"><option>Fiat Topolino gesloten</option></select></label>
+        </div>
+        <div class="lbl">Soort sticker</div>
+        <div class="seg" id="s-soort">
+          <button type="button" data-v="snij">Gesneden folie</button>
+          <button type="button" data-v="print">Geprinte sticker</button>
+        </div>
+        <div class="lbl">Op welke deur</div>
+        <div class="seg" id="s-deuren">
+          <button type="button" data-v="L">Links</button>
+          <button type="button" data-v="R">Rechts</button>
+          <button type="button" data-v="LR">Beide deuren</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. Logo -->
+    <section class="card" id="c-logo">
+      <div class="hd"><span class="num">2</span>Logo van de klant</div>
+      <div class="bd">
+        <label class="drop" id="drop">
+          <input type="file" id="file" accept=".svg,.pdf,.ai,.eps,.png,.jpg,.jpeg,.webp,.gif,image/*,application/pdf">
+          <b>Sleep het logo hierheen</b><br><span class="small">of klik om te kiezen · SVG, PDF, AI, PNG of JPG</span>
+        </label>
+        <div id="logo-info" class="hidden"></div>
+        <div id="logo-err" class="err hidden"></div>
+      </div>
+    </section>
+
+    <!-- 2b. Omzetten -->
+    <section class="card hidden" id="c-trace">
+      <div class="hd"><span class="num">⇢</span>Omzetten naar vector<span class="sp"></span><button class="btn sec sm" id="t-close" type="button">Sluiten</button></div>
+      <div class="bd">
+        <div class="trace-grid">
+          <figure><div class="box checker" id="t-orig"></div><figcaption><span>Origineel</span><span id="t-origsz"></span></figcaption></figure>
+          <figure><div class="box checker" id="t-vec"><div class="busy" id="t-busy">Bezig met omzetten…</div></div><figcaption><span>Vector (nieuw)</span><button type="button" class="btn sec sm" id="t-bg" style="min-height:24px;padding:1px 8px;font-size:12px">Donker</button></figcaption></figure>
+        </div>
+        <div class="row mt">
+          <label class="fld"><span>Aantal kleuren</span><select id="t-k"></select></label>
+          <label class="fld"><span>Achtergrond</span><select id="t-bgmode">
+            <option value="overal">Overal weg</option>
+            <option value="rand">Alleen rondom weg</option>
+            <option value="geen">Laten staan</option>
+          </select></label>
+        </div>
+        <div class="lbl">Hoeken</div>
+        <div class="seg" id="t-corners">
+          <button type="button" data-v="0.55">Scherp</button>
+          <button type="button" data-v="1">Normaal</button>
+          <button type="button" data-v="1.25">Rond</button>
+        </div>
+        <div class="lbl">Vlekjes en ruis weghalen</div>
+        <div class="seg" id="t-noise">
+          <button type="button" data-v="0.00002">Weinig</button>
+          <button type="button" data-v="0.00008">Normaal</button>
+          <button type="button" data-v="0.0003">Veel</button>
+        </div>
+        <div class="lbl">Kleuren in het resultaat</div>
+        <div class="colors" id="t-colors"></div>
+        <div class="btns mt">
+          <button class="btn" id="t-use" type="button" disabled>Gebruik deze vector</button>
+        </div>
+        <p class="small muted mt" style="margin-bottom:0">Vergelijk goed met het origineel, vooral kleine letters. Lukt het niet mooi? Gebruik <a href="https://vectorizer.ai" target="_blank" rel="noopener">Vectorizer.AI</a> en upload het SVG-resultaat hier, of vraag het stickerbedrijf om het logo na te tekenen. Laat een omgezet logo altijd door de klant goedkeuren.</p>
+      </div>
+    </section>
+
+    <!-- 3. Plaatsen -->
+    <section class="card stagecard" id="c-stage">
+      <div class="hd">
+        <span class="num">3</span>Plaatsen op de deur
+        <span class="sp"></span>
+        <div class="seg" id="s-side">
+          <button type="button" data-v="L">Linkerdeur</button>
+          <button type="button" data-v="R">Rechterdeur</button>
+        </div>
+        <div class="seg" id="s-zoom">
+          <button type="button" data-v="deur">Deur</button>
+          <button type="button" data-v="auto">Hele auto</button>
+        </div>
+      </div>
+      <div class="stagewrap" id="stagewrap">
+        <svg id="stage" xmlns="http://www.w3.org/2000/svg" tabindex="0" role="img" aria-label="Deur van de Topolino met het logo"></svg>
+      </div>
+      <div class="stagebar">
+        <span class="lbl">Autokleur</span>
+        <div class="cars" id="cars"></div>
+        <span class="sp" style="flex:1"></span>
+        <label class="toggle hidden" id="linkwrap"><input type="checkbox" id="f-linked" checked> Beide deuren gelijk</label>
+      </div>
+      <div class="place" id="place">
+        <div class="grid">
+          <label class="fld"><span>Breedte logo</span><div class="unit"><input type="number" id="p-w" min="10" step="1" inputmode="decimal"></div></label>
+          <label class="fld"><span>Hoogte logo</span><div class="unit"><input type="number" id="p-h" min="5" step="1" inputmode="decimal"></div></label>
+          <label class="fld"><span>Boven onderrand deur</span><div class="unit"><input type="number" id="p-b" step="1" inputmode="decimal"></div></label>
+          <label class="fld"><span>Vanaf naad bij greep</span><div class="unit"><input type="number" id="p-l" step="1" inputmode="decimal"></div></label>
+          <label class="fld"><span>Vanaf naad achterzijde</span><div class="unit"><input type="number" id="p-r" step="1" inputmode="decimal"></div></label>
+        </div>
+        <div class="btns">
+          <button class="btn sec sm" type="button" id="b-hc">Midden op de deur</button>
+          <button class="btn sec sm" type="button" id="b-vc">Midden tussen de lijnen</button>
+          <button class="btn sec sm" type="button" id="b-max">Zo groot mogelijk</button>
+        </div>
+        <ul class="chk" id="checks"></ul>
+      </div>
+    </section>
+
+    <!-- 4. Export -->
+    <section class="card" id="c-exp">
+      <div class="hd"><span class="num">4</span>Naar het stickerbedrijf</div>
+      <div class="bd">
+        <dl class="sum" id="sum"></dl>
+        <label class="fld mt"><span>Opmerking voor het stickerbedrijf (komt op de werktekening)</span><textarea id="f-opm" placeholder="Bijv. foliekleur, glans of mat, levertijd"></textarea></label>
+        <div class="btns">
+          <button class="btn" type="button" id="x-sticker" disabled>Stickerbestand (PDF, 1:1)</button>
+          <button class="btn sec" type="button" id="x-svg" disabled>Als SVG</button>
+          <button class="btn sec" type="button" id="x-werk" disabled>Werktekening (PDF)</button>
+          <button class="btn sec" type="button" id="x-voorbeeld" disabled>Klantvoorbeeld (PNG)</button>
+        </div>
+        <div class="lbl mt">Mailtekst</div>
+        <textarea class="mail" id="mail" readonly></textarea>
+        <div class="btns mt"><button class="btn sec sm" type="button" id="x-copy">Kopieer mailtekst</button></div>
+      </div>
+    </section>
+
+    <!-- Deurmaten -->
+    <details class="card" id="c-dims">
+      <summary>Maten van de deur</summary>
+      <div class="bd">
+        <p class="small muted" style="margin-top:0">Gemeten uit de schaaltekening van de Fiat Topolino (gesloten) en gecontroleerd met wielbasis, hoogte en breedte. Afwijking ongeveer ±2 cm. Meet één keer met een rolmaat de deurbreedte (naad tot naad) en de hoogte van de bovenste lijn boven de onderrand na, en vul ze hier in.</p>
+        <div class="row">
+          <label class="fld"><span>Breedte deur (naad tot naad)</span><div class="unit"><input type="number" id="d-W" step="1"></div></label>
+          <label class="fld"><span>Hoogte gelakt deel (onderrand tot raam)</span><div class="unit"><input type="number" id="d-H" step="1"></div></label>
+        </div>
+        <div class="row">
+          <label class="fld"><span>Bovenste lijn, boven onderrand</span><div class="unit"><input type="number" id="d-crU" step="1"></div></label>
+          <label class="fld"><span>Onderste lijn, boven onderrand</span><div class="unit"><input type="number" id="d-crL" step="1"></div></label>
+        </div>
+        <div class="row">
+          <label class="fld"><span>Vrijhouden tot naden en randen</span><div class="unit"><input type="number" id="d-marge" step="1"></div></label>
+          <div class="fld"><span>&nbsp;</span><button class="btn sec" type="button" id="d-reset">Standaardmaten</button></div>
+        </div>
+      </div>
+    </details>
+
+  </div>
+</main>
+<div class="toast" id="toast"></div>
+
+<script>
+'use strict';
+(() => {
+/* ============================== basis ============================== */
+const CDN = {
+  pdfjs: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js',
+  pdfjsWorker: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js',
+  pdflib: 'https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js',
+  jspdf: 'https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js',
+  svg2pdf: 'https://cdn.jsdelivr.net/npm/svg2pdf.js@2.2.4/dist/svg2pdf.umd.min.js',
+  potrace: 'https://cdn.jsdelivr.net/npm/esm-potrace-wasm@0.5.1/dist/index.js'
+};
+const NS = 'http://www.w3.org/2000/svg';
+const MODEL = 'Fiat Topolino (gesloten)';
+// Deurmal Topolino gesloten. Alle maten in mm. u = vanaf de naad bij de greep, v = vanaf de onderrand van de deur.
+// Beide deuren zijn hetzelfde onderdeel: van buitenaf gezien zit de greep altijd links in beeld.
+// Links = voorkant van de auto (linkerdeur, scharnier achter); rechts = achterkant (rechterdeur, scharnier voor).
+const DEF = {W:1090, H:740, top:1090, crU:590, crL:130, crLin:60, marge:20};
+const GREEP = {u0:0, u1:110, v0:545, v1:675};
+const zonesFor = d => ({greep:GREEP, refl:{u0:d.W-87, u1:d.W-14, v0:553, v1:597}});
+const CARS = [['Verde Vita','#9fcdb2'],['Wit','#f3f1ec'],['Crème','#efe2c4'],['Zwart','#262626'],['Roze','#ecbcc6'],['Lichtblauw','#a9c9e0'],['Rood','#b8312f']];
+const KEY = 's45-belettering-v1';
+
+const S = {
+  job:{klant:'', order:'', kenteken:'', soort:'snij', deuren:'LR', opm:''},
+  logo:null, place:{L:null, R:null}, linked:true, side:'L', zoom:'deur', car:CARS[0][1],
+  dims:{...DEF}, thin:null, shares:null, foil:{}
+};
+
+const $ = (s, r=document) => r.querySelector(s);
+const $$ = (s, r=document) => [...r.querySelectorAll(s)];
+function E(tag, attrs, parent){ const e = document.createElementNS(NS, tag); if (attrs) for (const k in attrs){ if (attrs[k] != null) e.setAttribute(k, attrs[k]); } if (parent) parent.appendChild(e); return e; }
+function h(tag, attrs, ...kids){
+  const e = document.createElement(tag);
+  if (attrs) for (const k in attrs){ const v = attrs[k]; if (v == null || v === false) continue;
+    if (k === 'class') e.className = v; else if (k.startsWith('on')) e.addEventListener(k.slice(2), v); else e.setAttribute(k, v === true ? '' : v); }
+  for (const c of kids.flat()){ if (c == null || c === false) continue; e.append(c.nodeType ? c : document.createTextNode(String(c))); }
+  return e;
+}
+const mm = n => String(Math.round(n));
+const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
+const slug = s => (s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-zA-Z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,40);
+function canvas(w, h){ const c = document.createElement('canvas'); c.width = Math.max(1, Math.round(w)); c.height = Math.max(1, Math.round(h)); return c; }
+function download(blob, name){ const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 3000); }
+let toastT; function toast(msg){ const t = $('#toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('on'), 2600); }
+const _scripts = {};
+function loadScript(src){ return _scripts[src] || (_scripts[src] = new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = () => { delete _scripts[src]; rej(new Error('Kon een onderdeel niet laden (geen internet?)')); }; document.head.appendChild(s); })); }
+async function getPdfjs(){ await loadScript(CDN.pdfjs); window.pdfjsLib.GlobalWorkerOptions.workerSrc = CDN.pdfjsWorker; return window.pdfjsLib; }
+async function getJsPDF(){ await loadScript(CDN.jspdf); await loadScript(CDN.svg2pdf); return window.jspdf.jsPDF; }
+async function getPdfLib(){ await loadScript(CDN.pdflib); return window.PDFLib; }
+let _pt; async function getPotrace(){ if (!_pt){ _pt = import(CDN.potrace).then(async m => { await m.init(); return m; }); _pt.catch(() => { _pt = null; }); } return _pt; }
+function loadImg(src){ return new Promise((res, rej) => { const im = new Image(); im.onload = () => res(im); im.onerror = () => rej(new Error('Afbeelding kon niet geopend worden')); im.src = src; }); }
+function svgDataURL(svg){ return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg); }
+function svgSized(svg, w, h){ const doc = new DOMParser().parseFromString(svg, 'image/svg+xml'); const r = doc.documentElement; r.setAttribute('width', w); r.setAttribute('height', h); r.setAttribute('preserveAspectRatio', 'none'); return new XMLSerializer().serializeToString(r); }
+function b64(bytes){ let s = ''; const ch = 0x8000; for (let i = 0; i < bytes.length; i += ch) s += String.fromCharCode.apply(null, bytes.subarray(i, i + ch)); return btoa(s); }
+function unb64(str){ const s = atob(str); const a = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) a[i] = s.charCodeAt(i); return a; }
+function blobToDataURL(blob){ return new Promise(res => { const r = new FileReader(); r.onload = () => res(r.result); r.readAsDataURL(blob); }); }
+
+/* ============================== kleur ============================== */
+function parseColor(s){
+  if (!s) return null; s = String(s).trim().toLowerCase();
+  if (s === 'none' || s === 'transparent' || s.startsWith('url') || s === 'currentcolor') return null;
+  let m = s.match(/^rgba?\(([^)]+)\)$/);
+  if (m){ const p = m[1].split(/[\s,\/]+/).filter(Boolean).map(x => x.endsWith('%') ? parseFloat(x) * 2.55 : parseFloat(x)); const a = p.length > 3 ? (m[1].includes('%') && p[3] > 1 ? p[3] / 255 : p[3]) : 1; return [p[0], p[1], p[2], a]; }
+  if (s[0] === '#'){ let x = s.slice(1); if (x.length === 3 || x.length === 4) x = x.split('').map(c => c + c).join(''); const n = parseInt(x.slice(0, 6), 16); if (isNaN(n)) return null; return [(n >> 16) & 255, (n >> 8) & 255, n & 255, 1]; }
+  const named = {black:'#000000', white:'#ffffff', red:'#ff0000', blue:'#0000ff', green:'#008000', yellow:'#ffff00', gray:'#808080', grey:'#808080', orange:'#ffa500'};
+  return named[s] ? parseColor(named[s]) : null;
+}
+const toHex = (r, g, b) => '#' + [r, g, b].map(x => clamp(Math.round(x), 0, 255).toString(16).padStart(2, '0')).join('');
+const LIN = new Float32Array(256); for (let i = 0; i < 256; i++){ const c = i / 255; LIN[i] = c > 0.04045 ? Math.pow((c + 0.055) / 1.055, 2.4) : c / 12.92; }
+function labF(t){ return t > 0.008856 ? Math.cbrt(t) : 7.787 * t + 16 / 116; }
+function rgb2lab(r, g, b){ const R = LIN[r|0], G = LIN[g|0], B = LIN[b|0];
+  const X = labF((R * 0.4124 + G * 0.3576 + B * 0.1805) / 0.95047), Y = labF(R * 0.2126 + G * 0.7152 + B * 0.0722), Z = labF((R * 0.0193 + G * 0.1192 + B * 0.9505) / 1.08883);
+  return [116 * Y - 16, 500 * (X - Y), 200 * (Y - Z)]; }
+const hexLab = hx => { const c = parseColor(hx); return rgb2lab(c[0], c[1], c[2]); };
+const dE = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
+const NAMES = [['wit','#ffffff'],['zwart','#000000'],['grijs','#808080'],['lichtgrijs','#c8c8c8'],['donkergrijs','#404040'],['rood','#d0202a'],['donkerrood','#8a1c22'],['oranje','#f08a1c'],['geel','#f5d000'],['goud','#c9a24a'],['groen','#2e8b3a'],['donkergroen','#1f4d2b'],['lichtgroen','#9ccc65'],['mintgroen','#9fd6bf'],['blauw','#1f5fbf'],['donkerblauw','#14295a'],['lichtblauw','#8ec5ee'],['turquoise','#2bb3b1'],['paars','#6a3d9a'],['roze','#f2a0b8'],['fuchsia','#d6267a'],['bruin','#7a4a26'],['beige','#e2d2b4'],['crème','#f3ead2'],['zilver','#bfc3c7']].map(([n, x]) => [n, hexLab(x)]);
+function colorName(hx){ const l = hexLab(hx); let best = NAMES[0], bd = 1e9; for (const p of NAMES){ const d = dE(l, p[1]); if (d < bd){ bd = d; best = p; } } return best[0]; }
+function shade(hx, amt){ const c = parseColor(hx); const f = amt < 0 ? 0 : 255, t = Math.abs(amt); return toHex(c[0] + (f - c[0]) * t, c[1] + (f - c[1]) * t, c[2] + (f - c[2]) * t); }
+
+/* ============================== beeld-analyse ============================== */
+// Exacte afstandstransformatie (Felzenszwalb). inside[i]=1 → afstand² tot dichtstbijzijnde pixel met inside=0.
+function edt(inside, w, h){
+  const INF = 1e20, n = Math.max(w, h), f = new Float64Array(n), d = new Float64Array(n), v = new Int32Array(n), z = new Float64Array(n + 1), out = new Float64Array(w * h);
+  function dt(len){ let k = 0; v[0] = 0; z[0] = -INF; z[1] = INF;
+    for (let q = 1; q < len; q++){ let s = ((f[q] + q * q) - (f[v[k]] + v[k] * v[k])) / (2 * q - 2 * v[k]); while (s <= z[k]){ k--; s = ((f[q] + q * q) - (f[v[k]] + v[k] * v[k])) / (2 * q - 2 * v[k]); } k++; v[k] = q; z[k] = s; z[k + 1] = INF; }
+    k = 0; for (let q = 0; q < len; q++){ while (z[k + 1] < q) k++; const r = v[k]; d[q] = (q - r) * (q - r) + f[r]; } }
+  for (let x = 0; x < w; x++){ for (let y = 0; y < h; y++) f[y] = inside[y * w + x] ? INF : 0; dt(h); for (let y = 0; y < h; y++) out[y * w + x] = d[y]; }
+  for (let y = 0; y < h; y++){ const o = y * w; for (let x = 0; x < w; x++) f[x] = out[o + x]; dt(w); for (let x = 0; x < w; x++) out[o + x] = d[x]; }
+  return out;
+}
+// Onderdelen dunner dan t pixels: alles wat verdwijnt bij een "opening" met straal t/2.
+function thinMask(mask, w, h, tpx, dIn){
+  const r = tpx / 2, er = new Uint8Array(w * h);
+  for (let i = 0; i < w * h; i++) er[i] = mask[i] && dIn[i] >= r * r ? 0 : 1; // 0 = uitgeholde kern
+  const dk = edt(er, w, h), rr = (r + 0.5) * (r + 0.5), thin = new Uint8Array(w * h); let cnt = 0;
+  for (let i = 0; i < w * h; i++) if (mask[i] && dk[i] > rr){ thin[i] = 1; cnt++; }
+  return {thin, cnt};
+}
+// Achtergrond van een pixelplaatje: transparant, of de overheersende randkleur.
+function borderInfo(d, w, h){
+  let n = 0, tr = 0; const hist = new Map();
+  const add = i => { n++; if (d[i * 4 + 3] < 128){ tr++; return; } const key = ((d[i * 4] >> 4) << 8) | ((d[i * 4 + 1] >> 4) << 4) | (d[i * 4 + 2] >> 4); hist.set(key, (hist.get(key) || 0) + 1); };
+  for (let x = 0; x < w; x++){ add(x); add((h - 1) * w + x); }
+  for (let y = 1; y < h - 1; y++){ add(y * w); add(y * w + w - 1); }
+  if (tr / n > 0.4) return {transparent:true};
+  let bk = -1, bc = 0; for (const [k, c] of hist) if (c > bc){ bc = c; bk = k; }
+  if (bc / n < 0.45) return {none:true};
+  // gemiddelde kleur van die bak
+  let r = 0, g = 0, b = 0, c = 0;
+  const avg = i => { if (d[i * 4 + 3] < 128) return; const key = ((d[i * 4] >> 4) << 8) | ((d[i * 4 + 1] >> 4) << 4) | (d[i * 4 + 2] >> 4); if (key === bk){ r += d[i * 4]; g += d[i * 4 + 1]; b += d[i * 4 + 2]; c++; } };
+  for (let x = 0; x < w; x++){ avg(x); avg((h - 1) * w + x); }
+  for (let y = 1; y < h - 1; y++){ avg(y * w); avg(y * w + w - 1); }
+  return {rgb:[r / c, g / c, b / c]};
+}
+// Masker van "inkt" (niet-achtergrond) voor plaatjes met een effen achtergrond.
+function inkMask(d, w, h, tol = 28){
+  const bi = borderInfo(d, w, h), m = new Uint8Array(w * h);
+  if (bi.transparent || bi.none){ for (let i = 0; i < w * h; i++) m[i] = d[i * 4 + 3] >= 128 ? 1 : 0; return m; }
+  const bl = rgb2lab(...bi.rgb), seen = new Uint8Array(w * h), q = new Int32Array(w * h); let qh = 0, qt = 0;
+  const isBg = i => d[i * 4 + 3] < 128 || dE(rgb2lab(d[i * 4], d[i * 4 + 1], d[i * 4 + 2]), bl) < tol;
+  const push = i => { if (!seen[i] && isBg(i)){ seen[i] = 1; q[qt++] = i; } };
+  for (let x = 0; x < w; x++){ push(x); push((h - 1) * w + x); } for (let y = 0; y < h; y++){ push(y * w); push(y * w + w - 1); }
+  while (qh < qt){ const i = q[qh++], x = i % w, y = (i / w) | 0; if (x > 0) push(i - 1); if (x < w - 1) push(i + 1); if (y > 0) push(i - w); if (y < h - 1) push(i + w); }
+  for (let i = 0; i < w * h; i++) m[i] = seen[i] ? 0 : (d[i * 4 + 3] >= 128 ? 1 : 0);
+  return m;
+}
+function maskBBox(m, w, h){ let x0 = w, y0 = h, x1 = -1, y1 = -1; for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if (m[y * w + x]){ if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; } return x1 < 0 ? null : {x0, y0, x1, y1}; }
+
+/* ============================== SVG inlezen ============================== */
+const STYLE_PROPS = ['fill','fill-opacity','fill-rule','stroke','stroke-width','stroke-opacity','stroke-linecap','stroke-linejoin','stroke-miterlimit','stroke-dasharray','opacity','font-family','font-size','font-weight','font-style','text-anchor','letter-spacing'];
+const SHAPES = 'path,rect,circle,ellipse,line,polyline,polygon,text,tspan,textPath,use,image';
+async function normalizeSvg(text, opts = {}){
+  const doc = new DOMParser().parseFromString(text, 'image/svg+xml');
+  if (doc.querySelector('parsererror') || doc.documentElement.nodeName.toLowerCase() !== 'svg') throw new Error('Dit SVG-bestand is beschadigd of kan niet gelezen worden.');
+  const src = doc.documentElement;
+  src.querySelectorAll('script,foreignObject,metadata,title,desc').forEach(n => n.remove());
+  for (const el of [src, ...src.querySelectorAll('*')]){
+    for (const a of [...el.attributes]){
+      const n = a.name.toLowerCase();
+      if (n.startsWith('on')) el.removeAttribute(a.name);
+      if ((n === 'href' || n === 'xlink:href') && !/^(#|data:)/i.test(a.value.trim())) el.removeAttribute(a.name);
+    }
+  }
+  const host = document.createElement('div');
+  host.style.cssText = 'position:absolute;left:-20000px;top:0;width:1000px;height:1000px;overflow:hidden;visibility:hidden;pointer-events:none';
+  document.body.appendChild(host);
+  try {
+    const root = host.attachShadow({mode:'open'});
+    const live = document.importNode(src, true);
+    live.setAttribute('width', '1000'); live.setAttribute('height', '1000');
+    root.appendChild(live);
+    // stijlen (ook uit <style> en class) vastzetten als attributen
+    const els = [...live.querySelectorAll(SHAPES + ',g,svg')];
+    const comp = els.map(el => { const cs = getComputedStyle(el); const o = {}; for (const p of STYLE_PROPS) o[p] = cs.getPropertyValue(p); o.display = cs.display; o.visibility = cs.visibility; return o; });
+    live.querySelectorAll('style').forEach(n => n.remove());
+    els.forEach((el, i) => {
+      const o = comp[i], fromAlpha = new Set();
+      if (o.display === 'none'){ if (el !== live && !el.closest('defs,clipPath,mask,symbol,pattern,linearGradient,radialGradient')) el.remove(); return; }
+      el.removeAttribute('class'); el.removeAttribute('style');
+      if (el === live || el.tagName.toLowerCase() === 'g' || el.tagName.toLowerCase() === 'svg'){ if (o.opacity && o.opacity !== '1') el.setAttribute('opacity', o.opacity); return; }
+      for (const p of STYLE_PROPS){
+        let v = (o[p] || '').trim(); if (!v) continue;
+        if (p === 'fill' || p === 'stroke'){ if (v.startsWith('url(')){ v = v.replace(/url\(["']?[^#]*#([^"')]+)["']?\)/, 'url(#$1)'); } else { const c = parseColor(v); v = c ? (c[3] === 0 ? 'none' : toHex(c[0], c[1], c[2])) : (v === 'none' ? 'none' : v); if (c && c[3] > 0 && c[3] < 1){ const op = parseFloat(o[p + '-opacity']); el.setAttribute(p + '-opacity', String(+(c[3] * (isFinite(op) ? op : 1)).toFixed(3))); fromAlpha.add(p + '-opacity'); } } }
+        if (fromAlpha.has(p)) continue;
+        if (p === 'stroke-width' || p === 'font-size' || p === 'letter-spacing') v = v.replace(/px$/, '');
+        if (p.startsWith('font') || p === 'text-anchor' || p === 'letter-spacing'){ if (!/^(text|tspan|textpath)$/i.test(el.tagName)) continue; }
+        if (p === 'stroke-dasharray' && v === 'none') continue;
+        if (p === 'opacity' && v === '1') continue;
+        el.setAttribute(p, v);
+      }
+    });
+    // inhoud in een groep om de echte buitenmaten te meten
+    const g = document.createElementNS(NS, 'g');
+    for (const ch of [...live.childNodes]){ if (ch.nodeType === 1 && /^(defs)$/i.test(ch.tagName)) continue; g.appendChild(ch); }
+    live.appendChild(g);
+    // witte achtergrondvlak (veel voorkomend bij geëxporteerde logo's) automatisch weghalen
+    let bgRemoved = false;
+    if (opts.dropBg){
+      const all = [...g.querySelectorAll('path,rect,circle,ellipse,polygon')].filter(el => !el.closest('defs,clipPath,mask,symbol,pattern'));
+      const first = all.find(el => { const f = el.getAttribute('fill'); return f && f !== 'none'; });
+      if (first && all.length > 1){
+        const f = first.getAttribute('fill'), fo = parseFloat(first.getAttribute('fill-opacity') || '1'), c = parseColor(f);
+        const gb = g.getBoundingClientRect(), r = first.getBoundingClientRect();
+        const white = c && (() => { const l = rgb2lab(c[0], c[1], c[2]); return l[0] > 96 && Math.hypot(l[1], l[2]) < 5; })();
+        if ((white || fo === 0) && r.width * r.height >= 0.96 * gb.width * gb.height){ first.remove(); bgRemoved = true; }
+      }
+    }
+    let bb; try { bb = g.getBBox(); } catch (e) { bb = null; }
+    if (!bb || bb.width <= 0 || bb.height <= 0) throw new Error('In dit bestand staat geen zichtbaar logo.');
+    let pad = 0;
+    g.querySelectorAll('[stroke]').forEach(el => { if (el.getAttribute('stroke') !== 'none'){ const sw = parseFloat(el.getAttribute('stroke-width') || '1'); if (sw / 2 > pad) pad = sw / 2; } });
+    pad = Math.min(pad, Math.max(bb.width, bb.height) * 0.05);
+    const vb = [bb.x - pad, bb.y - pad, bb.width + 2 * pad, bb.height + 2 * pad].map(x => +x.toFixed(3));
+    live.removeAttribute('width'); live.removeAttribute('height');
+    live.setAttribute('viewBox', vb.join(' ')); live.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+    // vlaggen
+    const used = new Set(); const colorEls = {};
+    let gradient = false;
+    for (const el of live.querySelectorAll(SHAPES)){
+      if (el.closest('defs,clipPath,mask')) continue;
+      for (const p of ['fill','stroke']){
+        const v = el.getAttribute(p); if (!v || v === 'none') continue;
+        if (p === 'stroke' && parseFloat(el.getAttribute('stroke-width') || '1') <= 0) continue;
+        if (v.startsWith('url(')){ const ref = live.querySelector(v.slice(4, -1).replace(/["']/g, '')); if (ref && /gradient|pattern/i.test(ref.tagName)) gradient = true; continue; }
+        if (/^#[0-9a-f]{6}$/.test(v)){ used.add(v); }
+      }
+    }
+    const flags = {text: !!live.querySelector('text'), gradient, rasterInside: !!live.querySelector('image'), shapes: live.querySelectorAll('path,rect,circle,ellipse,line,polyline,polygon,text').length, bgRemoved};
+    const svg = new XMLSerializer().serializeToString(live);
+    return {svg, aspect: vb[2] / vb[3], colors:[...used], flags};
+  } finally { host.remove(); }
+}
+
+/* ============================== PDF inlezen ============================== */
+async function pdfPage(L){
+  if (L._page) return L._page;
+  const pdfjs = await getPdfjs();
+  const doc = await pdfjs.getDocument({data: L.pdf.bytes.slice()}).promise;
+  L._page = await doc.getPage(1); L._pages = doc.numPages;
+  return L._page;
+}
+async function renderPdfCrop(L, ctx, pxW, pad = 0){
+  const page = await pdfPage(L), c = L.pdf.crop;
+  const scale = pxW / (c.right - c.left), vp = page.getViewport({scale});
+  const [px, py] = vp.convertToViewportPoint(c.left, c.top);
+  await page.render({canvasContext: ctx, viewport: vp, transform:[1, 0, 0, 1, pad - px, pad - py], background:'rgba(0,0,0,0)'}).promise;
+}
+async function importPdf(bytes, name){
+  const pdfjs = await getPdfjs();
+  const L = {kind:'pdf', name, pdf:{bytes}};
+  const page = await pdfPage(L);
+  const ops = await page.getOperatorList(); const O = pdfjs.OPS; let img = 0, paths = 0, shade = 0, txt = 0;
+  for (const fn of ops.fnArray){
+    if (fn === O.paintImageXObject || fn === O.paintInlineImageXObject || fn === O.paintImageXObjectRepeat || fn === O.paintInlineImageXObjectGroup) img++;
+    else if (fn === O.constructPath) paths++;
+    else if (fn === O.shadingFill) shade++;
+    else if (fn === O.showText) txt++;
+  }
+  const vp1 = page.getViewport({scale:1}), scale = Math.min(2400 / vp1.width, 2400 / vp1.height, 10), vp = page.getViewport({scale});
+  const c = canvas(vp.width, vp.height), g = c.getContext('2d');
+  await page.render({canvasContext:g, viewport:vp, background:'rgba(0,0,0,0)'}).promise;
+  const id = g.getImageData(0, 0, c.width, c.height);
+  const m = inkMask(id.data, c.width, c.height, 6), bb = maskBBox(m, c.width, c.height);
+  if (!bb) throw new Error('Op de eerste pagina van deze PDF staat geen zichtbaar logo.');
+  const [ax, ay] = vp.convertToPdfPoint(bb.x0, bb.y0), [bx, by] = vp.convertToPdfPoint(bb.x1 + 1, bb.y1 + 1);
+  L.pdf.crop = {left:Math.min(ax, bx), right:Math.max(ax, bx), bottom:Math.min(ay, by), top:Math.max(ay, by)};
+  L.pdf.rotate = page.rotate || 0;
+  const cw = bb.x1 + 1 - bb.x0, ch = bb.y1 + 1 - bb.y0, pc = canvas(cw, ch);
+  pc.getContext('2d').drawImage(c, bb.x0, bb.y0, cw, ch, 0, 0, cw, ch);
+  L.preview = pc.toDataURL('image/png'); L.aspect = cw / ch;
+  L.flags = {text: txt > 0, gradient: shade > 0, rasterInside: img > 0, shapes: paths, pages: L._pages};
+  L.colors = null;
+  if (img > 0 && paths < 4){ // eigenlijk een plaatje in een PDF
+    return {kind:'raster', name, raster:{url:L.preview, w:cw, h:ch}, aspect:L.aspect, note:'Deze PDF bevat alleen een afbeelding, geen echte vectoren.'};
+  }
+  return L;
+}
+
+/* ============================== pixelbestand ============================== */
+async function importRasterURL(url, name, note){
+  const im = await loadImg(url), c = canvas(im.naturalWidth, im.naturalHeight), g = c.getContext('2d');
+  g.drawImage(im, 0, 0);
+  const id = g.getImageData(0, 0, c.width, c.height), m = inkMask(id.data, c.width, c.height), bb = maskBBox(m, c.width, c.height) || {x0:0, y0:0, x1:c.width - 1, y1:c.height - 1};
+  const cw = bb.x1 + 1 - bb.x0, ch = bb.y1 + 1 - bb.y0;
+  // bijgesneden versie met transparante achtergrond (voor plaatsen en print)
+  const pc = canvas(cw, ch), pg = pc.getContext('2d'), pid = pg.createImageData(cw, ch);
+  for (let y = 0; y < ch; y++) for (let x = 0; x < cw; x++){ const si = (y + bb.y0) * c.width + x + bb.x0, di = y * cw + x; for (let k = 0; k < 4; k++) pid.data[di * 4 + k] = id.data[si * 4 + k]; if (!m[si]) pid.data[di * 4 + 3] = 0; }
+  pg.putImageData(pid, 0, 0);
+  return {kind:'raster', name, raster:{url:pc.toDataURL('image/png'), w:cw, h:ch, src:url}, aspect:cw / ch, note};
+}
+
+/* ============================== bestand openen ============================== */
+async function onFile(file){
+  showErr(null);
+  if (!file) return;
+  setLogoBusy(true);
+  try {
+    const buf = new Uint8Array(await file.arrayBuffer()), name = file.name || 'logo';
+    const ext = (name.split('.').pop() || '').toLowerCase();
+    const head = new TextDecoder('latin1').decode(buf.subarray(0, Math.min(buf.length, 4096)));
+    let L;
+    if (head.includes('%PDF-')){ L = await importPdf(buf, name); }
+    else if (/<svg[\s>]/i.test(new TextDecoder().decode(buf.subarray(0, Math.min(buf.length, 65536)))) || ext === 'svg'){
+      const text = new TextDecoder().decode(buf);
+      const n = await normalizeSvg(text, {dropBg:true});
+      if (n.flags.rasterInside && n.flags.shapes === 0){
+        const href = (text.match(/(?:xlink:)?href\s*=\s*["'](data:image\/[^"']+)["']/i) || [])[1];
+        if (!href) throw new Error('Dit SVG-bestand bevat alleen een plaatje dat niet ingesloten is.');
+        L = await importRasterURL(href, name, 'Dit SVG-bestand bevat alleen een ingesloten plaatje, geen echte vectoren.');
+      } else { L = {kind:'svg', name, ...n, origin:'bestand'}; if (text.length < 1.5e6) L.srcText = text; }
+    }
+    else if (head.startsWith('%!PS') || ext === 'eps' || ext === 'ai'){
+      throw new Error('Dit is een EPS- of oud Illustrator-bestand. Dat kan de browser niet openen. Vraag de klant om een PDF of SVG, of open het in Illustrator en kies "Opslaan als PDF". Het EPS-bestand zelf kun je wel gewoon naar het stickerbedrijf sturen.');
+    }
+    else if ((file.type || '').startsWith('image/') || ['png','jpg','jpeg','webp','gif','bmp'].includes(ext)){
+      L = await importRasterURL(await blobToDataURL(file), name);
+    }
+    else throw new Error('Dit bestandstype ken ik niet. Gebruik SVG, PDF, AI, PNG of JPG.');
+    setLogo(L, true);
+    if (L.kind === 'raster') openTrace(L);
+  } catch (e) {
+    console.error(e); showErr(e.message || String(e));
+  } finally { setLogoBusy(false); $('#file').value = ''; }
+}
+function showErr(msg){ const el = $('#logo-err'); el.textContent = msg || ''; el.classList.toggle('hidden', !msg); }
+function setLogoBusy(on){ const d = $('#drop'); d.style.opacity = on ? .5 : 1; d.querySelector('b').textContent = on ? 'Bezig met lezen…' : (S.logo ? 'Ander logo kiezen' : 'Sleep het logo hierheen'); }
+
+function setLogo(L, fresh){
+  const prevAspect = S.logo ? S.logo.aspect : null;
+  S.logo = L; S.thin = null; S.shares = null;
+  if (fresh || !S.place.L){ const p = defaultPlace(); S.place.L = {...p}; S.place.R = {...p}; }
+  else if (prevAspect && Math.abs(prevAspect - L.aspect) > 0.01){ for (const k of ['L','R']) if (S.place[k]) S.place[k] = fitPlace(S.place[k]); }
+  renderAll(); computeShares(); scheduleThin(); save();
+}
+
+/* ============================== plaatsing ============================== */
+const curSide = () => S.job.deuren === 'L' ? 'L' : S.job.deuren === 'R' ? 'R' : S.side;
+const placeOf = side => (S.linked || S.job.deuren !== 'LR') ? S.place.L : S.place[side];
+function setPlace(p){ const side = curSide(); if (S.linked || S.job.deuren !== 'LR'){ S.place.L = {...p}; S.place.R = {...p}; } else S.place[side] = {...p}; }
+const hOf = p => p.w / S.logo.aspect;
+function defaultPlace(){ const d = S.dims, a = S.logo ? S.logo.aspect : 2.5; const best = maxPlace(a); const w = Math.min(best.w * 0.8, 600); return {u:d.W / 2, v:(d.crU + d.crL) / 2, w}; }
+function maxPlace(a){
+  const d = S.dims, m = d.marge, z = zonesFor(d);
+  // A: tussen de lijnen, vrij van greep en reflector
+  const hA = d.crU - d.crL - 2 * m, wA = Math.min(hA * a, d.W - 2 * (z.greep.u1 + 10));
+  // B: onder de greep/reflector, over de volle breedte
+  const hB = (z.greep.v0 - 10) - (d.crL + m), wB = Math.min(hB * a, d.W - 2 * m);
+  return wA >= wB ? {w:wA, v:(d.crL + d.crU) / 2, u:d.W / 2} : {w:wB, v:d.crL + m + (wB / a) / 2, u:d.W / 2};
+}
+function fitPlace(p){ const d = S.dims, a = S.logo.aspect; let w = Math.min(p.w, d.W - 2, (d.H - 2) * a); return {u:clamp(p.u, w / 2, d.W - w / 2), v:clamp(p.v, w / a / 2, d.H - w / a / 2), w}; }
+
+/* ============================== tekenen ============================== */
+function viewBox(){ const d = S.dims; return S.zoom === 'deur' ? [-230, -(d.H + 260), d.W + 460, d.H + 260 + 340] : [-880, -1340, 2860, 1720]; }
+function drawContext(g){ // linkerkant, voorkant links. Gestileerd silhouet op schaal.
+  const car = S.car, line = '#1d1d1d';
+  E('path', {d:'M-381 -752 L-95 -1175 Q-60 -1247 30 -1247 L1450 -1247 Q1530 -1247 1553 -1139 L1589 -752 Z', fill:'#353535'}, g);
+  E('path', {d:'M-300 -800 L-88 -1132 L-36 -1132 L-36 -800 Z', fill:'#dde5ea'}, g);
+  E('path', {d:'M1126 -800 L1126 -1132 L1468 -1132 L1528 -800 Z', fill:'#dde5ea'}, g);
+  E('path', {d:'M-560 -762 L1650 -762 Q1748 -762 1754 -600 L1762 -60 Q1762 126 1600 126 L-600 126 Q-774 126 -774 -40 L-766 -560 Q-760 -762 -560 -762 Z', fill:car, stroke:line, 'stroke-width':4}, g);
+  E('rect', {x:-800, y:-110, width:210, height:190, rx:40, fill:'#2a2a2a'}, g);
+  E('rect', {x:1612, y:-110, width:210, height:190, rx:40, fill:'#2a2a2a'}, g);
+  E('circle', {cx:-716, cy:-556, r:72, fill:'#f3efe2', stroke:'#2a2a2a', 'stroke-width':6}, g);
+  E('rect', {x:1726, y:-650, width:38, height:120, rx:14, fill:'#c8332b'}, g);
+  for (const cx of [-335, 1388]){
+    E('path', {d:`M${cx - 316} 126 A352 352 0 1 1 ${cx + 316} 126 Z`, fill:'#242424'}, g);
+    E('circle', {cx, cy:-29, r:317, fill:'#1b1b1b'}, g);
+    E('circle', {cx, cy:-29, r:192, fill:'#c3c7cb', stroke:'#8d9297', 'stroke-width':6}, g);
+    E('circle', {cx, cy:-29, r:70, fill:'#8d9297'}, g);
+  }
+  E('line', {x1:-950, x2:1950, y1:288, y2:288, stroke:'rgba(0,0,0,.2)', 'stroke-width':6}, g);
+}
+function drawDoor(g){
+  const d = S.dims, W = d.W, H = d.H, T = d.top, z = zonesFor(d), car = S.car;
+  E('path', {d:`M0 ${-H} L0 ${-T + 30} Q0 ${-T} 30 ${-T} L${W - 60} ${-T} Q${W - 20} ${-T} ${W - 12} ${-T + 40} L${W} ${-H} Z`, fill:'#3a3a3a'}, g);
+  E('path', {d:`M42 ${-H - 36} L42 ${-T + 62} L${W - 78} ${-T + 62} L${W - 44} ${-H - 36} Z`, fill:'#dde5ea'}, g);
+  E('line', {x1:60, x2:W - 60, y1:-H - 230, y2:-H - 230, stroke:'#555', 'stroke-width':10}, g);
+  const r = 40, rt = 10;
+  E('path', {d:`M${rt} ${-H} L${W - rt} ${-H} Q${W} ${-H} ${W} ${-H + rt} L${W} ${-r} Q${W} 0 ${W - r} 0 L${r} 0 Q0 0 0 ${-r} L0 ${-H + rt} Q0 ${-H} ${rt} ${-H} Z`, fill:car, stroke:'#1d1d1d', 'stroke-width':4, 'stroke-linejoin':'round'}, g);
+  const cl = 'rgba(0,0,0,.42)';
+  E('line', {x1:2, x2:W - 2, y1:-d.crU, y2:-d.crU, stroke:cl, 'stroke-width':4}, g);
+  E('line', {x1:d.crLin, x2:W - d.crLin, y1:-d.crL, y2:-d.crL, stroke:cl, 'stroke-width':4}, g);
+  E('ellipse', {cx:-6, cy:-610, rx:115, ry:62, fill:'rgba(0,0,0,.14)', stroke:'#1d1d1d', 'stroke-width':4}, g);
+  E('circle', {cx:-64, cy:-593, r:24, fill:'#d4d6d8', stroke:'#555', 'stroke-width':4}, g);
+  E('rect', {x:z.refl.u0 + 3, y:-z.refl.v1, width:z.refl.u1 - z.refl.u0 - 6, height:z.refl.v1 - z.refl.v0, rx:20, fill:'#d8352a', stroke:'#7a1a14', 'stroke-width':3}, g);
+}
+function logoHref(L){ return L.kind === 'svg' ? svgDataURL(L.svg) : L.kind === 'pdf' ? L.preview : L.raster.url; }
+// Bouwt de scène in een <svg>. opts: {side, zoom, ui:true|false}
+function buildScene(svg, side, opts){
+  const d = S.dims, vb = opts.zoom === 'deur' ? viewBox() : [-880, -1340, 2860, 1720];
+  svg.innerHTML = ''; svg.setAttribute('viewBox', vb.join(' '));
+  const fs = vb[2] / 44;
+  const ctx = E('g', side === 'R' ? {transform:`translate(${d.W} 0) scale(-1 1)`} : null, svg);
+  drawContext(ctx);
+  const door = E('g', null, svg); drawDoor(door);
+  const p = S.logo ? placeOf(side) : null;
+  if (!S.logo || !p){
+    if (opts.ui){
+      const zx = 140, zy = d.crL + 30, zw = d.W - 280, zh = d.crU - d.crL - 60;
+      E('rect', {x:zx, y:-(zy + zh), width:zw, height:zh, rx:18, class:'ph', 'stroke-width':4, 'stroke-dasharray':'18 12'}, svg);
+      const t = E('text', {x:d.W / 2, y:-(zy + zh / 2), 'text-anchor':'middle', 'dominant-baseline':'middle', 'font-size':fs, class:'phtxt'}, svg); t.textContent = 'Sleep hier het logo naartoe';
+    }
+    return;
+  }
+  const L = S.logo, w = p.w, hh = hOf(p), x0 = p.u - w / 2, y1 = p.v + hh / 2;
+  const lg = E('g', {'data-role':'logo', style: opts.ui ? 'cursor:move' : null}, svg);
+  if (opts.ui) E('rect', {x:x0, y:-y1, width:w, height:hh, fill:'transparent', 'pointer-events':'all'}, lg);
+  E('image', {href:logoHref(L), x:x0, y:-y1, width:w, height:hh, preserveAspectRatio:'none'}, lg);
+  if (!opts.ui) return;
+  if (S.thin && S.thin.overlay && S.thin.w === Math.round(w)) E('image', {href:S.thin.overlay, x:x0, y:-y1, width:w, height:hh, preserveAspectRatio:'none', 'pointer-events':'none'}, svg);
+  // hulplijnen bij uitlijnen
+  if (drag && drag.snapX) E('line', {x1:d.W / 2, x2:d.W / 2, y1:-d.H, y2:0, class:'guide', 'stroke-width':4, 'stroke-dasharray':'16 10'}, svg);
+  if (drag && drag.snapY) E('line', {x1:0, x2:d.W, y1:-(d.crU + d.crL) / 2, y2:-(d.crU + d.crL) / 2, class:'guide', 'stroke-width':4, 'stroke-dasharray':'16 10'}, svg);
+  // maatlijnen
+  const dims = E('g', {'pointer-events':'none'}, svg), lw = fs * 0.07, tk = fs * 0.35;
+  const label = (x, y, txt, big) => { const t = E('text', {x, y, 'text-anchor':'middle', 'dominant-baseline':'middle', 'font-size':big ? fs * 1.05 : fs * 0.9, class:'dlbl', 'stroke-width':fs * 0.28}, dims); t.textContent = txt; };
+  const dimH = (xa, xb, y, txt) => { if (xb - xa < 2) return; E('line', {x1:xa, x2:xb, y1:y, y2:y, class:'dim', 'stroke-width':lw}, dims); for (const x of [xa, xb]) E('line', {x1:x, x2:x, y1:y - tk, y2:y + tk, class:'dim', 'stroke-width':lw}, dims); label((xa + xb) / 2, y - fs * 0.75, txt); };
+  const dimV = (x, ya, yb, txt) => { if (yb - ya < 2) return; E('line', {x1:x, x2:x, y1:-ya, y2:-yb, class:'dim', 'stroke-width':lw}, dims); for (const y of [ya, yb]) E('line', {x1:x - tk, x2:x + tk, y1:-y, y2:-y, class:'dim', 'stroke-width':lw}, dims); label(x + fs * 1.9, -(ya + yb) / 2, txt); };
+  const y0 = p.v - hh / 2, x1 = p.u + w / 2;
+  dimH(0, x0, -p.v, mm(x0)); dimH(x1, d.W, -p.v, mm(d.W - x1)); dimV(p.u, 0, y0, mm(y0));
+  label(p.u, -(y1) - fs * 0.85, `${mm(w)} × ${mm(hh)} mm`, true);
+  // selectie en hoekgrepen
+  E('rect', {x:x0, y:-y1, width:w, height:hh, class:'sel', 'stroke-width':fs * 0.07, 'stroke-dasharray':`${fs * 0.35} ${fs * 0.25}`, 'pointer-events':'none'}, svg);
+  const hs = clamp(Math.min(w, hh) * 0.22, fs * 0.32, fs * 0.75);
+  [['nw', x0, -y1], ['ne', x1, -y1], ['sw', x0, -y0], ['se', x1, -y0]].forEach(([c, x, y]) => {
+    E('circle', {cx:x, cy:y, r:hs * 1.1, fill:'transparent', 'data-role':'handle', 'data-c':c, class:'hdl ' + c, style:'stroke:none'}, svg);
+    E('rect', {x:x - hs / 2, y:y - hs / 2, width:hs, height:hs, rx:hs * 0.2, class:'hdl ' + c, 'stroke-width':fs * 0.08, 'data-role':'handle', 'data-c':c}, svg);
+  });
+  // labels randen
+  const t1 = E('text', {x:0, y:fs * 1.4, 'text-anchor':'start', 'font-size':fs * 0.7, class:'dlbl', 'stroke-width':fs * 0.2, 'pointer-events':'none'}, svg); t1.textContent = side === 'L' ? '← voorkant auto (naad bij greep)' : '← achterkant auto (naad bij greep)';
+}
+
+function renderStage(){
+  const svg = $('#stage'), side = curSide();
+  buildScene(svg, side, {zoom:S.zoom, ui:true});
+  const vb = svg.getAttribute('viewBox').split(' ').map(Number);
+  $('#stagewrap').style.aspectRatio = `${vb[2]} / ${vb[3]}`;
+}
+
+/* ============================== slepen en schalen ============================== */
+let drag = null;
+function svgPt(e){ const svg = $('#stage'), pt = svg.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY; return pt.matrixTransform(svg.getScreenCTM().inverse()); }
+function onDown(e){
+  if (!S.logo) return;
+  const role = e.target.closest('[data-role]'); if (!role) return;
+  const p = placeOf(curSide()), pt = svgPt(e);
+  e.preventDefault(); $('#stage').setPointerCapture(e.pointerId);
+  if (role.dataset.role === 'handle') drag = {mode:'size', p0:{...p}};
+  else drag = {mode:'move', p0:{...p}, dx:pt.x - p.u, dy:-pt.y - p.v};
+}
+function onMove(e){
+  if (!drag) return;
+  const pt = svgPt(e), d = S.dims, a = S.logo.aspect; let p = {...drag.p0};
+  if (drag.mode === 'move'){
+    p.u = pt.x - drag.dx; p.v = -pt.y - drag.dy;
+    drag.snapX = Math.abs(p.u - d.W / 2) < 16; if (drag.snapX) p.u = d.W / 2;
+    const mid = (d.crU + d.crL) / 2; drag.snapY = Math.abs(p.v - mid) < 16; if (drag.snapY) p.v = mid;
+  } else {
+    const w = Math.max(2 * Math.abs(pt.x - p.u), 2 * Math.abs(-pt.y - p.v) * a);
+    p.w = clamp(Math.round(w), 20, d.W * 1.2);
+  }
+  setPlace(p); renderStage(); renderPlaceInputs(); renderChecks();
+}
+function onUp(){ if (!drag) return; drag = null; renderStage(); afterPlaceChange(); }
+function afterPlaceChange(){ renderPlaceInputs(); renderChecks(); renderExport(); scheduleThin(); save(); }
+
+/* ============================== dunne delen ============================== */
+let thinT = null;
+function scheduleThin(){ clearTimeout(thinT); thinT = setTimeout(runThin, 380); }
+async function logoCanvas(pxW, pxH, pad){
+  const L = S.logo, c = canvas(pxW + 2 * pad, pxH + 2 * pad), g = c.getContext('2d');
+  if (L.kind === 'svg'){ const im = await loadImg(svgDataURL(svgSized(L.svg, pxW, pxH))); g.drawImage(im, pad, pad, pxW, pxH); }
+  else if (L.kind === 'pdf'){ await renderPdfCrop(L, g, pxW, pad); }
+  else { const im = await loadImg(L.raster.url); g.drawImage(im, pad, pad, pxW, pxH); }
+  return c;
+}
+async function runThin(){
+  const L = S.logo; if (!L || L.kind === 'raster'){ S.thin = null; renderChecks(); return; }
+  const p = placeOf(curSide()), w = p.w, hh = hOf(p);
+  const key = L.name + '|' + Math.round(w) + '|' + S.job.soort + '|' + (L.svg ? L.svg.length : 0);
+  if (S.thin && S.thin.key === key) return;
+  try {
+    const mmpp = Math.max(0.12, w / 2400, hh / 2400), pw = Math.round(w / mmpp), ph = Math.round(hh / mmpp), pad = 3;
+    const c = await logoCanvas(pw, ph, pad), W = c.width, H = c.height, d = c.getContext('2d').getImageData(0, 0, W, H).data;
+    const mask = new Uint8Array(W * H); let ink = 0; for (let i = 0; i < W * H; i++) if (d[i * 4 + 3] >= 128){ mask[i] = 1; ink++; }
+    if (!ink){ S.thin = null; return; }
+    const dIn = edt(mask, W, H);
+    const tests = S.job.soort === 'snij' ? [1, 2] : [0.5];
+    const res = [], masks = [], ov = canvas(W, H), og = ov.getContext('2d'), oid = og.createImageData(W, H);
+    for (const t of tests){ const {thin, cnt} = thinMask(mask, W, H, t / mmpp, dIn); res.push({t, frac:cnt / ink, cnt}); masks.push(thin); }
+    // eerst de ruimste toets (oranje), daarna de strengste (rood) eroverheen
+    for (let k = tests.length - 1; k >= 0; k--){
+      const r = res[k]; if (!(r.cnt > 25 && r.frac > 0.002)) continue;
+      const strong = k === 0, m = masks[k];
+      for (let i = 0; i < W * H; i++) if (m[i]){ const o = i * 4; oid.data[o] = strong ? 230 : 255; oid.data[o + 1] = strong ? 20 : 150; oid.data[o + 2] = strong ? 40 : 0; oid.data[o + 3] = 255; }
+    }
+    og.putImageData(oid, 0, 0);
+    const crop = canvas(pw, ph); crop.getContext('2d').drawImage(ov, pad, pad, pw, ph, 0, 0, pw, ph);
+    const any = res.some(r => r.cnt > 25 && r.frac > 0.002);
+    S.thin = {key, w:Math.round(w), res, overlay: any ? crop.toDataURL('image/png') : null};
+  } catch (e) { console.warn('dunne delen', e); S.thin = null; }
+  renderStage(); renderChecks();
+}
+
+/* ============================== kleuraandeel ============================== */
+async function computeShares(){
+  const L = S.logo; if (!L) return;
+  try {
+    const long = 420, pw = L.aspect >= 1 ? long : Math.round(long * L.aspect), ph = L.aspect >= 1 ? Math.round(long / L.aspect) : long;
+    const c = await logoCanvas(pw, ph, 0), d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
+    let cols = L.kind === 'svg' ? L.colors.slice() : null;
+    if (!cols || !cols.length){ // PDF of pixel: kleuren schatten
+      const P = {w:c.width, h:c.height, d}; const smp = coreSamples(P, d); if (!smp.n) return;
+      const k = autoK(smp.lab); const km = kmeans(smp.lab, k, 7);
+      cols = km.centers.map((cl, i) => avgRGBForCluster(smp, km.assign, i));
+    }
+    const labs = cols.map(hexLab), cnt = new Array(cols.length).fill(0); let tot = 0;
+    for (let i = 0; i < c.width * c.height; i++){ if (d[i * 4 + 3] < 200) continue; const l = rgb2lab(d[i * 4], d[i * 4 + 1], d[i * 4 + 2]); let bi = 0, bd = 1e9; for (let k = 0; k < labs.length; k++){ const dd = dE(l, labs[k]); if (dd < bd){ bd = dd; bi = k; } } cnt[bi]++; tot++; }
+    S.shares = cols.map((hx, i) => ({hex:hx, pct: tot ? cnt[i] / tot : 0})).filter(x => x.pct > 0.0005 || L.kind === 'svg').sort((a, b) => b.pct - a.pct);
+    S.sharesEstimated = L.kind !== 'svg';
+  } catch (e) { console.warn('kleuren', e); }
+  renderLogoInfo(); renderChecks(); renderExport();
+}
+
+/* ============================== omzetten (potrace) ============================== */
+const TR = {L:null, P:null, km:{}, k:'auto', bg:'overal', alpha:1, noise:0.00008, colors:null, labels:null, svg:null, darkbg:false, run:0, off:new Set()};
+function coreSamples(P, d){ // pixels waarvan de buren dezelfde kleur hebben (geen randjes)
+  const {w, h} = P, step = Math.max(1, Math.floor(Math.sqrt(w * h / 70000))), lab = [], rgb = [];
+  const L = (i) => rgb2lab(d[i * 4], d[i * 4 + 1], d[i * 4 + 2]);
+  for (let y = 1; y < h - 1; y += step) for (let x = 1; x < w - 1; x += step){
+    const i = y * w + x; if (d[i * 4 + 3] < 200) continue; const c = L(i); let ok = true;
+    for (const j of [i - 1, i + 1, i - w, i + w]){ if (d[j * 4 + 3] < 200 || dE(c, L(j)) > 7){ ok = false; break; } }
+    if (ok){ lab.push(c[0], c[1], c[2]); rgb.push(d[i * 4], d[i * 4 + 1], d[i * 4 + 2]); }
+  }
+  if (lab.length < 150) for (let i = 0; i < w * h; i += step){ if (d[i * 4 + 3] < 200) continue; const c = L(i); lab.push(c[0], c[1], c[2]); rgb.push(d[i * 4], d[i * 4 + 1], d[i * 4 + 2]); }
+  return {lab:Float32Array.from(lab), rgb:Uint8Array.from(rgb), n:lab.length / 3};
+}
+function rng(seed){ let a = seed >>> 0; return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function kmeans(X, k, seed = 3){
+  const n = X.length / 3, rnd = rng(seed), C = [], D = new Float64Array(n).fill(Infinity), A = new Int32Array(n);
+  let f = Math.floor(rnd() * n); C.push([X[f * 3], X[f * 3 + 1], X[f * 3 + 2]]);
+  for (let c = 1; c < k; c++){
+    let sum = 0; const last = C[c - 1];
+    for (let i = 0; i < n; i++){ const dd = (X[i * 3] - last[0]) ** 2 + (X[i * 3 + 1] - last[1]) ** 2 + (X[i * 3 + 2] - last[2]) ** 2; if (dd < D[i]) D[i] = dd; sum += D[i]; }
+    let r = rnd() * sum, pick = n - 1; for (let i = 0; i < n; i++){ r -= D[i]; if (r <= 0){ pick = i; break; } }
+    C.push([X[pick * 3], X[pick * 3 + 1], X[pick * 3 + 2]]);
+  }
+  const counts = new Array(k).fill(0);
+  for (let it = 0; it < 25; it++){
+    let changed = 0; const S3 = Array.from({length:k}, () => [0, 0, 0]); counts.fill(0);
+    for (let i = 0; i < n; i++){ let bi = 0, bd = Infinity; for (let c = 0; c < k; c++){ const dd = (X[i * 3] - C[c][0]) ** 2 + (X[i * 3 + 1] - C[c][1]) ** 2 + (X[i * 3 + 2] - C[c][2]) ** 2; if (dd < bd){ bd = dd; bi = c; } } if (A[i] !== bi){ A[i] = bi; changed++; } counts[bi]++; S3[bi][0] += X[i * 3]; S3[bi][1] += X[i * 3 + 1]; S3[bi][2] += X[i * 3 + 2]; }
+    for (let c = 0; c < k; c++) if (counts[c]) C[c] = [S3[c][0] / counts[c], S3[c][1] / counts[c], S3[c][2] / counts[c]];
+    if (!changed && it) break;
+  }
+  return {centers:C, counts, assign:A, n};
+}
+function autoK(X){
+  let best = 1;
+  for (let k = 2; k <= 7; k++){
+    const r = kmeans(X, k); let minD = Infinity; for (let a = 0; a < k; a++) for (let b = a + 1; b < k; b++) minD = Math.min(minD, dE(r.centers[a], r.centers[b]));
+    const minShare = Math.min(...r.counts) / r.n;
+    if (minD >= 16 && minShare >= 0.004) best = k;
+  }
+  return best;
+}
+function avgRGBForCluster(smp, assign, ci){ let r = 0, g = 0, b = 0, c = 0; for (let i = 0; i < smp.n; i++) if (assign[i] === ci){ r += smp.rgb[i * 3]; g += smp.rgb[i * 3 + 1]; b += smp.rgb[i * 3 + 2]; c++; } if (!c) return '#888888'; let hx = toHex(r / c, g / c, b / c); const l = hexLab(hx); if (dE(l, [100, 0, 0]) < 5) hx = '#ffffff'; else if (dE(l, [0, 0, 0]) < 6) hx = '#000000'; return hx; }
+
+async function traceSource(L){ return L.raster.src || L.raster.url; }
+async function openTrace(L){
+  TR.L = L; TR.km = {}; TR.colors = null; TR.svg = null; TR.off = new Set();
+  $('#c-trace').classList.remove('hidden');
+  const im = await loadImg(await traceSource(L));
+  const sw = im.naturalWidth, sh = im.naturalHeight, long = Math.max(sw, sh);
+  let f = 1; if (long < 1400) f = Math.min(6, 1400 / long); else if (long > 2000) f = 2000 / long;
+  if (sw * sh * f * f > 2.6e6) f = Math.sqrt(2.6e6 / (sw * sh));
+  const w = Math.max(1, Math.round(sw * f)), ht = Math.max(1, Math.round(sh * f)), c = canvas(w, ht), g = c.getContext('2d');
+  g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'high'; g.drawImage(im, 0, 0, w, ht);
+  const d = g.getImageData(0, 0, w, ht).data;
+  TR.P = {w, h:ht, d, smp:coreSamples({w, h:ht}, d), border:borderInfo(d, w, ht)};
+  const oc = $('#t-orig'); oc.innerHTML = ''; const pv = canvas(Math.min(sw, 900), Math.min(sw, 900) * sh / sw); pv.getContext('2d').drawImage(im, 0, 0, pv.width, pv.height); oc.append(pv);
+  $('#t-origsz').textContent = `${sw} × ${sh} px`;
+  const auto = autoK(TR.P.smp.lab); TR.autoK = auto;
+  const sel = $('#t-k'); sel.innerHTML = '';
+  sel.append(h('option', {value:'auto'}, `Automatisch (${auto})`)); for (let k = 1; k <= 7; k++) sel.append(h('option', {value:k}, String(k)));
+  sel.value = TR.k = 'auto';
+  $('#t-bgmode').value = TR.bg;
+  segSet('#t-corners', String(TR.alpha)); segSet('#t-noise', String(TR.noise));
+  $('#c-trace').scrollIntoView({behavior:'smooth', block:'start'});
+  retrace(true);
+}
+function classify(){
+  const P = TR.P, k = TR.k === 'auto' ? TR.autoK : +TR.k;
+  const km = TR.km[k] || (TR.km[k] = kmeans(P.smp.lab, k, 3));
+  const {w, h, d} = P, n = w * h, lab = new Int8Array(n), C = km.centers;
+  for (let i = 0; i < n; i++){
+    if (d[i * 4 + 3] < 128){ lab[i] = -1; continue; }
+    const l = rgb2lab(d[i * 4], d[i * 4 + 1], d[i * 4 + 2]); let bi = 0, bd = Infinity;
+    for (let c = 0; c < C.length; c++){ const dd = (l[0] - C[c][0]) ** 2 + (l[1] - C[c][1]) ** 2 + (l[2] - C[c][2]) ** 2; if (dd < bd){ bd = dd; bi = c; } }
+    lab[i] = bi;
+  }
+  // losse pixels opruimen (jpg-ruis)
+  const out = lab.slice(), cnt = new Int32Array(9);
+  for (let y = 1; y < h - 1; y++) for (let x = 1; x < w - 1; x++){
+    const i = y * w + x, me = lab[i]; let same = 0; const nb = [i - w - 1, i - w, i - w + 1, i - 1, i + 1, i + w - 1, i + w, i + w + 1];
+    for (const j of nb) if (lab[j] === me) same++;
+    if (same <= 1){ cnt.fill(0); let bl = me, bc = 0; for (const j of nb){ const v = lab[j] + 1; cnt[v]++; if (cnt[v] > bc){ bc = cnt[v]; bl = lab[j]; } } out[i] = bl; }
+  }
+  // achtergrond
+  let bgIdx = null;
+  if (!P.border.transparent){
+    const bc = new Array(C.length).fill(0); let tot = 0;
+    const add = i => { if (out[i] >= 0){ bc[out[i]]++; tot++; } };
+    for (let x = 0; x < w; x++){ add(x); add((h - 1) * w + x); } for (let y = 0; y < h; y++){ add(y * w); add(y * w + w - 1); }
+    const m = bc.indexOf(Math.max(...bc)); if (tot && bc[m] / tot > 0.5) bgIdx = m;
+  }
+  if (bgIdx != null && TR.bg !== 'geen'){
+    if (TR.bg === 'overal'){ for (let i = 0; i < n; i++) if (out[i] === bgIdx) out[i] = -1; }
+    else { const q = new Int32Array(n); let qh = 0, qt = 0; const push = i => { if (out[i] === bgIdx){ out[i] = -1; q[qt++] = i; } };
+      for (let x = 0; x < w; x++){ push(x); push((h - 1) * w + x); } for (let y = 0; y < h; y++){ push(y * w); push(y * w + w - 1); }
+      while (qh < qt){ const i = q[qh++], x = i % w, y = (i / w) | 0; if (x > 0) push(i - 1); if (x < w - 1) push(i + 1); if (y > 0) push(i - w); if (y < h - 1) push(i + w); } }
+  }
+  const pix = new Array(C.length).fill(0); let ink = 0; for (let i = 0; i < n; i++) if (out[i] >= 0){ pix[out[i]]++; ink++; }
+  TR.labels = out;
+  TR.colors = C.map((c, i) => ({i, hex:avgRGBForCluster(P.smp, km.assign, i), px:pix[i], pct: ink ? pix[i] / ink : 0})).filter(c => c.px > 0).sort((a, b) => b.px - a.px);
+}
+let traceT = null;
+function retrace(reclass){ clearTimeout(traceT); traceT = setTimeout(() => doTrace(reclass), 60); }
+async function doTrace(reclass){
+  const run = ++TR.run; $('#t-busy').classList.add('on'); $('#t-use').disabled = true;
+  try {
+    if (reclass || !TR.labels) classify();
+    const pt = await getPotrace(); if (run !== TR.run) return;
+    const w = TR.P.w, ht = TR.P.h, n = w * ht, turd = Math.max(2, Math.round(n * TR.noise)), parts = [];
+    for (const c of TR.colors){
+      if (TR.off.has(c.hex)) continue;
+      const id = new ImageData(w, ht), dd = id.data;
+      for (let i = 0; i < n; i++){ const v = TR.labels[i] === c.i ? 0 : 255; dd[i * 4] = dd[i * 4 + 1] = dd[i * 4 + 2] = v; dd[i * 4 + 3] = 255; }
+      const paths = await pt.potrace(id, {turdsize:turd, turnpolicy:4, alphamax:TR.alpha, opticurve:1, opttolerance:0.2, pathonly:true, extractcolors:false, posterizelevel:2, posterizationalgorithm:0});
+      if (run !== TR.run) return;
+      const dstr = (Array.isArray(paths) ? paths : [paths]).join(' ').trim();
+      if (dstr) parts.push(`<path fill="${c.hex}" d="${dstr}"/>`);
+    }
+    if (!parts.length){ TR.svg = null; $('#t-vec').querySelectorAll('img').forEach(x => x.remove()); renderTraceColors(); return; }
+    TR.svg = `<svg xmlns="${NS}" viewBox="0 0 ${w} ${ht}"><g transform="translate(0 ${ht}) scale(0.1 -0.1)">${parts.join('')}</g></svg>`;
+    const box = $('#t-vec'); box.querySelectorAll('img').forEach(x => x.remove());
+    box.append(h('img', {src:svgDataURL(TR.svg), alt:'Omgezet logo'}));
+    $('#t-use').disabled = false;
+    renderTraceColors();
+  } catch (e) { console.error(e); toast('Omzetten mislukt: ' + (e.message || e)); }
+  finally { if (run === TR.run) $('#t-busy').classList.remove('on'); }
+}
+function renderTraceColors(){
+  const box = $('#t-colors'); box.innerHTML = '';
+  for (const c of TR.colors || []){
+    const off = TR.off.has(c.hex);
+    box.append(h('div', {class:'crow' + (off ? ' off' : '')},
+      h('span', {class:'sq', style:`background:${c.hex}`}),
+      h('span', null, colorName(c.hex)), h('span', {class:'hx'}, c.hex),
+      h('span', {class:'pc'}, (c.pct * 100).toFixed(c.pct < 0.01 ? 1 : 0) + '%'),
+      h('button', {type:'button', onclick:() => { off ? TR.off.delete(c.hex) : TR.off.add(c.hex); retrace(false); }}, off ? 'Terugzetten' : 'Weglaten')));
+  }
+}
+async function useTrace(){
+  if (!TR.svg) return;
+  try {
+    const n = await normalizeSvg(TR.svg), src = TR.L;
+    const L = {kind:'svg', name:src.name, ...n, origin:'omgezet', traceSrc:src.raster.src || src.raster.url};
+    $('#c-trace').classList.add('hidden');
+    setLogo(L, false); toast('Logo omgezet naar vector');
+    $('#c-stage').scrollIntoView({behavior:'smooth', block:'start'});
+  } catch (e) { toast(e.message); }
+}
+
+/* ============================== kleur weglaten (SVG) ============================== */
+async function dropColor(hex){
+  const L = S.logo; if (!L || L.kind !== 'svg') return;
+  if (!L.svgOrig) L.svgOrig = L.svg;
+  const doc = new DOMParser().parseFromString(L.svg, 'image/svg+xml');
+  for (const el of doc.querySelectorAll(SHAPES)){
+    if (el.getAttribute('fill') === hex) el.setAttribute('fill', 'none');
+    if (el.getAttribute('stroke') === hex) el.setAttribute('stroke', 'none');
+    if (el.getAttribute('fill') === 'none' && (!el.getAttribute('stroke') || el.getAttribute('stroke') === 'none') && !/^(text|tspan)$/i.test(el.tagName)) el.remove();
+  }
+  try { const n = await normalizeSvg(new XMLSerializer().serializeToString(doc.documentElement)); Object.assign(L, n); setLogo(L, false); }
+  catch (e) { toast('Dan blijft er niets over van het logo'); }
+}
+async function restoreColors(){ const L = S.logo; if (!L || !L.svgOrig) return; const n = await normalizeSvg(L.svgOrig); n.flags.bgRemoved = L.flags.bgRemoved; Object.assign(L, n); delete L.svgOrig; setLogo(L, false); }
+async function restoreBg(){ const L = S.logo; if (!L || !L.srcText) return; const n = await normalizeSvg(L.srcText, {dropBg:false}); Object.assign(L, n); delete L.svgOrig; setLogo(L, false); }
+
+/* ============================== controles ============================== */
+function placeChecks(p, sideName){
+  const d = S.dims, m = d.marge, z = zonesFor(d), hh = hOf(p), x0 = p.u - p.w / 2, x1 = p.u + p.w / 2, y0 = p.v - hh / 2, y1 = p.v + hh / 2, out = [];
+  const pre = sideName ? sideName + ': ' : '';
+  if (x0 < m || x1 > d.W - m || y0 < m || y1 > d.H - m) out.push(['bad', `${pre}te dicht bij de rand van de deur. Houd minimaal ${m} mm vrij tot de naden, de onderrand en het raam.`]);
+  else out.push(['ok', `${pre}past op de deur.`]);
+  const hit = (q, c) => x0 < q.u1 + c && x1 > q.u0 - c && y0 < q.v1 + c && y1 > q.v0 - c;
+  if (hit(z.greep, 10)) out.push(['bad', `${pre}raakt de deurgreep. Maak het logo kleiner of schuif het naar beneden of naar rechts.`]);
+  if (hit(z.refl, 10)) out.push(['bad', `${pre}raakt de reflector achter op de deur.`]);
+  if ((y0 < d.crU - 3 && y1 > d.crU + 3) || (y0 < d.crL - 3 && y1 > d.crL + 3 && x1 > d.crLin && x0 < d.W - d.crLin)) out.push(['warn', `${pre}loopt over een lijn (vouw) in de deur. Folie sluit daar minder strak aan; liever tussen de lijnen.`]);
+  return out;
+}
+function allChecks(){
+  const L = S.logo, out = []; if (!L) return out;
+  const cut = S.job.soort === 'snij', f = L.flags || {};
+  if (L.kind === 'raster'){
+    const p = placeOf(curSide()), dpi = L.raster.w / (p.w / 25.4);
+    out.push([cut ? 'bad' : (dpi < 100 ? 'bad' : dpi < 150 ? 'warn' : 'ok'), cut ? 'Pixelbestand. Voor gesneden folie eerst omzetten naar vector (stap 2).' : `Pixelbestand: ${Math.round(dpi)} dpi op dit formaat (${dpi < 150 ? 'te weinig, minimaal 150' : 'genoeg voor print'}). Een vectorbestand blijft beter.`]);
+  } else {
+    if (f.rasterInside) out.push([cut ? 'bad' : 'warn', 'Er zit ook een plaatje (pixels) in dit bestand. Dat deel kan niet gesneden worden.']);
+    else out.push(['ok', L.origin === 'omgezet' ? 'Vector, door de tool omgezet. Laat de klant het resultaat goedkeuren.' : 'Echt vectorbestand.']);
+    if (f.text) out.push(['warn', L.kind === 'pdf' ? 'Bevat tekst met een ingesloten lettertype. Meestal geen probleem; vraag anders een versie met "tekst omgezet naar contouren".' : 'Bevat losse tekst, niet omgezet naar contouren. Bij het stickerbedrijf kan het lettertype verspringen: vraag de klant om een versie met tekst als contouren.']);
+    if (f.gradient) out.push([cut ? 'bad' : 'ok', cut ? 'Bevat een kleurverloop. Dat kan niet uit folie gesneden worden: kies "Geprinte sticker".' : 'Bevat een kleurverloop: kan alleen geprint worden (staat goed).']);
+    if (L.kind === 'pdf' && f.pages > 1) out.push(['info', `De PDF heeft ${f.pages} pagina's; alleen pagina 1 wordt gebruikt.`]);
+  }
+  if (S.shares && cut){ const n = S.shares.length; out.push([n > 3 ? 'warn' : 'ok', `${n} kleur${n === 1 ? '' : 'en'} = ${n} ${n === 1 ? 'laag' : 'lagen'} folie${S.sharesEstimated ? ' (geschat)' : ''}.${n > 3 ? ' Veel lagen is duur en lastig plakken; overweeg print.' : ''}`]); }
+  if (S.shares){ const car = hexLab(S.car); const low = S.shares.filter(c => c.pct > 0.15 && dE(hexLab(c.hex), car) < 14); if (low.length) out.push(['warn', `De kleur ${colorName(low[0].hex)} valt bijna weg tegen deze autokleur.`]); }
+  const sides = S.job.deuren === 'LR' ? (S.linked ? [['L', '']] : [['L', 'Linkerdeur'], ['R', 'Rechterdeur']]) : [[S.job.deuren, '']];
+  for (const [sd, nm] of sides) out.push(...placeChecks(placeOf(sd), nm));
+  if (S.thin && S.thin.res){
+    for (const r of S.thin.res){
+      if (r.cnt > 25 && r.frac > 0.002){
+        const strong = r.t === S.thin.res[0].t;
+        out.push([strong ? (cut ? 'bad' : 'warn') : 'warn', `${(r.frac * 100).toFixed(r.frac < 0.01 ? 1 : 0)}% van het logo is dunner dan ${String(r.t).replace('.', ',')} mm (${strong ? 'rood' : 'oranje'} in de tekening). ${cut ? (strong ? 'Zo dun valt folie eraf: maak het logo groter.' : 'Kan, maar lastig plakken en minder sterk.') : 'Wordt mogelijk onscherp.'}`]);
+      }
+    }
+    if (!S.thin.res.some(r => r.cnt > 25 && r.frac > 0.002)) out.push(['ok', `Geen te dunne delen (getest op ${S.thin.res.map(r => String(r.t).replace('.', ',') + ' mm').join(' en ')}).`]);
+  }
+  return out;
+}
+function renderChecks(){
+  const ul = $('#checks'); ul.innerHTML = '';
+  if (!S.logo){ ul.append(h('li', {class:'info'}, h('span', {class:'ic'}, 'i'), h('span', null, 'Kies eerst een logo in stap 2.'))); return; }
+  const icons = {ok:'✓', warn:'!', bad:'✕', info:'i'};
+  for (const [k, t] of allChecks()) ul.append(h('li', {class:k}, h('span', {class:'ic'}, icons[k]), h('span', null, t)));
+}
+
+/* ============================== UI renderen ============================== */
+function segSet(sel, v){ $$(sel + ' button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === String(v)))); }
+function renderJob(){
+  $('#f-klant').value = S.job.klant; $('#f-order').value = S.job.order; $('#f-kenteken').value = S.job.kenteken; $('#f-opm').value = S.job.opm;
+  segSet('#s-soort', S.job.soort); segSet('#s-deuren', S.job.deuren);
+  $('#s-side').classList.toggle('hidden', S.job.deuren !== 'LR');
+  segSet('#s-side', curSide()); segSet('#s-zoom', S.zoom);
+  $('#linkwrap').classList.toggle('hidden', S.job.deuren !== 'LR');
+  $('#f-linked').checked = S.linked;
+  $$('#cars button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === S.car)));
+  for (const k of ['W','H','crU','crL','marge']) $('#d-' + k).value = S.dims[k];
+}
+function renderLogoInfo(){
+  const box = $('#logo-info'), L = S.logo;
+  box.classList.toggle('hidden', !L); $('#drop').querySelector('b').textContent = L ? 'Ander logo kiezen' : 'Sleep het logo hierheen';
+  if (!L){ box.innerHTML = ''; return; }
+  box.innerHTML = '';
+  const kindChip = L.kind === 'svg' ? (L.origin === 'omgezet' ? ['ok', 'Vector (omgezet)'] : ['ok', 'Vector · SVG']) : L.kind === 'pdf' ? (L.flags.rasterInside ? ['warn', 'PDF · deels pixels'] : ['ok', 'Vector · PDF']) : ['bad', 'Pixelbestand'];
+  const thumb = h('div', {class:'thumb checker'}, h('img', {src:logoHref(L), alt:''}));
+  box.append(h('div', {class:'logo-head mt'}, thumb, h('div', {style:'min-width:0'}, h('div', {class:'nm'}, L.name), h('div', {class:'chips'}, h('span', {class:'chip ' + kindChip[0]}, kindChip[1]), L.kind === 'raster' ? h('span', {class:'chip'}, `${L.raster.w} × ${L.raster.h} px`) : null))));
+  if (L.note) box.append(h('p', {class:'small', style:'margin:10px 0 0'}, L.note));
+  if (L.kind === 'svg' && L.flags && L.flags.bgRemoved) box.append(h('p', {class:'small', style:'margin:10px 0 0'}, 'Witte achtergrondvlak van het logo weggehaald. ', L.srcText ? h('a', {href:'#', onclick:e => { e.preventDefault(); restoreBg(); }}, 'Toch terugzetten') : null));
+  if (L.kind === 'raster'){
+    box.append(h('p', {class:'small', style:'margin:10px 0 0'}, S.job.soort === 'snij' ? 'Voor gesneden folie heeft het stickerbedrijf een vectorbestand nodig. Zet het logo om, of vraag de klant om een SVG, PDF of AI.' : 'Voor print kan een groot pixelbestand, maar een vectorbestand is altijd scherper.'));
+    box.append(h('div', {class:'btns mt'}, h('button', {class:'btn', type:'button', onclick:() => openTrace(L)}, 'Omzetten naar vector')));
+  }
+  if (L.origin === 'omgezet' && L.traceSrc) box.append(h('div', {class:'btns mt'}, h('button', {class:'btn sec sm', type:'button', onclick:() => reopenTrace()}, 'Omzetten aanpassen')));
+  if (S.shares && S.shares.length){
+    const cl = h('div', {class:'colors'});
+    box.append(h('div', {class:'lbl mt'}, S.sharesEstimated ? 'Kleuren (geschat) en foliekleur' : 'Kleuren en foliekleur'), cl);
+    const list = S.shares.slice(0, 10);
+    for (const c of list){
+      const inp = h('input', {type:'text', value:S.foil[c.hex] || '', placeholder:'Foliekleur, bijv. ' + colorName(c.hex), oninput:e => { S.foil[c.hex] = e.target.value; renderExport(); save(); }});
+      cl.append(h('div', {class:'crow'}, h('span', {class:'sq', style:`background:${c.hex}`}), h('span', {class:'hx'}, c.hex), inp,
+        h('span', {class:'pc'}, (c.pct * 100).toFixed(c.pct < 0.01 ? 1 : 0) + '%'),
+        L.kind === 'svg' && S.shares.length > 1 ? h('button', {type:'button', title:'Deze kleur niet plakken', onclick:() => dropColor(c.hex)}, 'Weglaten') : null));
+    }
+    if (S.shares.length > 10) cl.append(h('div', {class:'small muted'}, `+ ${S.shares.length - 10} kleuren meer: dit lijkt een foto of illustratie, kies dan "Geprinte sticker".`));
+    if (L.svgOrig) box.append(h('div', {class:'btns mt'}, h('button', {class:'btn sec sm', type:'button', onclick:restoreColors}, 'Weggelaten kleuren terugzetten')));
+  }
+}
+async function reopenTrace(){ const L = S.logo; if (!L || !L.traceSrc) return; await openTrace({kind:'raster', name:L.name, raster:{url:L.traceSrc, src:L.traceSrc}}); }
+function renderPlaceInputs(){
+  const on = !!S.logo; $('#place').querySelectorAll('input,button').forEach(x => x.disabled = !on);
+  if (!on){ ['w','h','b','l','r'].forEach(k => { if (document.activeElement !== $('#p-' + k)) $('#p-' + k).value = ''; }); return; }
+  const p = placeOf(curSide()), hh = hOf(p), d = S.dims;
+  const vals = {w:p.w, h:hh, b:p.v - hh / 2, l:p.u - p.w / 2, r:d.W - (p.u + p.w / 2)};
+  for (const k in vals){ const el = $('#p-' + k); if (document.activeElement !== el) el.value = Math.round(vals[k]); }
+}
+function onPlaceInput(k, val){
+  if (!S.logo || !isFinite(val)) return;
+  const p = {...placeOf(curSide())}, a = S.logo.aspect, d = S.dims;
+  if (k === 'w'){ const l = p.u - p.w / 2, b = p.v - p.w / a / 2; p.w = clamp(val, 10, d.W * 1.2); p.u = l + p.w / 2; p.v = b + p.w / a / 2; }
+  if (k === 'h'){ const l = p.u - p.w / 2, b = p.v - p.w / a / 2; p.w = clamp(val * a, 10, d.W * 1.2); p.u = l + p.w / 2; p.v = b + p.w / a / 2; }
+  if (k === 'b') p.v = val + p.w / a / 2;
+  if (k === 'l') p.u = val + p.w / 2;
+  if (k === 'r') p.u = d.W - val - p.w / 2;
+  setPlace(p); renderStage(); renderChecks(); renderExport(); scheduleThin(); save();
+  if (k === 'w' || k === 'h') renderPlaceInputsExcept(k); else renderPlaceInputsExcept(k);
+}
+function renderPlaceInputsExcept(k){ const keep = $('#p-' + k); const v = keep.value; renderPlaceInputs(); keep.value = v; }
+
+function exportName(ext, extra){ const base = ['S45', slug(S.job.klant) || slug(S.job.order) || slug(S.logo && S.logo.name.replace(/\.[^.]+$/, '')) || 'logo'].join('_'); return base + (extra ? '_' + extra : '') + '.' + ext; }
+function stickerSize(){ const p = placeOf(curSide()); return {w:p.w, h:hOf(p)}; }
+function stickerList(){
+  if (!S.logo) return [];
+  const d = S.job.deuren;
+  if (d === 'LR' && !S.linked){ const a = placeOf('L'), b = placeOf('R'); if (Math.round(a.w) !== Math.round(b.w)) return [{sides:['L'], p:a}, {sides:['R'], p:b}]; return [{sides:['L','R'], p:a, posDiff:true}]; }
+  return [{sides: d === 'LR' ? ['L','R'] : [d], p:placeOf(d === 'R' ? 'R' : 'L')}];
+}
+const sideTxt = s => s.length === 2 ? 'linker- en rechterdeur' : s[0] === 'L' ? 'linkerdeur' : 'rechterdeur';
+function foilTxt(){ if (!S.shares) return ''; return S.shares.slice(0, 8).map(c => (S.foil[c.hex] || colorName(c.hex)) + ` (${c.hex})`).join(', '); }
+function renderExport(){
+  const L = S.logo, sum = $('#sum'); sum.innerHTML = '';
+  const can = !!L;
+  $('#x-werk').disabled = !can; $('#x-voorbeeld').disabled = !can;
+  $('#x-sticker').disabled = !can || (L.kind === 'raster' && S.job.soort === 'snij');
+  $('#x-svg').disabled = !can || L.kind !== 'svg';
+  $('#x-svg').classList.toggle('hidden', !!L && L.kind !== 'svg');
+  if (!L){ sum.append(h('dt', null, 'Logo'), h('dd', {class:'muted'}, 'nog niet gekozen')); $('#mail').value = ''; return; }
+  const list = stickerList();
+  const plek = p => `${mm(p.v - hOf(p) / 2)} mm boven onderrand, ${mm(p.u - p.w / 2)} mm vanaf naad bij greep`;
+  for (const s of list){
+    const hh = hOf(s.p);
+    sum.append(h('dt', null, 'Formaat'), h('dd', null, `${mm(s.p.w)} × ${mm(hh)} mm (b × h)`));
+    sum.append(h('dt', null, 'Aantal'), h('dd', null, `${s.sides.length}× · ${sideTxt(s.sides)}`));
+    if (s.posDiff){ sum.append(h('dt', null, 'Plek links'), h('dd', null, plek(placeOf('L'))), h('dt', null, 'Plek rechts'), h('dd', null, plek(placeOf('R')))); }
+    else sum.append(h('dt', null, 'Plek'), h('dd', null, plek(s.p)));
+  }
+  sum.append(h('dt', null, 'Soort'), h('dd', null, S.job.soort === 'snij' ? 'Gesneden folie' : 'Geprinte sticker'));
+  if (S.shares) sum.append(h('dt', null, 'Kleuren'), h('dd', null, foilTxt() || '–'));
+  // mailtekst
+  const who = [S.job.klant, S.job.order ? 'order ' + S.job.order : '', S.job.kenteken].filter(Boolean).join(' · ');
+  const lines = ['Hoi,', '', `Graag de volgende belettering maken${who ? ' voor ' + who : ''}:`, ''];
+  for (const s of list) lines.push(`- ${s.sides.length}× logo ${mm(s.p.w)} × ${mm(hOf(s.p))} mm (breedte × hoogte), voor de ${sideTxt(s.sides)} van een ${MODEL}`);
+  lines.push(`- Soort: ${S.job.soort === 'snij' ? 'gesneden folie' : 'geprinte sticker, contour gesneden en gelamineerd'}`);
+  if (S.shares) lines.push(`- Kleuren: ${foilTxt()}`);
+  if (S.job.opm) lines.push(`- Opmerking: ${S.job.opm}`);
+  lines.push('', `In de bijlage het logo op ware grootte (1:1) en de werktekening met de plaats op de deur.`, '', 'Groet,', 'Spéciale45');
+  $('#mail').value = lines.join('\n');
+}
+function renderAll(){ renderJob(); renderLogoInfo(); renderStage(); renderPlaceInputs(); renderChecks(); renderExport(); }
+
+/* ============================== exporteren ============================== */
+async function logoPNG(longPx){ const L = S.logo, pw = L.aspect >= 1 ? longPx : Math.round(longPx * L.aspect), ph = L.aspect >= 1 ? Math.round(longPx / L.aspect) : longPx; const c = await logoCanvas(pw, ph, 0); return c.toDataURL('image/png'); }
+async function exportSticker(){
+  const L = S.logo; if (!L) return;
+  const btn = $('#x-sticker'); btn.disabled = true; const old = btn.textContent; btn.textContent = 'Bezig…';
+  try {
+    for (const s of stickerList()){
+      const w = +s.p.w.toFixed(1), hh = +hOf(s.p).toFixed(1), tag = `${Math.round(w)}x${Math.round(hh)}mm` + (stickerList().length > 1 ? '_' + s.sides[0] : '');
+      const title = `Logo ${S.job.klant || ''} ${Math.round(w)} x ${Math.round(hh)} mm (1:1)`.replace(/\s+/g, ' ');
+      if (L.kind === 'pdf'){
+        const {PDFDocument} = await getPdfLib();
+        const src = await PDFDocument.load(L.pdf.bytes, {ignoreEncryption:true});
+        const out = await PDFDocument.create();
+        const c = L.pdf.crop, emb = await out.embedPage(src.getPage(0), {left:c.left, bottom:c.bottom, right:c.right, top:c.top});
+        const pw = w * 72 / 25.4, ph = hh * 72 / 25.4, page = out.addPage([pw, ph]);
+        page.drawPage(emb, {x:0, y:0, width:pw, height:ph});
+        out.setTitle(title); out.setCreator('Spéciale45 belettering'); out.setProducer('Spéciale45');
+        download(new Blob([await out.save()], {type:'application/pdf'}), exportName('pdf', tag));
+      } else {
+        const jsPDF = await getJsPDF();
+        const doc = new jsPDF({orientation: w >= hh ? 'landscape' : 'portrait', unit:'mm', format:[w, hh], compress:true});
+        if (L.kind === 'svg'){
+          const holder = document.createElement('div'); holder.style.cssText = 'position:absolute;left:-20000px;top:0;visibility:hidden';
+          holder.innerHTML = svgSized(L.svg, w + 'mm', hh + 'mm'); document.body.appendChild(holder);
+          try { await doc.svg(holder.firstElementChild, {x:0, y:0, width:w, height:hh}); } finally { holder.remove(); }
+        } else {
+          doc.addImage(L.raster.url, 'PNG', 0, 0, w, hh, undefined, 'NONE');
+        }
+        doc.setProperties({title, creator:'Spéciale45 belettering'});
+        download(doc.output('blob'), exportName('pdf', tag));
+      }
+    }
+    toast('Stickerbestand gedownload');
+  } catch (e) { console.error(e); toast('Maken mislukt: ' + (e.message || e)); }
+  finally { btn.textContent = old; renderExport(); }
+}
+function exportSVG(){
+  const L = S.logo; if (!L || L.kind !== 'svg') return;
+  for (const s of stickerList()){
+    const w = +s.p.w.toFixed(1), hh = +hOf(s.p).toFixed(1), tag = `${Math.round(w)}x${Math.round(hh)}mm` + (stickerList().length > 1 ? '_' + s.sides[0] : '');
+    const doc = new DOMParser().parseFromString(L.svg, 'image/svg+xml'), r = doc.documentElement;
+    r.setAttribute('width', w + 'mm'); r.setAttribute('height', hh + 'mm');
+    download(new Blob(['<?xml version="1.0" encoding="UTF-8"?>\n' + new XMLSerializer().serializeToString(r)], {type:'image/svg+xml'}), exportName('svg', tag));
+  }
+}
+let _logoBlack;
+async function brandBlack(){ if (_logoBlack) return _logoBlack; try { const r = await fetch('logo-zwart.png'); const bl = await r.blob(); const url = await blobToDataURL(bl); const im = await loadImg(url); _logoBlack = {url, ar: im.naturalWidth / im.naturalHeight}; } catch (e) { _logoBlack = null; } return _logoBlack; }
+async function exportWerk(){
+  const L = S.logo; if (!L) return;
+  const btn = $('#x-werk'); btn.disabled = true; const old = btn.textContent; btn.textContent = 'Bezig…';
+  try {
+    const jsPDF = await getJsPDF(), doc = new jsPDF({orientation:'landscape', unit:'mm', format:'a4', compress:true});
+    const png = await logoPNG(1400), brand = await brandBlack(), d = S.dims, z = zonesFor(d), SC = 8;
+    const datum = new Date().toLocaleDateString('nl-NL', {day:'numeric', month:'long', year:'numeric'});
+    const pages = S.job.deuren === 'LR' && !S.linked ? [['L'], ['R']] : [S.job.deuren === 'LR' ? ['L','R'] : [S.job.deuren]];
+    pages.forEach((sides, pi) => {
+      if (pi) doc.addPage();
+      const side = sides[0], p = placeOf(side), hh = hOf(p);
+      // kop
+      if (brand) doc.addImage(brand.url, 'PNG', 12, 8, 9 * brand.ar, 9);
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(15); doc.setTextColor(20); doc.text('Werktekening belettering', 285, 14, {align:'right'});
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(60);
+      const meta = [S.job.klant && 'Klant: ' + S.job.klant, S.job.order && 'Order: ' + S.job.order, S.job.kenteken && 'Kenteken: ' + S.job.kenteken, MODEL, datum].filter(Boolean).join('   ·   ');
+      doc.text(meta, 12, 24); doc.setDrawColor(30); doc.setLineWidth(0.3); doc.line(12, 27, 285, 27);
+      // tekening 1:8
+      const ox = 22, oy = 172, P = (u, v) => [ox + u / SC, oy - v / SC];
+      doc.setFontSize(8.5); doc.setTextColor(40);
+      doc.text(sides.length === 2 ? 'Linker- en rechterdeur (zelfde onderdeel), van buitenaf gezien' : (side === 'L' ? 'Linkerdeur, van buitenaf gezien' : 'Rechterdeur, van buitenaf gezien'), ox, 34);
+      // raamdeel
+      doc.setFillColor(70); doc.setDrawColor(70); let [x, y] = P(0, d.top); doc.rect(x, y, d.W / SC, (d.top - d.H) / SC, 'F');
+      doc.setFillColor(232, 238, 241); [x, y] = P(42, d.top - 62); doc.rect(x, y, (d.W - 86) / SC, (d.top - d.H - 98) / SC, 'F');
+      // paneel
+      doc.setFillColor(247, 247, 245); doc.setDrawColor(20); doc.setLineWidth(0.35); [x, y] = P(0, d.H); doc.roundedRect(x, y, d.W / SC, d.H / SC, 2, 2, 'FD');
+      doc.setDrawColor(150); doc.setLineWidth(0.25);
+      doc.line(...P(0, d.crU), ...P(d.W, d.crU)); doc.line(...P(d.crLin, d.crL), ...P(d.W - d.crLin, d.crL));
+      doc.setDrawColor(20); doc.setLineWidth(0.25); doc.ellipse(...P(-6, 610), 115 / SC, 62 / SC, 'S'); doc.circle(...P(-64, 593), 24 / SC, 'S');
+      doc.setDrawColor(170, 40, 30); [x, y] = P(z.refl.u0 + 3, z.refl.v1); doc.roundedRect(x, y, (z.refl.u1 - z.refl.u0 - 6) / SC, (z.refl.v1 - z.refl.v0) / SC, 1.5, 1.5, 'S');
+      // logo
+      [x, y] = P(p.u - p.w / 2, p.v + hh / 2); doc.addImage(png, 'PNG', x, y, p.w / SC, hh / SC, undefined, 'FAST');
+      // maatlijnen
+      const x0 = p.u - p.w / 2, x1 = p.u + p.w / 2, y0 = p.v - hh / 2;
+      doc.setDrawColor(20); doc.setLineWidth(0.2); doc.setTextColor(20); doc.setFontSize(8.5);
+      const tick = (xa, ya) => doc.line(xa - 0.9, ya + 0.9, xa + 0.9, ya - 0.9);
+      const dimH = (ua, ub, yy, txt, ext) => { const [xa] = P(ua, 0), [xb] = P(ub, 0); if (xb - xa < 0.3) return; doc.line(xa, yy, xb, yy); tick(xa, yy); tick(xb, yy); if (ext) for (const [uu, vv] of ext){ const [ex, ey] = P(uu, vv); doc.setDrawColor(150); doc.line(ex, ey + 0.8, ex, yy + 1.5); doc.setDrawColor(20); } doc.text(txt, (xa + xb) / 2, yy - 1.2, {align:'center'}); };
+      const yA = oy + 7, yB = oy + 14;
+      dimH(0, x0, yA, mm(x0), [[0, 0], [x0, y0]]); dimH(x0, x1, yA, mm(p.w), [[x1, y0]]); dimH(x1, d.W, yA, mm(d.W - x1), [[d.W, 0]]);
+      doc.setTextColor(110); dimH(0, d.W, yB, `deur ${mm(d.W)} (naad tot naad)`); doc.setTextColor(20);
+      const xV = ox + d.W / SC + 7;
+      const dimV = (va, vb, txt, ext) => { const [, ya] = P(0, va), [, yb] = P(0, vb); doc.line(xV, ya, xV, yb); tick(xV, ya); tick(xV, yb); for (const [uu, vv] of ext){ const [ex, ey] = P(uu, vv); doc.setDrawColor(150); doc.line(ex + 0.8, ey, xV + 1.5, ey); doc.setDrawColor(20); } doc.text(txt, xV + 1.6, (ya + yb) / 2 + 1, {align:'left'}); };
+      dimV(0, y0, mm(y0), [[d.W, 0], [x1, y0]]); dimV(y0, y0 + hh, mm(hh), [[x1, y0 + hh]]);
+      doc.setFontSize(7.5); doc.setTextColor(110);
+      doc.text('naad bij greep', ox, oy + 19); doc.text('naad achterzijde', ox + d.W / SC, oy + 19, {align:'right'});
+      doc.text(sides.length === 2 ? 'greep-kant = voorkant auto (linkerdeur) / achterkant auto (rechterdeur)' : side === 'L' ? 'greep-kant = voorkant auto' : 'greep-kant = achterkant auto', ox + d.W / SC / 2, oy + 19, {align:'center'});
+      doc.text('onderrand deur', ox - 1, oy + 0.8, {align:'right'});
+      // rechterkolom
+      const cx = 188; let cy = 40;
+      doc.setTextColor(110); doc.setFontSize(8); doc.text('STICKER', cx, cy); cy += 7;
+      doc.setTextColor(20); doc.setFont('helvetica', 'bold'); doc.setFontSize(18); doc.text(`${mm(p.w)} × ${mm(hh)} mm`, cx, cy); cy += 5;
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(90); doc.text('breedte × hoogte, buitenmaten logo', cx, cy); cy += 8;
+      const rowT = (k, v) => { doc.setFontSize(8.5); doc.setTextColor(110); doc.text(k, cx, cy); doc.setTextColor(20); const lines = doc.splitTextToSize(v, 66); doc.text(lines, cx + 27, cy); cy += 4.6 * lines.length + 1.6; };
+      rowT('Aantal', `${sides.length}× (${sideTxt(sides)})`);
+      rowT('Soort', S.job.soort === 'snij' ? 'Gesneden folie' : 'Geprinte sticker, contour gesneden');
+      rowT('Positie', `onderkant logo ${mm(y0)} mm boven onderrand deur; linkerkant logo ${mm(x0)} mm vanaf naad bij greep${Math.abs(p.u - d.W / 2) < 1 ? ' (midden van de deur)' : ''}`);
+      rowT('Bestand', exportName(L.kind === 'svg' ? 'pdf / .svg' : 'pdf', `${Math.round(p.w)}x${Math.round(hh)}mm`) + ' — ware grootte 1:1');
+      if (S.shares){
+        doc.setFontSize(8.5); doc.setTextColor(110); doc.text('Kleuren', cx, cy);
+        for (const c of S.shares.slice(0, 8)){ const rgb = parseColor(c.hex); doc.setFillColor(rgb[0], rgb[1], rgb[2]); doc.setDrawColor(120); doc.setLineWidth(0.15); doc.rect(cx + 27, cy - 3, 3.4, 3.4, 'FD'); doc.setTextColor(20); doc.text(`${S.foil[c.hex] || colorName(c.hex)}  ${c.hex}`, cx + 32, cy); cy += 5; }
+        cy += 1.6;
+      }
+      if (S.job.opm) rowT('Opmerking', S.job.opm);
+      // voet
+      doc.setFontSize(7); doc.setTextColor(120);
+      doc.text(`Alle maten in mm. Tekening op schaal 1:${SC} bij afdrukken op 100% (A4). Deurmal ${MODEL} van Spéciale45, gemeten uit schaaltekening (±2 cm): controleer de deur vóór het plakken.`, 12, 203);
+      doc.text(`Pagina ${pi + 1} van ${pages.length}`, 285, 203, {align:'right'});
+    });
+    doc.setProperties({title:'Werktekening belettering ' + (S.job.klant || ''), creator:'Spéciale45 belettering'});
+    download(doc.output('blob'), exportName('pdf', 'werktekening'));
+    toast('Werktekening gedownload');
+  } catch (e) { console.error(e); toast('Maken mislukt: ' + (e.message || e)); }
+  finally { btn.textContent = old; btn.disabled = false; }
+}
+async function exportVoorbeeld(){
+  if (!S.logo) return;
+  try {
+    const sides = S.job.deuren === 'LR' ? ['L','R'] : [S.job.deuren], Wpx = 1600, vb = [2860, 1720], Hpx = Math.round(Wpx * vb[1] / vb[0]);
+    const head = 90, foot = 70, c = canvas(Wpx, head + sides.length * (Hpx + 20) + foot), g = c.getContext('2d');
+    g.fillStyle = '#ffffff'; g.fillRect(0, 0, c.width, c.height);
+    g.fillStyle = '#1b1b1b'; g.font = '700 34px -apple-system, Segoe UI, Roboto, Arial, sans-serif'; g.fillText('Voorbeeld belettering' + (S.job.klant ? ' · ' + S.job.klant : ''), 40, 56);
+    let y = head;
+    for (const sd of sides){
+      const svg = document.createElementNS(NS, 'svg'); svg.setAttribute('width', Wpx); svg.setAttribute('height', Hpx);
+      buildScene(svg, sd, {zoom:'auto', ui:false});
+      const im = await loadImg(svgDataURL(new XMLSerializer().serializeToString(svg)));
+      g.fillStyle = '#f2efe9'; g.fillRect(0, y, Wpx, Hpx); g.drawImage(im, 0, y, Wpx, Hpx);
+      g.fillStyle = '#555'; g.font = '600 26px -apple-system, Segoe UI, Roboto, Arial, sans-serif'; g.fillText(sd === 'L' ? 'Linkerkant' : 'Rechterkant', 40, y + 44);
+      y += Hpx + 20;
+    }
+    const brand = await brandBlack();
+    if (brand){ const im = await loadImg(brand.url); const bh = 34; g.drawImage(im, Wpx - 40 - bh * brand.ar, c.height - foot + 14, bh * brand.ar, bh); }
+    g.fillStyle = '#777'; g.font = '400 20px -apple-system, Segoe UI, Roboto, Arial, sans-serif'; g.fillText('Impressie. Kleuren en verhoudingen kunnen in het echt iets afwijken.', 40, c.height - 30);
+    c.toBlob(bl => download(bl, exportName('png', 'voorbeeld')), 'image/png');
+  } catch (e) { console.error(e); toast('Maken mislukt: ' + (e.message || e)); }
+}
+
+/* ============================== opslaan ============================== */
+let saveT;
+function save(){ clearTimeout(saveT); saveT = setTimeout(() => {
+  try {
+    const o = {job:S.job, place:S.place, linked:S.linked, side:S.side, zoom:S.zoom, car:S.car, dims:S.dims, foil:S.foil};
+    const L = S.logo;
+    if (L){ const l = {kind:L.kind, name:L.name, aspect:L.aspect, flags:L.flags, colors:L.colors, origin:L.origin, note:L.note};
+      if (L.kind === 'svg'){ l.svg = L.svg; if (L.svgOrig) l.svgOrig = L.svgOrig; if (L.srcText) l.srcText = L.srcText; if (L.traceSrc && L.traceSrc.length < 1.5e6) l.traceSrc = L.traceSrc; }
+      if (L.kind === 'pdf'){ l.pdf = {b64:b64(L.pdf.bytes), crop:L.pdf.crop}; l.preview = L.preview; }
+      if (L.kind === 'raster'){ l.raster = {url:L.raster.url, w:L.raster.w, h:L.raster.h}; if (L.raster.src && L.raster.src.length < 1.5e6) l.raster.src = L.raster.src; }
+      o.logo = l; }
+    let s = JSON.stringify(o); if (s.length > 4.5e6){ delete o.logo; s = JSON.stringify(o); }
+    localStorage.setItem(KEY, s);
+  } catch (e) { /* opslag vol of geblokkeerd: niet erg */ }
+}, 400); }
+function load(){
+  try {
+    const o = JSON.parse(localStorage.getItem(KEY) || 'null'); if (!o) return;
+    Object.assign(S.job, o.job || {}); S.place = o.place || S.place; S.linked = o.linked !== false; S.side = o.side || 'L'; S.zoom = o.zoom || 'deur'; S.car = o.car || S.car; S.dims = {...DEF, ...(o.dims || {})}; S.foil = o.foil || {};
+    if (o.logo){ const l = o.logo; if (l.kind === 'pdf') l.pdf = {bytes:unb64(l.pdf.b64), crop:l.pdf.crop}; S.logo = l; }
+  } catch (e) {}
+}
+
+/* ============================== events ============================== */
+function bind(){
+  const job = ['klant','order','kenteken','opm'];
+  for (const k of job) $('#f-' + k).addEventListener('input', e => { S.job[k] = e.target.value; renderExport(); save(); });
+  $('#s-soort').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; S.job.soort = b.dataset.v; S.thin = null; renderAll(); scheduleThin(); save(); });
+  $('#s-deuren').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; S.job.deuren = b.dataset.v; if (b.dataset.v !== 'LR') S.side = b.dataset.v; renderAll(); save(); });
+  $('#s-side').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; S.side = b.dataset.v; renderAll(); scheduleThin(); save(); });
+  $('#s-zoom').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; S.zoom = b.dataset.v; renderJob(); renderStage(); save(); });
+  $('#f-linked').addEventListener('change', e => { S.linked = e.target.checked; if (S.linked) S.place.R = {...S.place.L}; else if (S.place.L) S.place.R = {...S.place.L}; S.side = 'L'; renderAll(); save(); });
+  const cars = $('#cars');
+  for (const [n, c] of CARS) cars.append(h('button', {type:'button', title:n, 'aria-label':n, 'data-v':c, style:`background:${c}`, onclick:() => { S.car = c; renderJob(); renderStage(); renderChecks(); save(); }}));
+  cars.append(h('input', {type:'color', title:'Eigen kleur', 'aria-label':'Eigen autokleur', value:'#9fcdb2', oninput:e => { S.car = e.target.value; renderJob(); renderStage(); renderChecks(); save(); }}));
+  // bestand
+  const drop = $('#drop');
+  $('#file').addEventListener('change', e => onFile(e.target.files[0]));
+  for (const t of [drop, $('#stagewrap')]){
+    t.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('over'); });
+    t.addEventListener('dragleave', () => drop.classList.remove('over'));
+    t.addEventListener('drop', e => { e.preventDefault(); drop.classList.remove('over'); const f = e.dataTransfer.files[0]; if (f) onFile(f); });
+  }
+  // stage
+  const st = $('#stage');
+  st.addEventListener('pointerdown', onDown); st.addEventListener('pointermove', onMove); st.addEventListener('pointerup', onUp); st.addEventListener('pointercancel', onUp);
+  st.addEventListener('keydown', e => {
+    if (!S.logo) return; const step = e.shiftKey ? 10 : 1, p = {...placeOf(curSide())};
+    if (e.key === 'ArrowLeft') p.u -= step; else if (e.key === 'ArrowRight') p.u += step; else if (e.key === 'ArrowUp') p.v += step; else if (e.key === 'ArrowDown') p.v -= step; else return;
+    e.preventDefault(); setPlace(p); renderStage(); afterPlaceChange();
+  });
+  for (const k of ['w','h','b','l','r']){ const el = $('#p-' + k); el.addEventListener('input', () => onPlaceInput(k, parseFloat(el.value))); el.addEventListener('blur', renderPlaceInputs); }
+  $('#b-hc').addEventListener('click', () => { const p = {...placeOf(curSide())}; p.u = S.dims.W / 2; setPlace(p); renderStage(); afterPlaceChange(); });
+  $('#b-vc').addEventListener('click', () => { const p = {...placeOf(curSide())}; p.v = (S.dims.crU + S.dims.crL) / 2; setPlace(p); renderStage(); afterPlaceChange(); });
+  $('#b-max').addEventListener('click', () => { const m = maxPlace(S.logo.aspect); setPlace({u:m.u, v:m.v, w:Math.floor(m.w)}); renderStage(); afterPlaceChange(); });
+  // omzetten
+  $('#t-close').addEventListener('click', () => { $('#c-trace').classList.add('hidden'); TR.run++; });
+  $('#t-k').addEventListener('change', e => { TR.k = e.target.value; TR.off = new Set(); retrace(true); });
+  $('#t-bgmode').addEventListener('change', e => { TR.bg = e.target.value; retrace(true); });
+  $('#t-corners').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; TR.alpha = +b.dataset.v; segSet('#t-corners', b.dataset.v); retrace(false); });
+  $('#t-noise').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; TR.noise = +b.dataset.v; segSet('#t-noise', b.dataset.v); retrace(false); });
+  $('#t-bg').addEventListener('click', () => { TR.darkbg = !TR.darkbg; $('#t-vec').classList.toggle('dark', TR.darkbg); $('#t-orig').classList.toggle('dark', TR.darkbg); $('#t-bg').textContent = TR.darkbg ? 'Licht' : 'Donker'; });
+  $('#t-use').addEventListener('click', useTrace);
+  // export
+  $('#x-sticker').addEventListener('click', exportSticker);
+  $('#x-svg').addEventListener('click', exportSVG);
+  $('#x-werk').addEventListener('click', exportWerk);
+  $('#x-voorbeeld').addEventListener('click', exportVoorbeeld);
+  $('#x-copy').addEventListener('click', async () => { try { await navigator.clipboard.writeText($('#mail').value); toast('Mailtekst gekopieerd'); } catch (e) { $('#mail').select(); document.execCommand('copy'); toast('Mailtekst gekopieerd'); } });
+  // deurmaten
+  for (const k of ['W','H','crU','crL','marge']) $('#d-' + k).addEventListener('change', e => { const v = parseFloat(e.target.value); if (isFinite(v) && v > 0){ S.dims[k] = v; if (k === 'H') S.dims.top = v + 350; renderAll(); scheduleThin(); save(); } });
+  $('#d-reset').addEventListener('click', () => { S.dims = {...DEF}; renderAll(); save(); toast('Standaardmaten teruggezet'); });
+  $('#b-reset').addEventListener('click', () => {
+    if (!confirm('Alles leegmaken en met een nieuwe opdracht beginnen?')) return;
+    S.job = {klant:'', order:'', kenteken:'', soort:S.job.soort, deuren:'LR', opm:''}; S.logo = null; S.place = {L:null, R:null}; S.linked = true; S.side = 'L'; S.thin = null; S.shares = null; S.foil = {};
+    $('#c-trace').classList.add('hidden'); showErr(null); renderAll(); save();
+  });
+  window.addEventListener('resize', () => renderStage());
+}
+
+load(); bind(); renderAll();
+if (S.logo){ computeShares(); scheduleThin(); }
+window.__S = S; // voor testen
+})();
+</script>
+</body>
+</html>
