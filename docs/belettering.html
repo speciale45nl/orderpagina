@@ -943,6 +943,7 @@ function removeItem(it){
   renderAll(); save();
 }
 function selectItem(id, keepView){
+  if (liveC) endRecolor(liveC.it, liveC.key, liveC.val);
   const it = S.items.find(i => i.id === id); if (!it) return;
   S.active = id; if (!keepView && !onView(it, S.view)) S.view = viewsOf(it)[0];
   hideTraceFor(it); showErr(null); renderAll(); save();
@@ -1662,16 +1663,42 @@ function renderLogoInfo(it){
   }
   if (L.origin === 'omgezet' && L.traceSrc) box.append(h('div', {class:'btns mt'}, h('button', {class:'btn sec sm', type:'button', onclick:() => reopenTrace()}, 'Omzetten aanpassen')));
 }
+// Live kleur wijzigen tijdens het slepen in de kleurkiezer (net als de autokleur): alleen het beeld bijwerken,
+// pas bij loslaten alles netjes omzetten (kleurenlijst, foliekleuren, dunne delen).
+let liveC = null;
+function liveRecolor(it, key, val, hxEl){
+  if (!it.L || it.L.kind !== 'svg') return;
+  if (liveC && (liveC.it !== it || liveC.key !== key)) endRecolor(liveC.it, liveC.key, liveC.val);
+  if (!liveC) liveC = {it, key, base:it.L};
+  liveC.val = val; cancelAnimationFrame(liveC.raf);
+  liveC.raf = requestAnimationFrame(() => {
+    if (!liveC || cur() !== it) return;
+    const base = liveC.base;
+    it.L = {...base, svg:recolorSvg(base.svg, {[key]:val})}; it.rev = (it.rev || 0) + 1;
+    renderStage(); renderItems();
+    const th = $('#logo-info .thumb img'); if (th) th.src = logoHref(it.L);
+    if (hxEl) hxEl.textContent = val;
+  });
+}
+function endRecolor(it, key, val){
+  if (!liveC || liveC.it !== it || liveC.key !== key){ if (val && val !== key) recolor(it, {[key]:val}); return; }
+  cancelAnimationFrame(liveC.raf); it.L = liveC.base; liveC = null;
+  if (key !== '*' && val === key){ renderAll(); return; }
+  recolor(it, {[key]:val});
+}
 function renderColors(it){
-  const box = $('#ed-colors'); box.innerHTML = '';
+  const box = $('#ed-colors');
+  if (liveC && liveC.it === it) return; // niet opnieuw opbouwen terwijl er gesleept wordt
+  box.innerHTML = '';
   if (!it.L || !it.shares || !it.shares.length) return;
   const cl = h('div', {class:'colors'});
   box.append(h('div', {class:'lbl mt'}, it.sharesEstimated ? 'Kleuren (geschat) en foliekleur' : 'Kleuren en foliekleur'), cl);
   for (const c of it.shares.slice(0, 10)){
     const inp = h('input', {type:'text', value:it.foil[c.hex] || '', placeholder:'Foliekleur, bijv. ' + colorName(c.hex), oninput:e => { it.foil[c.hex] = e.target.value; renderExport(); save(); }});
     const editable = it.type === 'logo' && it.L.kind === 'svg';
-    const sq = editable ? h('input', {type:'color', class:'sqc', value:c.hex, title:'Kleur aanpassen', 'aria-label':'Kleur ' + c.hex + ' aanpassen', onchange:e => { if (e.target.value !== c.hex) recolor(it, {[c.hex]:e.target.value}); }}) : h('span', {class:'sq', style:`background:${c.hex}`});
-    cl.append(h('div', {class:'crow'}, sq, h('span', {class:'hx'}, c.hex), inp,
+    const hx = h('span', {class:'hx'}, c.hex);
+    const sq = editable ? h('input', {type:'color', class:'sqc', value:c.hex, title:'Kleur aanpassen', 'aria-label':'Kleur ' + c.hex + ' aanpassen', oninput:e => liveRecolor(it, c.hex, e.target.value, hx), onchange:e => endRecolor(it, c.hex, e.target.value), onblur:e => { if (liveC && liveC.key === c.hex) endRecolor(it, c.hex, e.target.value); }}) : h('span', {class:'sq', style:`background:${c.hex}`});
+    cl.append(h('div', {class:'crow'}, sq, hx, inp,
       h('span', {class:'pc'}, (c.pct * 100).toFixed(c.pct < 0.01 ? 1 : 0).replace('.', ',') + '%'),
       it.type === 'logo' && it.L.kind === 'svg' && it.shares.length > 1 ? h('button', {type:'button', title:'Deze kleur niet plakken', onclick:() => dropColor(c.hex)}, 'Weglaten') : null));
   }
@@ -1682,7 +1709,7 @@ function renderColors(it){
     box.append(h('p', {class:'small muted', style:'margin:8px 0 0'}, 'Klik op een kleurvakje om die kleur te veranderen.'));
     const mono = h('div', {class:'swatches', style:'margin-top:6px'});
     for (const [n, c] of FOILS) mono.append(h('button', {type:'button', title:n, 'aria-label':'Hele logo ' + n.toLowerCase(), style:`background:${c}`, onclick:() => recolor(it, {'*':c})}));
-    mono.append(h('input', {type:'color', title:'Eigen kleur', 'aria-label':'Hele logo in eigen kleur', value:'#111111', onchange:e => recolor(it, {'*':e.target.value})}));
+    mono.append(h('input', {type:'color', title:'Eigen kleur', 'aria-label':'Hele logo in eigen kleur', value:'#111111', oninput:e => liveRecolor(it, '*', e.target.value), onchange:e => endRecolor(it, '*', e.target.value), onblur:e => { if (liveC && liveC.key === '*') endRecolor(it, '*', e.target.value); }}));
     box.append(h('div', {class:'lbl mt'}, 'Hele logo in één kleur'), mono);
     if ((it.shares || []).length > 1) box.append(h('p', {class:'small muted', style:'margin:6px 0 0'}, 'Let op: delen van het logo die op elkaar liggen worden dan één vlak. Laat zo nodig een kleur weg in plaats van hem te veranderen.'));
     if (L.svgOrig) box.append(h('div', {class:'btns mt'}, h('button', {class:'btn sec sm', type:'button', onclick:restoreColors}, 'Oorspronkelijke kleuren terugzetten')));
