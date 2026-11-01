@@ -292,7 +292,7 @@
 <script>
 (function(){
   'use strict';
-  const BUILD='2026-10-29T10:18';
+  const BUILD='2026-11-01T09:35';
   let laatsteCheck=0;
   async function checkVersie(){ // als app op het beginscherm blijft de oude pagina anders hangen
     const nu=Date.now(); if(nu-laatsteCheck<90000) return; laatsteCheck=nu;
@@ -681,7 +681,7 @@
     const nn=isInt()?'':tagVan(o.kenteken,o.meldcode);
     setTop(isInt()?o.klant:autoLabel(o), `<a class="back" href="#" id="back">← Alle orders</a>${nn?`<span class="tagnr" title="Stickernummer op de auto">${esc(nn)}</span>`:''}${isInt()?`<span>order ${esc(o.nummer)}</span>`:(o.type==='los'?`<span>losse interieurbestelling · order ${esc(o.nummer)}</span>`:`<span>${esc(o.model||'')}</span><span>meldcode ${esc(o.meldcode||'—')}</span>`)}${dlO?`<span><b>${deadlineLabel()} ${esc(fmtD(dlO))}</b></span>`:''}`, p);
     const canTick=!!S.db&&!S.readOnly&&S.canWrite!==false, canPhoto=canTick;
-    const specKeys = isS45() ? ['spuitwerk','montage','interieur'] : (S.role==='1stop'?['spuitwerk','montage']:['interieur']);
+    const specKeys = isS45() ? ['spuitwerk','montage','interieur','extern'] : (S.role==='1stop'?['spuitwerk','montage']:['interieur']);
     const spec=(o.opdracht||{});
     const log=zichtbaarLog();
     const openProb=log.filter(e=>e.probleem&&!e.opgelost);
@@ -699,7 +699,7 @@
     h+=`<section class="card"><div class="hd"><h2>${isS45()?'Opdracht':(isInt()?'Deze bestelling':'Deze auto')}</h2><span class="hint">${isInt()?'order '+esc(o.nummer):esc(o.klant)+' · order '+esc(o.nummer)}</span></div><div class="bd">
       <div class="big ${isInt()?'naam':''}">${isInt()?esc(o.klant):esc(autoLabel(o))}</div>
       <div class="meta-row">${isInt()?`<span>order ${esc(o.nummer)}</span>`:(o.type==='los'?`<span>losse interieurbestelling</span>`:`<span>${esc(o.model||'')}</span>${o.basis?`<span>basis ${esc(o.basis)}</span>`:''}`)}${dlO?`<span><b>${deadlineLabel()} ${esc(fmtD(dlO))}</b>${du!==null?' ('+(du<0?'te laat':du+' dagen')+')':''}</span>`:''}</div>
-      ${isS45()?`<ul class="lines">${specKeys.filter(k=>spec[k]&&spec[k].length).map(k=>`<li><b>${k==='spuitwerk'?'Spuitwerk':(k==='montage'?'Montage':'Interieur')}</b>${spec[k].map(esc).join('<br>')}</li>`).join('')}</ul>`:''}
+      ${isS45()?`<ul class="lines">${specKeys.filter(k=>spec[k]&&spec[k].length).map(k=>`<li><b>${({spuitwerk:'Spuitwerk',montage:'Montage',interieur:'Interieur',extern:'Extern (regelt Spéciale45)'})[k]||k}</b>${spec[k].map(esc).join('<br>')}</li>`).join('')}</ul>`:''}
       ${o.referentie&&specKeys.includes('spuitwerk')?`<div class="ref">${esc(o.referentie)}</div>`:''}
       ${o.letop&&!isInt()?`<span class="req">${esc(o.letop)}</span>`:''}${o.letopInterieur&&(isInt()||isS45())?`<span class="req">${esc(o.letopInterieur)}</span>`:''}
       ${wijz.length?`<div class="wijz"><b>Wijzigingen</b>${wijz.map(w=>`<div><span class="meta">✎ ${esc(fmt(w.at))} · </span>${esc(w.tekst)}${isS45()?' <span class="meta">— '+(w.voor||WIJZ_VOOR).map(r=>{ const c=S.checks[wijzId(w,r)]; return c&&c.done?`<span class="ok">${esc(r)} gezien ${esc(fmt(c.at))}</span>`:`<span class="nee">${esc(r)} nog niet gezien</span>`; }).join(', ')+'</span>':(wijzGezien(S.checks,w,S.role)?' <span class="meta ok">gezien</span>':'')}</div>`).join('')}</div>`:''}
