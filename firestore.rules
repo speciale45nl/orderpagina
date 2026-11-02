@@ -34,6 +34,12 @@ service cloud.firestore {
       allow update, delete: if beheer();
     }
     match /voorraad/{id} { allow read, write: if ingelogd(); }
+    // Telefoons die meldingen willen (token per telefoon, met de rol); de server stuurt hiermee de pushberichten
+    match /tokens/{token} {
+      allow read: if beheer();
+      allow create, update: if ingelogd() && request.resource.data.uid == request.auth.uid && request.resource.data.rol is string;
+      allow delete: if beheer() || (ingelogd() && resource.data.uid == request.auth.uid);
+    }
     // Voorraadlijst (kopie van het voorraadbestand, met klant- en betaalinfo): alleen Spéciale45
     match /lijsten/{id} { allow read, write: if beheer(); }
     match /{document=**} { allow read, write: if false; }

@@ -1,0 +1,11 @@
+{
+  "name": "orderpagina-meldingen",
+  "description": "Pushmeldingen voor de orderpagina van Spéciale45 (Cloud Functions, Firestore-triggers)",
+  "private": true,
+  "main": "index.js",
+  "engines": { "node": "22" },
+  "dependencies": {
+    "firebase-admin": "^13.0.0",
+    "firebase-functions": "^6.3.0"
+  }
+}

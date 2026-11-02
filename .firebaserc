@@ -1,1 +1,3 @@
-{ "projects": { "default": "speciale45-orders" } }
+{
+  "projects": { "default": "speciale45-orders" }
+}

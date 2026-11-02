@@ -10,11 +10,13 @@
 <meta name="format-detection" content="telephone=no">
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" href="icon-180.png">
+<link rel="manifest" href="manifest.webmanifest">
 <title>Orderpagina Spéciale45</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging-compat.js"></script>
 <script src="firebase-config.js"></script>
 <style>
   /* Layout: wie-ben-je als eerste scherm, daarna één kolom: kop met voortgang, opdracht, de eigen stappen, opmerkingen. */
@@ -68,6 +70,11 @@
   .prog-label{font-size:13px;opacity:.9;display:flex;justify-content:space-between;gap:8px}
 
   .banner{margin:14px 0 0;padding:10px 14px;border-radius:10px;font-size:14px;background:var(--warn-bg)}
+  .meldrij{margin-top:12px;padding:12px 14px;border-radius:12px;background:var(--paper);border:1px solid var(--line-strong);display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:14.5px}
+  .meldrij .tekst{flex:1 1 180px}.meldrij .tekst small{display:block;color:var(--muted);margin-top:2px}
+  .meldrij .later{background:none;border:0;color:var(--muted);text-decoration:underline;font:inherit;font-size:13.5px;cursor:pointer;padding:6px}
+  .melding{margin:12px 0 0;padding:12px 14px;border-radius:12px;background:var(--accent);color:var(--accent-ink);box-shadow:var(--shadow);display:flex;gap:10px;align-items:center;cursor:pointer}
+  .melding b{display:block}.melding span{flex:1;font-size:14px}.melding .x{font-size:20px;padding:0 4px;opacity:.8}
 
   .back{display:inline-flex;align-items:center;gap:6px;text-decoration:none;font-size:15px;font-weight:700;min-height:40px;padding:6px 16px 6px 12px;border-radius:12px;background:var(--top-ink);color:var(--top);box-shadow:0 1px 2px rgba(0,0,0,.25)}
   .back[hidden],.brand[hidden],.top .sub[hidden]{display:none}
@@ -299,7 +306,7 @@
 <script>
 (function(){
   'use strict';
-  const BUILD='2026-11-02T15:31';
+  const BUILD='2026-11-02T16:19';
   let laatsteCheck=0;
   async function checkVersie(){ // als app op het beginscherm blijft de oude pagina anders hangen
     const nu=Date.now(); if(nu-laatsteCheck<90000) return; laatsteCheck=nu;
@@ -313,7 +320,7 @@
   const S={ db:null,authReady:false,canWrite:true,readOnly:false,loginRol:'',
             role:'',name:'',uid:null,
             orders:[],order:null,orderId:null, checks:{},photos:[],log:[], unsub:[], qrOpen:false,
-            aanmeldingen:[], rollen:{}, toggled:{}, voorraad:{}, tel:{}, route:null, routeKey:'', tags:{}, voertuigen:{}, tagDoc:undefined, view:'', tab:(function(){ try{ return localStorage.getItem('s45tab')||'orders'; }catch(e){ return 'orders'; } })(), lijst:null, zoekV:'', open:{}, fotoWeg:null, bewerk:null, intFilter:'', nieuwLos:false, nieuwKlus:false, vzFilter:'', nieuwAuto:false, voertuigenGeladen:false };
+            aanmeldingen:[], rollen:{}, toggled:{}, voorraad:{}, tel:{}, route:null, routeKey:'', tags:{}, voertuigen:{}, tagDoc:undefined, view:'', tab:(function(){ try{ return localStorage.getItem('s45tab')||'orders'; }catch(e){ return 'orders'; } })(), lijst:null, zoekV:'', open:{}, fotoWeg:null, bewerk:null, intFilter:'', nieuwLos:false, nieuwKlus:false, vzFilter:'', nieuwAuto:false, voertuigenGeladen:false, tokens:null, meldBezig:false };
   const kKey=k=>String(k||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
   const tagVan=(kenteken,meldcode)=>{ const key=kKey(kenteken); for(const nn in S.tags){ const t=S.tags[nn]; if(key&&kKey(t.kenteken)===key) return nn; if(!key&&meldcode&&!kKey(t.kenteken)&&t.meldcode===meldcode) return nn; } return ''; };
   const autoLabel=o=>o.kenteken||(o.meldcode?'Meldcode '+o.meldcode:(o.klant||'—'));
@@ -447,6 +454,7 @@
         <div class="rij3"><label>Klaar vóór <input type="date" name="deadline"></label></div>
         <label>Let op (optioneel) <input name="letop" placeholder="bv. kleur volgens referentiefoto"></label>
         <div class="logbtns"><button type="submit" class="btn primary">Klus aanmaken</button><button type="button" class="btn" id="nieuwKlusWeg">Annuleren</button></div><div class="hint">Referentiefoto's voeg je daarna toe op de klus zelf.</div></form>`; }
+    h += meldBanner();
     h += isInt()?'':`<form class="snel" id="snelForm"><label for="snelTag">Meldcode van de auto <span class="hint" style="font-weight:500">(4 cijfers, sticker in de deurstijl)</span></label><input id="snelTag" inputmode="numeric" placeholder="0240" aria-label="Meldcode, kenteken of stickernummer"><button type="submit" class="btn primary">Open</button></form>`;
     const li=o=>{ const st=mySteps(o), p=progress(st,o._checks||{}), x=o._st, dl=mijnDeadline(o), du=daysUntil(dl);
       const pills=[];
@@ -476,7 +484,8 @@
     if(S.role==='1stop'||isS45()) h+=voorraadKaart();
     if(isS45()) h+=`<section class="card"><div class="hd"><h2>Beheer</h2><span class="hint">Orders en auto's uit de chat inlezen</span></div><div class="bd">
       <textarea id="importJson" placeholder='Plak hier de tekst die Claude je geeft (begint met { "orders": … )' style="width:100%;min-height:90px;border:1px solid var(--line-strong);border-radius:10px;padding:9px 12px;font:inherit;font-size:16px;background:var(--paper);color:var(--ink)"></textarea>
-      <div class="logbtns"><button type="button" class="btn primary" id="importBtn">Inlezen</button><span id="importMsg" class="hint"></span></div></div></section>`;
+      <div class="logbtns"><button type="button" class="btn primary" id="importBtn">Inlezen</button><span id="importMsg" class="hint"></span></div>
+      ${S.tokens?`<div class="hint" style="margin-top:12px">Meldingen aan op: ${ROLES.map(r=>`${esc(r)} ${S.tokens.filter(t=>t.rol===r).length}×`).join(' · ')} telefoon(s)</div>`:''}</div></section>`;
     if(false){
       const rows=[];
       h+=`<section class="card toegang"><div class="hd"><h2>Toegang</h2><span class="hint">Wie de link opent, verschijnt hier. Geef een rol.</span></div>
@@ -880,6 +889,61 @@
     else toast('Opslaan mislukt, probeer opnieuw.');
   }
 
+  // ── meldingen op de telefoon (web push via Firebase) ──
+  const isIOS=()=>/iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+  const standalone=()=>!!(navigator.standalone||(window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches));
+  function meldKan(){ try{ return !!self.VAPID_KEY && 'Notification' in window && 'serviceWorker' in navigator && 'PushManager' in window && !!(firebase.messaging&&firebase.messaging.isSupported&&firebase.messaging.isSupported()); }catch(e){ return false; } }
+  function meldStatus(){ // aan | uit | geblokkeerd | beginscherm (iPhone: eerst als app op het beginscherm) | nee (kan niet)
+    if(!self.VAPID_KEY) return 'nee';
+    if(isIOS()&&!standalone()) return 'beginscherm';
+    if(!meldKan()) return 'nee';
+    const p=Notification.permission; return p==='granted'?'aan':(p==='denied'?'geblokkeerd':'uit');
+  }
+  let swReg=null;
+  async function meldSW(){ if(!swReg) swReg=await navigator.serviceWorker.register('firebase-messaging-sw.js'); return swReg; }
+  async function meldToken(stil){ // token ophalen en bij de rol bewaren, zodat de server weet naar welke telefoons een melding moet
+    if(!S.role||!S.db||!meldKan()||Notification.permission!=='granted') return false;
+    try{
+      const reg=await meldSW(); const token=await firebase.messaging().getToken({vapidKey:self.VAPID_KEY,serviceWorkerRegistration:reg});
+      if(!token) return false;
+      let oud=''; try{ oud=localStorage.getItem('s45meldToken')||''; }catch(e){}
+      if(oud&&oud!==token){ try{ await S.db.doc('tokens/'+oud).delete(); }catch(e){} }
+      await S.db.doc('tokens/'+token).set({rol:S.role,uid:S.uid,at:new Date().toISOString(),ua:navigator.userAgent.slice(0,160),app:standalone()},{merge:true});
+      try{ localStorage.setItem('s45meldToken',token); localStorage.setItem('s45meldAt',String(Date.now())); }catch(e){}
+      meldLuister(); return true;
+    }catch(err){ if(!stil) toast('Meldingen aanzetten lukt niet: '+(err&&err.message||err)); return false; }
+  }
+  async function meldAan(){ // knop "Meldingen aanzetten" (moet vanuit een tik gebeuren)
+    if(S.meldBezig||!meldKan()) return; S.meldBezig=true;
+    try{
+      let p=Notification.permission;
+      if(p!=='granted'){ p=await new Promise(res=>{ try{ const r=Notification.requestPermission(x=>res(x)); if(r&&r.then) r.then(res); }catch(e){ res('default'); } }); }
+      if(p!=='granted'){ toast(p==='denied'?'Meldingen zijn geblokkeerd. Zet ze aan in de instellingen van je telefoon.':'Niet aangezet.'); return; }
+      toast('Even geduld…'); const ok=await meldToken(false); if(ok) toast('Meldingen staan aan 🔔');
+    } finally { S.meldBezig=false; render(); }
+  }
+  function meldVerversen(){ // bij openen: token stilletjes vernieuwen (hooguit 1× per 12 uur)
+    if(!S.role||meldStatus()!=='aan') return; let at=0; try{ at=+localStorage.getItem('s45meldAt')||0; }catch(e){}
+    meldLuister(); if(Date.now()-at>12*3600e3) meldToken(true);
+  }
+  function meldLuister(){ // melding terwijl de app open staat: balkje bovenin
+    if(S._meldLuister||!meldKan()||Notification.permission!=='granted') return; S._meldLuister=true;
+    try{ firebase.messaging().onMessage(p=>{ const n=(p&&p.notification)||{}, d=(p&&p.data)||{}; toonMelding(n.title||'Melding',n.body||'',d.nr||''); }); }catch(e){}
+  }
+  function toonMelding(titel,tekst,nr){
+    const b=$('banners'); const el=document.createElement('div'); el.className='melding'; el.setAttribute('role','status');
+    el.innerHTML=`<span><b>${esc(titel)}</b>${esc(tekst)}</span><span class="x" aria-label="Sluiten">×</span>`;
+    el.addEventListener('click',e=>{ el.remove(); if(nr&&!e.target.closest('.x')) location.hash=nr; });
+    b.prepend(el); setTimeout(()=>el.remove(),15000);
+  }
+  function meldBanner(){ // uitnodiging bovenaan de lijst; "Later" verbergt 'm een paar dagen
+    const st=meldStatus(); if(st==='aan'||st==='nee') return '';
+    let later=0; try{ later=+localStorage.getItem('s45meldLater')||0; }catch(e){} if(Date.now()-later<3*864e5) return '';
+    if(st==='uit') return `<div class="meldrij"><div class="tekst">🔔 Seintje op je telefoon bij nieuwe orders en wijzigingen?</div><button type="button" class="btn primary" id="meldAanBtn">Meldingen aanzetten</button><button type="button" class="later" data-meldlater="1">Later</button></div>`;
+    if(st==='beginscherm') return `<div class="meldrij"><div class="tekst">🔔 Meldingen bij nieuwe orders?<small>Zet deze pagina eerst op je beginscherm: tik onderin op <b>Delen</b> → <b>Zet op beginscherm</b>. Open 'm daar en tik op "Meldingen aanzetten".</small></div><button type="button" class="later" data-meldlater="1">Later</button></div>`;
+    return `<div class="meldrij"><div class="tekst">🔕 Meldingen zijn geblokkeerd voor deze app.<small>Aanzetten: Instellingen van je telefoon → Meldingen → Orders S45 (of Safari/Chrome).</small></div><button type="button" class="later" data-meldlater="1">Verberg</button></div>`;
+  }
+
   // ── data ──
   function clearSubs(){ S.unsub.forEach(u=>{ try{u();}catch(e){} }); S.unsub=[]; }
   function subscribe(){
@@ -893,6 +957,7 @@
     }
     if(!S.orderId){
       if(isS45()) S.unsub.push(S.db.collection('voertuigen').onSnapshot(snap=>{ const m={}; snap.docs.forEach(d=>{ if(d.exists) m[d.id]=Object.assign({key:d.id},d.data()); }); S.voertuigen=m; S.voertuigenGeladen=true; render(); },()=>{ S.voertuigenGeladen=true; render(); }));
+      if(isS45()) S.unsub.push(S.db.collection('tokens').onSnapshot(snap=>{ S.tokens=snap.docs.filter(d=>d.exists).map(d=>d.data()); render(); },()=>{}));
       S.unsub.push(S.db.collection('orders').onSnapshot(snap=>{
         const seen=new Set(S.orders.map(o=>o.id));
         S.orders=snap.docs.filter(d=>d.exists).map(d=>{ const prev=S.orders.find(x=>x.id===d.id)||{}; return Object.assign({id:d.id,_checks:prev._checks||{},_log:prev._log||[],_photos:prev._photos||[],_sub:prev._sub},d.data()); });
@@ -927,10 +992,13 @@
     S.authReady=true; S.uid=u?u.uid:null; const rol=u?rolVanEmail(u.email||''):'';
     const changed=rol!==S.role; S.role=rol; if(!rol) clearSubs();
     if(changed) subscribe(); render();
+    if(rol) setTimeout(meldVerversen,1500);
   });
   document.addEventListener('click',async e=>{
     const rb=e.target.closest('.login button[data-rol]'); if(rb){ S.loginRol=rb.dataset.rol; render(); return; }
     if(e.target.closest('#loginBtn')){ await login(); return; }
+    if(e.target.closest('#meldAanBtn')){ meldAan(); return; }
+    if(e.target.closest('[data-meldlater]')){ try{ localStorage.setItem('s45meldLater',String(Date.now())); }catch(err){} render(); return; }
     if(e.target.closest('#rolTag')){ const now=Date.now(); if(S._uit&&now-S._uit<3000){ S._uit=0; try{ await firebase.auth().signOut(); toast('Uitgelogd'); }catch(err){} } else { S._uit=now; toast('Nog een keer tikken om uit te loggen'); } return; }
   });
   document.addEventListener('keydown',e=>{ if(e.key==='Enter'&&e.target&&e.target.id==='pin') login(); });
