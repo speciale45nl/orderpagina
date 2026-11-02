@@ -178,6 +178,12 @@
   .klaarblok{margin-top:16px;border:2px solid var(--ok);border-radius:14px;background:var(--paper);box-shadow:var(--shadow);overflow:hidden}
   .klaarblok .hd{background:var(--ok-bg);color:var(--ok);font-weight:700;padding:12px 16px;font-size:16px}
   .klaarblok .bd{padding:12px 16px 14px}
+  .refs{margin-top:10px;padding-top:10px;border-top:1px solid var(--line)} .refs>b{display:block;font-size:12.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+  .refs .grid{display:flex;gap:10px;flex-wrap:wrap} .refs .ph{width:112px;height:112px;border-radius:8px;overflow:hidden;border:1px solid var(--line);background:var(--bg);position:relative} .refs .ph img{width:100%;height:100%;object-fit:cover;display:block;cursor:zoom-in} .refs .ph span{position:absolute;left:0;right:0;bottom:0;font-size:10.5px;padding:2px 5px;background:rgba(0,0,0,.55);color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .refs .ph .weg{position:absolute;top:3px;right:3px;width:26px;height:26px;border-radius:50%;border:0;background:rgba(0,0,0,.65);color:#fff;font-size:18px;line-height:26px;padding:0;cursor:pointer} .refs .ph .bevestig{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:rgba(0,0,0,.72)} .refs .ph .bevestig button{border:0;border-radius:8px;padding:5px 12px;font:inherit;font-size:13px;font-weight:700;cursor:pointer} .refs .ph .bevestig .ja{background:var(--bad);color:#fff} .refs .ph .bevestig .nee{background:#fff;color:#222}
+  .refs .refknoppen{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px} .refs .refknoppen .btn{min-height:40px;padding:6px 12px;font-size:13.5px}
+  .photos .ph img,.klaarblok .grid img{cursor:zoom-in}
+  .lightbox{display:none;position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.92);align-items:center;justify-content:center;flex-direction:column;gap:10px;padding:16px;cursor:zoom-out} .lightbox.open{display:flex} .lightbox img{max-width:100%;max-height:85vh;object-fit:contain;border-radius:8px} .lightbox span{color:#fff;font-size:13px;opacity:.8}
   .klaarblok .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;margin:8px 0 12px}
   .klaarblok .grid img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px;border:1px solid var(--line);display:block}
   .klaarblok .grid span{display:block;font-size:11.5px;color:var(--muted);margin-top:2px}
@@ -287,12 +293,13 @@
   <div id="banners"></div>
   <main id="main"><div class="empty">Laden…</div></main>
 </div>
+<div class="lightbox" id="lightbox" role="dialog" aria-label="Foto groot"><img src="" alt="Foto groot"><span>Tik om te sluiten</span></div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
 (function(){
   'use strict';
-  const BUILD='2026-11-01T09:35';
+  const BUILD='2026-11-02T15:29';
   let laatsteCheck=0;
   async function checkVersie(){ // als app op het beginscherm blijft de oude pagina anders hangen
     const nu=Date.now(); if(nu-laatsteCheck<90000) return; laatsteCheck=nu;
@@ -306,7 +313,7 @@
   const S={ db:null,authReady:false,canWrite:true,readOnly:false,loginRol:'',
             role:'',name:'',uid:null,
             orders:[],order:null,orderId:null, checks:{},photos:[],log:[], unsub:[], qrOpen:false,
-            aanmeldingen:[], rollen:{}, toggled:{}, voorraad:{}, tel:{}, route:null, routeKey:'', tags:{}, voertuigen:{}, tagDoc:undefined, view:'', tab:(function(){ try{ return localStorage.getItem('s45tab')||'orders'; }catch(e){ return 'orders'; } })(), lijst:null, zoekV:'', open:{}, fotoWeg:null, bewerk:null, intFilter:'', nieuwLos:false, vzFilter:'', nieuwAuto:false, voertuigenGeladen:false };
+            aanmeldingen:[], rollen:{}, toggled:{}, voorraad:{}, tel:{}, route:null, routeKey:'', tags:{}, voertuigen:{}, tagDoc:undefined, view:'', tab:(function(){ try{ return localStorage.getItem('s45tab')||'orders'; }catch(e){ return 'orders'; } })(), lijst:null, zoekV:'', open:{}, fotoWeg:null, bewerk:null, intFilter:'', nieuwLos:false, nieuwKlus:false, vzFilter:'', nieuwAuto:false, voertuigenGeladen:false };
   const kKey=k=>String(k||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
   const tagVan=(kenteken,meldcode)=>{ const key=kKey(kenteken); for(const nn in S.tags){ const t=S.tags[nn]; if(key&&kKey(t.kenteken)===key) return nn; if(!key&&meldcode&&!kKey(t.kenteken)&&t.meldcode===meldcode) return nn; } return ''; };
   const autoLabel=o=>o.kenteken||(o.meldcode?'Meldcode '+o.meldcode:(o.klant||'—'));
@@ -430,9 +437,16 @@
     if(isS45()&&S.tab==='voorraad'){ renderVoorraad(main); return; }
     if(isS45()&&S.tab==='interieur'){ renderInterieur(main); return; }
     setTop('Orders', isS45()?'Alle auto\'s in bewerking':'Auto\'s met werk voor jou', null);
-    let list=S.orders.filter(o=>mySteps(o).length&&!(isS45()&&o.type==='los')).map(o=>Object.assign({_st:statusVan(o)},o));
+    let list=S.orders.filter(o=>mySteps(o).length&&!(isS45()&&o.type==='los'&&o.los!=='1stop')).map(o=>Object.assign({_st:statusVan(o)},o));
     list.sort((a,b)=>(b._st.open-a._st.open)||((b._st.controle?1:0)-(a._st.controle?1:0))||((daysUntil(a.deadline)??9999)-(daysUntil(b.deadline)??9999)));
     let h = isS45()?tabsHtml():'';
+    if(isS45()){ h+=`<div class="zoekrij" style="justify-content:flex-end;margin-top:10px"><button type="button" class="btn" id="nieuwKlusBtn">+ Losse klus voor 1stop</button></div>`;
+      if(S.nieuwKlus) h+=`<form class="bewerk nieuw vz" id="nieuwKlusForm" style="margin-top:8px"><b>Losse klus voor 1stop</b>
+        <label>Voor wie <input name="voor" placeholder="bv. JVK"></label>
+        <label>Wat moet er gebeuren, één regel per onderdeel <textarea name="items" rows="3" placeholder="4× Fiat wieldop: witte rand spuiten in Sera blue"></textarea></label>
+        <div class="rij3"><label>Klaar vóór <input type="date" name="deadline"></label></div>
+        <label>Let op (optioneel) <input name="letop" placeholder="bv. kleur volgens referentiefoto"></label>
+        <div class="logbtns"><button type="submit" class="btn primary">Klus aanmaken</button><button type="button" class="btn" id="nieuwKlusWeg">Annuleren</button></div><div class="hint">Referentiefoto's voeg je daarna toe op de klus zelf.</div></form>`; }
     h += isInt()?'':`<form class="snel" id="snelForm"><label for="snelTag">Meldcode van de auto <span class="hint" style="font-weight:500">(4 cijfers, sticker in de deurstijl)</span></label><input id="snelTag" inputmode="numeric" placeholder="0240" aria-label="Meldcode, kenteken of stickernummer"><button type="submit" class="btn primary">Open</button></form>`;
     const li=o=>{ const st=mySteps(o), p=progress(st,o._checks||{}), x=o._st, dl=mijnDeadline(o), du=daysUntil(dl);
       const pills=[];
@@ -452,7 +466,7 @@
       if(isS45()&&x.dagen!==null&&x.dagen>=3) pills.push(`<span class="pill todo">${x.dagen} dagen stil</span>`);
       const nn=isInt()?'':tagVan(o.kenteken,o.meldcode);
       return `<li><a href="#${esc(o.nummer)}"><div class="row"><span class="klant">${nn?`<span class="tagnr">${esc(nn)}</span>`:''}${isInt()?esc(o.klant):esc(autoLabel(o))+' · '+esc(o.model||'')}</span></div>
-        <div class="sub">${isInt()?'order '+esc(o.nummer):esc(o.klant)+' · meldcode '+esc(o.meldcode||'—')+' · order '+esc(o.nummer)}</div>
+        <div class="sub">${isInt()?'order '+esc(o.nummer):(o.type==='los'?'losse klus · order '+esc(o.nummer):esc(o.klant)+' · meldcode '+esc(o.meldcode||'—')+' · order '+esc(o.nummer))}</div>
         <div class="flags">${pills.join('')}</div>
         <div class="mini">${p.states.map((d,i)=>`<span class="${d?'done':(i===p.cur?'cur':'')}"></span>`).join('')}</div></a></li>`; };
     const klaarVoorMij=o=>{ const p=progress(mySteps(o),o._checks||{}); return p.cur<0||(isS45()&&o._st.afgeleverd); };
@@ -536,6 +550,15 @@
     if(o.type==='los') fase=(done&&chk('o-ontvangen'))?'klaar':'los'; else if(afgeleverd) fase='klaar'; else if(done&&chk('m-doos')) fase='ontvangen'; else if(done||chk('i-doos')) fase='verstuurd'; else if(blocked) fase='bestellen'; else if(voorkapWacht) fase='voorkap'; else fase='bezig';
     const acts=items.map(i=>c[i.id]&&c[i.id].at).filter(Boolean).sort();
     return {st,items,n,done,blocked,voorkapWacht,fase,last:acts[acts.length-1]||null};
+  }
+  function volgendKlusNummer(){ let m=70000; S.orders.forEach(o=>{ const n=parseInt(o.nummer,10); if(n>=70000&&n<79999&&n>m) m=n; }); return String(m+1); }
+  async function nieuweLosseKlus(form){
+    const fd=new FormData(form); const voor=String(fd.get('voor')||'').trim()||'Losse klus'; const regels=String(fd.get('items')||'').split('\n').map(x=>x.trim()).filter(Boolean); const letop=String(fd.get('letop')||'').trim(); const deadline=String(fd.get('deadline')||'');
+    if(!regels.length){ toast('Typ minstens één regel.'); return; }
+    const nr=volgendKlusNummer();
+    const o={nummer:nr,type:'los',los:'1stop',aangemaakt:new Date().toISOString().slice(0,10),klant:voor,kenteken:'',meldcode:'',model:'Losse klus',basis:'',deadline,opdracht:{spuitwerk:regels,montage:[],interieur:[]},referentie:'',letop,letopInterieur:'',
+      stappen:[{id:'klus',titel:'Klus',wie:'1stop',foto:true,items:regels.map((t,i)=>({id:'c-'+(i+1),tekst:t}))},{id:'klaar',titel:'Klaar',wie:'1stop',foto:false,vereistFotoVan:['klus'],items:[{id:'k-klaar',tekst:'Alles nagelopen en gefotografeerd, klus is klaar'}]},{id:'aflevering-regelen',titel:'Afhandelen',wie:'Spéciale45',foto:false,vereistStappen:['klaar'],items:[{id:'r-fotos',tekst:"Foto's van 1stop gecontroleerd (akkoord)"},{id:'r-factuur',tekst:'Gefactureerd'},{id:'r-datum',tekst:'Opgehaald of geleverd aan '+voor}]}]};
+    try{ await S.db.doc('orders/'+nr).set(o); S.nieuwKlus=false; toast('Losse klus '+nr+' aangemaakt'); location.hash='#'+nr; }catch(err){ fail(err); }
   }
   function volgendLosNummer(){ let m=80000; S.orders.forEach(o=>{ const n=parseInt(o.nummer,10); if(n>=80000&&n<89999&&n>m) m=n; }); return String(m+1); }
   function renderInterieur(main){
@@ -679,7 +702,7 @@
     const bezig=ROLES.map(w=>curVoor(o,S.checks,S.photos,w)).filter(Boolean), nuIds=new Set(bezig.filter(b=>!b.locked).map(b=>b.id));
     if(isS45()&&p.cur>=0){ const l=bezig.filter(b=>!b.locked).map(b=>b.titel); if(l.length) p.label=l.join(' + '); }
     const nn=isInt()?'':tagVan(o.kenteken,o.meldcode);
-    setTop(isInt()?o.klant:autoLabel(o), `<a class="back" href="#" id="back">← Alle orders</a>${nn?`<span class="tagnr" title="Stickernummer op de auto">${esc(nn)}</span>`:''}${isInt()?`<span>order ${esc(o.nummer)}</span>`:(o.type==='los'?`<span>losse interieurbestelling · order ${esc(o.nummer)}</span>`:`<span>${esc(o.model||'')}</span><span>meldcode ${esc(o.meldcode||'—')}</span>`)}${dlO?`<span><b>${deadlineLabel()} ${esc(fmtD(dlO))}</b></span>`:''}`, p);
+    setTop(isInt()?o.klant:autoLabel(o), `<a class="back" href="#" id="back">← Alle orders</a>${nn?`<span class="tagnr" title="Stickernummer op de auto">${esc(nn)}</span>`:''}${isInt()?`<span>order ${esc(o.nummer)}</span>`:(o.type==='los'?`<span>${o.los==='1stop'?'losse klus':'losse interieurbestelling'} · order ${esc(o.nummer)}</span>`:`<span>${esc(o.model||'')}</span><span>meldcode ${esc(o.meldcode||'—')}</span>`)}${dlO?`<span><b>${deadlineLabel()} ${esc(fmtD(dlO))}</b></span>`:''}`, p);
     const canTick=!!S.db&&!S.readOnly&&S.canWrite!==false, canPhoto=canTick;
     const specKeys = isS45() ? ['spuitwerk','montage','interieur','extern'] : (S.role==='1stop'?['spuitwerk','montage']:['interieur']);
     const spec=(o.opdracht||{});
@@ -692,15 +715,18 @@
     if(!isS45()){ const mijn=bezig.find(b=>b.wie===S.role); if(p.cur<0) h+=`<div class="nudoen">✓ Jouw werk aan deze auto is klaar</div>`; else if(mijn&&!mijn.locked){ const st=steps.find(x=>x.id===mijn.id), n=(st.items||[]).filter(i=>S.checks[i.id]&&S.checks[i.id].done).length; h+=`<div class="nudoen" data-scroll="${esc(mijn.id)}" role="button"><span>▶</span><span>Nu doen: ${esc(mijn.titel)}<small>${n} van ${(st.items||[]).length} punten afgevinkt — tik hier om ernaartoe te gaan</small></span></div>`; } else if(mijn&&mijn.locked) h+=`<div class="nudoen"><span>⏸</span><span>Even wachten<small>${esc(mijn.titel)} kan pas na ${esc((steps.find(x=>x.id===mijn.id).vereistFotoVan||[]).length?'de foto\'s':'de vorige stap van een ander')}</small></span></div>`; }
     if(isS45()){ const kl=(o.stappen||[]).find(x=>x.id==='klaar'), rg=(o.stappen||[]).find(x=>x.id==='aflevering-regelen');
       if(kl&&rg&&stepDone(kl,S.checks)&&!stepDone(rg,S.checks)){ const ak=rg.items&&rg.items[0], c=ak&&S.checks[ak.id], gegeven=!!(c&&c.done);
-        h+=`<div class="klaarblok"><div class="hd">✓ 1stop meldt deze auto klaar — controleer de foto's</div><div class="bd">
-          ${S.photos.length?`<div class="grid">${S.photos.map(f=>`<div><img src="${esc(f.data||f.url||'')}" alt="Foto" loading="lazy"><span>${esc(stapNaam(o,f.stap))} · ${esc(fmt(f.at))}</span></div>`).join('')}</div>`:'<div class="hint">Geen foto\'s gevonden.</div>'}
+        h+=`<div class="klaarblok"><div class="hd">✓ 1stop meldt ${o.type==='los'?'deze klus':'deze auto'} klaar — controleer de foto's</div><div class="bd">
+          ${S.photos.filter(f=>f.stap!=='ref').length?`<div class="grid">${S.photos.filter(f=>f.stap!=='ref').map(f=>`<div><img src="${esc(f.data||f.url||'')}" alt="Foto" loading="lazy" data-groot="${esc(f.id)}"><span>${esc(stapNaam(o,f.stap))} · ${esc(fmt(f.at))}</span></div>`).join('')}</div>`:'<div class="hint">Geen foto\'s gevonden.</div>'}
           ${gegeven?`<span class="pill ok">Akkoord gegeven · ${esc(fmt(c.at))}</span> <span class="hint">Nu nog: tenaamstelling, restbetaling en afleverdag (stap hieronder).</span>`:(ak&&canTick?`<button type="button" class="btn ok" data-akkoord="${esc(ak.id)}">Akkoord — foto's kloppen met de opdracht</button> <span class="hint">Klopt er iets niet? Stuur onderaan een opmerking of meld een probleem; 1stop kan pas afleveren na jouw akkoord.</span>`:'')}
         </div></div>`; } }
-    h+=`<section class="card"><div class="hd"><h2>${isS45()?'Opdracht':(isInt()?'Deze bestelling':'Deze auto')}</h2><span class="hint">${isInt()?'order '+esc(o.nummer):esc(o.klant)+' · order '+esc(o.nummer)}</span></div><div class="bd">
+    h+=`<section class="card"><div class="hd"><h2>${isS45()?'Opdracht':(isInt()?'Deze bestelling':(o.type==='los'?'Deze klus':'Deze auto'))}</h2><span class="hint">${isInt()?'order '+esc(o.nummer):esc(o.klant)+' · order '+esc(o.nummer)}</span></div><div class="bd">
       <div class="big ${isInt()?'naam':''}">${isInt()?esc(o.klant):esc(autoLabel(o))}</div>
-      <div class="meta-row">${isInt()?`<span>order ${esc(o.nummer)}</span>`:(o.type==='los'?`<span>losse interieurbestelling</span>`:`<span>${esc(o.model||'')}</span>${o.basis?`<span>basis ${esc(o.basis)}</span>`:''}`)}${dlO?`<span><b>${deadlineLabel()} ${esc(fmtD(dlO))}</b>${du!==null?' ('+(du<0?'te laat':du+' dagen')+')':''}</span>`:''}</div>
+      <div class="meta-row">${isInt()?`<span>order ${esc(o.nummer)}</span>`:(o.type==='los'?`<span>${o.los==='1stop'?'losse klus':'losse interieurbestelling'}</span>`:`<span>${esc(o.model||'')}</span>${o.basis?`<span>basis ${esc(o.basis)}</span>`:''}`)}${dlO?`<span><b>${deadlineLabel()} ${esc(fmtD(dlO))}</b>${du!==null?' ('+(du<0?'te laat':du+' dagen')+')':''}</span>`:''}</div>
       ${isS45()?`<ul class="lines">${specKeys.filter(k=>spec[k]&&spec[k].length).map(k=>`<li><b>${({spuitwerk:'Spuitwerk',montage:'Montage',interieur:'Interieur',extern:'Extern (regelt Spéciale45)'})[k]||k}</b>${spec[k].map(esc).join('<br>')}</li>`).join('')}</ul>`:''}
       ${o.referentie&&specKeys.includes('spuitwerk')?`<div class="ref">${esc(o.referentie)}</div>`:''}
+      ${(()=>{ const refs=S.photos.filter(f=>f.stap==='ref'&&(isS45()||!f.voor||f.voor==='alle'||f.voor===S.role)); if(!refs.length&&!isS45()) return '';
+        return `<div class="refs"><b>Referentiefoto's${isS45()?' <span class="hint">(kleur, voorbeeld, detail)</span>':''}</b>${refs.length?`<div class="grid">${refs.map(f=>{ const mag=canTick&&(isS45()||f.uid===S.uid); const vraag=S.fotoWeg===f.id; return `<div class="ph ${vraag?'vraag':''}"><img src="${esc(f.data||'')}" alt="Referentiefoto" loading="lazy" data-groot="${esc(f.id)}"><span>${esc(f.omschrijving||(f.voor&&f.voor!=='alle'?'voor '+f.voor:'voor iedereen'))}</span>${mag&&!vraag?`<button type="button" class="weg" data-fotoweg="${esc(f.id)}" aria-label="Verwijderen">×</button>`:''}${vraag?`<div class="bevestig"><button type="button" class="ja" data-fotoja="${esc(f.id)}">Weg</button><button type="button" class="nee" data-fotonee="1">Nee</button></div>`:''}</div>`; }).join('')}</div><div class="hint">Tik op een foto om hem groot te zien.</div>`:'<div class="hint">Nog geen referentiefoto\'s.</div>'}
+        ${isS45()&&canPhoto?`<div class="refknoppen"><label class="btn photo" for="ref-1stop">📷 Voor 1stop<input type="file" id="ref-1stop" data-ref="1stop" accept="image/*" hidden></label><label class="btn photo" for="ref-int">📷 Voor de interieurspecialist<input type="file" id="ref-int" data-ref="Interieurspecialist" accept="image/*" hidden></label></div>`:''}</div>`; })()}
       ${o.letop&&!isInt()?`<span class="req">${esc(o.letop)}</span>`:''}${o.letopInterieur&&(isInt()||isS45())?`<span class="req">${esc(o.letopInterieur)}</span>`:''}
       ${wijz.length?`<div class="wijz"><b>Wijzigingen</b>${wijz.map(w=>`<div><span class="meta">✎ ${esc(fmt(w.at))} · </span>${esc(w.tekst)}${isS45()?' <span class="meta">— '+(w.voor||WIJZ_VOOR).map(r=>{ const c=S.checks[wijzId(w,r)]; return c&&c.done?`<span class="ok">${esc(r)} gezien ${esc(fmt(c.at))}</span>`:`<span class="nee">${esc(r)} nog niet gezien</span>`; }).join(', ')+'</span>':(wijzGezien(S.checks,w,S.role)?' <span class="meta ok">gezien</span>':'')}</div>`).join('')}</div>`:''}
     </div>${isS45()?`<div class="tools"><button type="button" class="btn" id="qrBtn">QR / link van deze auto</button></div><div class="qr ${S.qrOpen?'open':''}" id="qrBox"></div>`:''}</section>`;
@@ -717,7 +743,7 @@
         <ul class="items">${items.map(it=>{ const c=S.checks[it.id], d=!!(c&&c.done), ok=canTick&&(!locked||d);
           const vraag=d&&S.tel[it.id]&&(it.telt||[]).length?`<div class="telvraag"><b>Even tellen: hoeveel liggen er nu nog?</b>${(it.telt||[]).map(pid=>{ const v=S.voorraad[pid]||{}; const n=(typeof v.aantal==='number')?Math.max(0,v.aantal-1):''; return `<div class="rij"><span>${esc(partNaam(pid))}</span><input type="number" inputmode="numeric" min="0" data-telvraag="${esc(pid)}" value="${n}" placeholder="?" style="width:72px;height:40px;text-align:center;font:inherit;font-size:18px;font-weight:700;border:1px solid var(--line-strong);border-radius:8px;background:var(--paper);color:var(--ink)"></div>`; }).join('')}<div class="acties"><button type="button" class="btn primary" data-telsave="${esc(it.id)}">Opslaan</button><button type="button" class="later" data-tellater="${esc(it.id)}">Later</button></div></div>`:'';
           return `<li class="${d?'done':''}"><label class="${ok?'':'ro'} ${locked&&!d?'locked':''}"><input type="checkbox" id="chk-${esc(it.id)}" data-item="${esc(it.id)}" ${d?'checked':''} ${ok?'':'disabled'}><span><span class="t">${esc(it.tekst)}</span>${d?`<span class="meta">${esc(c.by||'')} · ${esc(fmt(c.at))}</span>`:''}</span></label>${vraag}</li>`; }).join('')}</ul>
-        ${st.foto?`<div class="photos">${photos.map(f=>{ const mag=canTick&&(isS45()||f.uid===S.uid); const vraag=S.fotoWeg===f.id; return `<div class="ph ${vraag?'vraag':''}"><img src="${esc(f.data||f.url||'')}" alt="Foto" loading="lazy"><span>${esc(f.by||'')} · ${esc(fmt(f.at))}</span>${mag&&!vraag?`<button type="button" class="weg" data-fotoweg="${esc(f.id)}" aria-label="Foto verwijderen">×</button>`:''}${vraag?`<div class="bevestig"><button type="button" class="ja" data-fotoja="${esc(f.id)}">Weg</button><button type="button" class="nee" data-fotonee="1">Nee</button></div>`:''}</div>`; }).join('')}
+        ${st.foto?`<div class="photos">${photos.map(f=>{ const mag=canTick&&(isS45()||f.uid===S.uid); const vraag=S.fotoWeg===f.id; return `<div class="ph ${vraag?'vraag':''}"><img src="${esc(f.data||f.url||'')}" alt="Foto" loading="lazy" data-groot="${esc(f.id)}"><span>${esc(f.by||'')} · ${esc(fmt(f.at))}</span>${mag&&!vraag?`<button type="button" class="weg" data-fotoweg="${esc(f.id)}" aria-label="Foto verwijderen">×</button>`:''}${vraag?`<div class="bevestig"><button type="button" class="ja" data-fotoja="${esc(f.id)}">Weg</button><button type="button" class="nee" data-fotonee="1">Nee</button></div>`:''}</div>`; }).join('')}
           ${canPhoto&&!locked?`<label class="btn photo" for="foto-${esc(st.id)}">📷 ${esc(photos.length?'Nog een foto':fotoLabel(st))}<input type="file" id="foto-${esc(st.id)}" data-step="${esc(st.id)}" accept="image/*" capture="environment" hidden></label>`:''}
           ${!photos.length?`<span class="hint">${locked?'Foto kan zodra deze stap open is.':'Eén foto is genoeg.'}</span>`:''}</div>`:''}
       </div></section>`;
@@ -753,6 +779,8 @@
     if(e.target.closest('#nieuwAutoWeg')){ S.nieuwAuto=false; render(); return; }
     if(e.target.closest('#nieuwLosBtn')){ S.nieuwLos=!S.nieuwLos; render(); const f=$('nieuwLosForm'); if(f){ const i=f.querySelector('input'); if(i) i.focus(); } return; }
     if(e.target.closest('#nieuwLosWeg')){ S.nieuwLos=false; render(); return; }
+    if(e.target.closest('#nieuwKlusBtn')){ S.nieuwKlus=!S.nieuwKlus; render(); const f=$('nieuwKlusForm'); if(f){ const i=f.querySelector('input'); if(i) i.focus(); } return; }
+    if(e.target.closest('#nieuwKlusWeg')){ S.nieuwKlus=false; render(); return; }
     const ifl=e.target.closest('[data-intfilter]'); if(ifl){ S.intFilter=S.intFilter===ifl.dataset.intfilter?'':ifl.dataset.intfilter; render(); window.scrollTo({top:0,behavior:'smooth'}); return; }
     const ar=e.target.closest('button[data-archiveer]'); if(ar){ try{ await S.db.doc('voertuigen/'+ar.dataset.archiveer).update({fase:'archief'}); toast('Naar het archief'); }catch(err){ fail(err); } return; }
     const tr=e.target.closest('button[data-terug]'); if(tr){ const v=S.voertuigen[tr.dataset.terug]||{}; const fase=v.afgeleverd?'afgeleverd':(v.klant&&v.soort!=='jvk'?'ingepland':'voorraad'); try{ await S.db.doc('voertuigen/'+tr.dataset.terug).update({fase}); toast('Terug naar actueel'); }catch(err){ fail(err); } return; }
@@ -767,6 +795,8 @@
     if(tl){ delete S.tel[tl.dataset.tellater]; render(); return; }
     const ak=e.target.closest('button[data-akkoord]');
     if(ak){ try{ await S.db.doc('orders/'+S.orderId+'/checks/'+ak.dataset.akkoord).set({done:true,by:who(),uid:S.uid,at:new Date().toISOString()}); toast('Akkoord gegeven'); }catch(err){ fail(err); } return; }
+    const gr=e.target.closest('img[data-groot]'); if(gr){ const f=S.photos.find(x=>x.id===gr.dataset.groot); if(f){ const lb=$('lightbox'); lb.querySelector('img').src=f.data||f.url||''; lb.classList.add('open'); } return; }
+    if(e.target.closest('#lightbox')){ $('lightbox').classList.remove('open'); return; }
     const fw=e.target.closest('button[data-fotoweg]'); if(fw){ S.fotoWeg=fw.dataset.fotoweg; render(); return; }
     if(e.target.closest('button[data-fotonee]')){ S.fotoWeg=null; render(); return; }
     const fj=e.target.closest('button[data-fotoja]'); if(fj){ S.fotoWeg=null; try{ await S.db.doc('orders/'+S.orderId+'/photos/'+fj.dataset.fotoja).delete(); toast('Foto verwijderd'); }catch(err){ fail(err); } return; }
@@ -787,7 +817,8 @@
     const chk=e.target.closest('input[type=checkbox][data-item]'); if(chk){ await toggle(chk.dataset.item,chk.checked,chk); return; }
     const ii=e.target.closest('input[type=checkbox][data-intitem]'); if(ii){ const ref=S.db.doc('orders/'+ii.dataset.order+'/checks/'+ii.dataset.intitem); try{ if(ii.checked) await ref.set({done:true,by:who(),uid:S.uid,at:new Date().toISOString()}); else await ref.delete(); }catch(err){ ii.checked=!ii.checked; fail(err); } return; }
     const td=e.target.closest('input[type=checkbox][data-todo]'); if(td){ const v=S.voertuigen[td.dataset.todo]; if(!v) return; const todo=(v.todo||[]).map((t,i)=>i===Number(td.dataset.i)?Object.assign({},t,{done:td.checked,at:new Date().toISOString()}):t); try{ await S.db.doc('voertuigen/'+v.key).update({todo}); }catch(err){ td.checked=!td.checked; fail(err); } return; }
-    const f=e.target.closest('input[type=file][data-step]'); if(f&&f.files&&f.files[0]){ await addPhoto(f.dataset.step,f.files[0]); f.value=''; }
+    const f=e.target.closest('input[type=file][data-step]'); if(f&&f.files&&f.files[0]){ await addPhoto(f.dataset.step,f.files[0]); f.value=''; return; }
+    const rf=e.target.closest('input[type=file][data-ref]'); if(rf&&rf.files&&rf.files[0]){ await addPhoto('ref',rf.files[0],rf.dataset.ref); rf.value=''; }
   });
   document.addEventListener('input',e=>{ if(e.target.id==='koppelMc') koppelZoek(); if(e.target.id==='zoekV'){ S.zoekV=e.target.value; clearTimeout(S._zt); S._zt=setTimeout(()=>{ const el=$('zoekV'); const pos=el?el.selectionStart:0; render(); const n=$('zoekV'); if(n){ n.focus(); try{ n.setSelectionRange(pos,pos); }catch(err){} } },250); } });
   document.addEventListener('submit',async e=>{
@@ -795,6 +826,7 @@
       if(/[A-Za-z]/.test(raw)){ location.hash='#'+kKey(raw); return; } if(d.length<=3){ location.hash='#t'+d.padStart(2,'0'); return; } if(d.length===4){ location.hash='#'+d; return; } location.hash='#'+d; return; }
     if(e.target.id==='nieuwAutoForm'){ e.preventDefault(); await nieuweAuto(e.target); return; }
     if(e.target.id==='nieuwLosForm'){ e.preventDefault(); await nieuweLosseBestelling(e.target); return; }
+    if(e.target.id==='nieuwKlusForm'){ e.preventDefault(); await nieuweLosseKlus(e.target); return; }
     if(e.target.classList.contains('losregel')){ e.preventDefault(); await losRegelErbij(e.target); e.target.reset(); return; }
     if(e.target.classList.contains('bewerk')&&e.target.dataset.key){ e.preventDefault(); await slaAutoOp(e.target); }
   });
@@ -833,11 +865,12 @@
         res(out); };
       img.onerror=()=>{ URL.revokeObjectURL(u); res(''); }; img.src=u; });
   }
-  async function addPhoto(stepId,file){
+  async function addPhoto(stepId,file,voor){
     if(!S.db) return;
     toast('Foto wordt opgeslagen…');
     try{ const data=await verklein(file); if(!data){ toast('Kon de foto niet lezen.'); return; }
-      await S.db.collection('orders/'+S.orderId+'/photos').add({stap:stepId,data,by:who(),uid:S.uid,at:new Date().toISOString()}); toast('Foto toegevoegd'); }
+      const doc={stap:stepId,data,by:who(),uid:S.uid,at:new Date().toISOString()}; if(voor) doc.voor=voor;
+      await S.db.collection('orders/'+S.orderId+'/photos').add(doc); toast(stepId==='ref'?'Referentiefoto toegevoegd':'Foto toegevoegd'); }
     catch(err){ fail(err); }
   }
   function fail(err){
