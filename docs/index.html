@@ -306,7 +306,7 @@
 <script>
 (function(){
   'use strict';
-  const BUILD='2026-11-02T16:19';
+  const BUILD='2026-11-02T18:37';
   let laatsteCheck=0;
   async function checkVersie(){ // als app op het beginscherm blijft de oude pagina anders hangen
     const nu=Date.now(); if(nu-laatsteCheck<90000) return; laatsteCheck=nu;
@@ -553,7 +553,8 @@
     const st=(o.stappen||[]).find(x=>x.wie==='Interieurspecialist'); if(!st) return null;
     const c=o._checks||{}, items=st.items||[], n=items.filter(i=>c[i.id]&&c[i.id].done).length, done=stepDone(st,c);
     const chk=id=>!!(c[id]&&c[id].done); const vz=(o.stappen||[]).find(x=>x.id==='voorkap-verzenden');
-    const voorkapWacht=items.some(i=>i.id==='i-voorkap')&&!chk('i-voorkap')&&!!vz&&!stepDone(vz,c);
+    const rest=items.filter(i=>i.id!=='i-voorkap'&&i.id!=='i-doos'&&!/voorkap/i.test(i.tekst||'')); // de set zelf kan altijd vast gemaakt worden; 'wacht op de voorkap' pas als alleen de voorkap nog mist
+    const voorkapWacht=items.some(i=>i.id==='i-voorkap')&&!chk('i-voorkap')&&!!vz&&!stepDone(vz,c)&&(!rest.length||rest.every(i=>chk(i.id)));
     const blocked=!stappenOk(o,st,c); let fase;
     const afgeleverd=(()=>{ const a=(o.stappen||[]).find(x=>x.id==='afleveren'); return !!a&&stepDone(a,c); })();
     if(o.type==='los') fase=(done&&chk('o-ontvangen'))?'klaar':'los'; else if(afgeleverd) fase='klaar'; else if(done&&chk('m-doos')) fase='ontvangen'; else if(done||chk('i-doos')) fase='verstuurd'; else if(blocked) fase='bestellen'; else if(voorkapWacht) fase='voorkap'; else fase='bezig';
