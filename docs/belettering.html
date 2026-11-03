@@ -9,7 +9,7 @@
 <link rel="icon" href="icon-180.png">
 <title>Belettering · Spéciale45</title>
 <style>
-  /* Belettering-tool: logo van de klant op de deur van de Topolino plaatsen en het stickerbestand + werktekening maken. */
+  /* Belettering-tool: stickers (logo, tekst, QR) op de auto plaatsen (Fiat Topolino, Opel Rocks) en het stickerbestand + werktekening maken. */
   :root{
     --bg:#f4eee3; --paper:#fffdf9; --ink:#2b221b; --muted:#7a6c5d; --line:#e0d4c2; --line-strong:#c9b89f;
     --accent:#141414; --accent-ink:#ffffff; --accent-soft:#e9e2d6; --top:#111111; --top-ink:#ffffff;
@@ -220,7 +220,7 @@
         </div>
         <div class="row">
           <label class="fld" style="margin-bottom:0"><span>Kenteken</span><input id="f-kenteken" autocomplete="off" placeholder="Optioneel"></label>
-          <label class="fld" style="margin-bottom:0"><span>Model</span><select id="f-model"><option>Fiat Topolino gesloten</option></select></label>
+          <label class="fld" style="margin-bottom:0"><span>Model</span><select id="f-model"><option value="topolino">Fiat Topolino gesloten</option><option value="rocks">Opel Rocks (2025)</option></select></label>
         </div>
       </div>
     </section>
@@ -332,7 +332,7 @@
         </div>
       </div>
       <div class="stagewrap" id="stagewrap">
-        <svg id="stage" xmlns="http://www.w3.org/2000/svg" tabindex="0" role="img" aria-label="De Topolino met de stickers"></svg>
+        <svg id="stage" xmlns="http://www.w3.org/2000/svg" tabindex="0" role="img" aria-label="De auto met de stickers"></svg>
       </div>
       <div class="stagebar">
         <span class="lbl">Autokleur</span>
@@ -356,7 +356,7 @@
           <button class="btn sec sm" type="button" id="b-max">Zo groot mogelijk</button>
         </div>
         <ul class="chk" id="checks"></ul>
-        <p class="small muted" style="margin:12px 0 0">Auto: gerenderd uit het 3D-model "Fiat Topolino 2024" van Behr Bros (3DExport), onder licentie van Spéciale45. Op ware schaal. Op de ruiten tekent de tool de sticker iets platter, omdat je schuin op het glas kijkt; de maten zijn de echte stickermaten.</p>
+        <p class="small muted" style="margin:12px 0 0"><span id="credit"></span> Op de ruiten tekent de tool de sticker iets platter, omdat je schuin op het glas kijkt; de maten zijn de echte stickermaten.</p>
       </div>
     </section>
 
@@ -383,13 +383,13 @@
     <details class="card" id="c-dims">
       <summary>Maten van de deur</summary>
       <div class="bd">
-        <p class="small muted" style="margin-top:0">Gemeten uit het 3D-model van de Topolino (Behr Bros) uit de configurator. Wielbasis en breedte kloppen op ±0,5% met de fabrieksmaten. De deur heeft één echte lijn (vouw); daaronder zit alleen een zachte holling, daar kan folie gewoon overheen. Meet voor de zekerheid één keer met een rolmaat de breedte (naad tot naad), de hoogte van het gelakte deel en de hoogte van de lijn na.</p>
+        <p class="small muted" style="margin-top:0" id="dims-txt"></p>
         <div class="row">
           <label class="fld"><span>Breedte deur (naad tot naad)</span><div class="unit"><input type="number" id="d-W" step="1"></div></label>
           <label class="fld"><span>Hoogte gelakt deel (onderrand tot raam)</span><div class="unit"><input type="number" id="d-H" step="1"></div></label>
         </div>
         <div class="row">
-          <label class="fld"><span>Lijn (vouw), boven onderrand</span><div class="unit"><input type="number" id="d-crU" step="1"></div></label>
+          <label class="fld"><span id="lbl-crU">Lijn (vouw), boven onderrand</span><div class="unit"><input type="number" id="d-crU" step="1"></div></label>
           <label class="fld"><span>Vrijhouden tot naden en randen</span><div class="unit"><input type="number" id="d-marge" step="1"></div></label>
         </div>
         <div class="row">
@@ -426,25 +426,95 @@ const FONTS = [
   {id:'pacifico', name:'Pacifico · handschrift', url:'https://cdn.jsdelivr.net/npm/@fontsource/pacifico@5.2.7/files/pacifico-latin-400-normal.woff'}
 ];
 const NS = 'http://www.w3.org/2000/svg';
-const MODEL = 'Fiat Topolino (gesloten)';
-// Deurmal Topolino gesloten. Alle maten in mm. u = vanaf de naad bij de greep, v = vanaf de onderrand van de deur.
-// Beide deuren zijn hetzelfde onderdeel: van buitenaf gezien zit de greep altijd links in beeld.
-// Links = voorkant van de auto (linkerdeur, scharnier achter); rechts = achterkant (rechterdeur, scharnier voor).
-// Gemeten uit het 3D-model van de Topolino (Behr Bros, 3DExport #573119) uit de configurator: wielbasis 1727 en
-// breedte met spiegels 1539 mm, dus ±0,5% van de fabrieksmaten. Eén scherpe lijn (vouw) op 530 mm; daaronder alleen
-// een zachte holling (±15 mm diep rond 190 mm); boven de lijn loopt de deur bol naar het raam.
-const DEF = {W:1080, H:690, top:1092, crU:530, marge:20};
-const DIMS_VERSION = 2;
+// Automodellen. Per model: renders, deurmal, wat er op/naast de deur zit, kleuren en standaardplekken voor/achter.
+// Deurmal: alle maten in mm; u = vanaf de linkernaad in beeld (zoals je voor de deur staat), v = boven de onderrand van de deur.
 const GREEP = {u0:0, u1:105, v0:500, v1:605};
-// Wat er op/naast de deur zit, in beeld (zoals je voor de deur staat). De greep zit aan beide kanten bij de linkernaad in beeld:
-// links vóór de linkerdeur, rechts áchter de rechterdeur. Knipperlicht achter op de deur, vlaggetje voor op de deur.
-const zonesFor = (d, side) => side === 'R'
-  ? [{k:'greep', ...GREEP}, {k:'blink', u0:12, u1:84, v0:518, v1:561}, {k:'badge', u0:d.W - 89, u1:d.W - 3, v0:528, v1:550}]
-  : [{k:'greep', ...GREEP}, {k:'badge', u0:3, u1:89, v0:528, v1:550}, {k:'blink', u0:d.W - 84, u1:d.W - 12, v0:518, v1:561}];
-const midV = d => (d.marge + GREEP.v0 - 10) / 2;
-const CARS = [['Verde Vita','#93bbae'],['Wit','#f3f1ec'],['Crème','#efe2c4'],['Zwart','#262626'],['Roze','#ecbcc6'],['Lichtblauw','#a9c9e0'],['Rood','#b8312f']];
+const MODELS = {
+  topolino: {
+    name:'Fiat Topolino (gesloten)', short:'Topolino', img:'topolino', zone:'zone',
+    // Gemeten uit het 3D-model van de Topolino (Behr Bros, 3DExport #573119) uit de configurator: wielbasis 1727 en
+    // breedte met spiegels 1539 mm, dus ±0,5% van de fabrieksmaten. Eén scherpe lijn (vouw) op 530 mm; daaronder alleen
+    // een zachte holling (±15 mm diep rond 190 mm); boven de lijn loopt de deur bol naar het raam.
+    // Beide deuren zijn hetzelfde onderdeel: de greep zit links in beeld (vóór de linkerdeur, áchter de rechterdeur).
+    def:{W:1080, H:690, top:1092, crU:530, marge:20},
+    vx:{L:-799, R:-761}, vy:-1282, sh:[540, 293, 1360, 46],
+    cars:[['Verde Vita','#93bbae'],['Wit','#f3f1ec'],['Crème','#efe2c4'],['Zwart','#262626'],['Roze','#ecbcc6'],['Lichtblauw','#a9c9e0'],['Rood','#b8312f']],
+    roofs:[['Antraciet (af fabriek)','#3a3f40'],['Zwart','#262626'],['Wit','#f3f1ec'],['Crème','#efe2c4']], roof:null,
+    credit:'Auto: gerenderd uit het 3D-model "Fiat Topolino 2024" van Behr Bros (3DExport), onder licentie van Spéciale45. Op ware schaal.',
+    dimsTxt:'Gemeten uit het 3D-model van de Topolino (Behr Bros) uit de configurator. Wielbasis en breedte kloppen op ±0,5% met de fabrieksmaten. De deur heeft één echte lijn (vouw); daaronder zit alleen een zachte holling, daar kan folie gewoon overheen. Meet voor de zekerheid één keer met een rolmaat de breedte (naad tot naad), de hoogte van het gelakte deel en de hoogte van de lijn na.',
+    lineLbl:'Lijn (vouw), boven onderrand', midLbl:'Midden onder de lijn',
+    band:d => [d.marge, GREEP.v0 - 10],
+    zones:(d, side) => side === 'R'
+      ? [{k:'greep', ...GREEP}, {k:'blink', u0:12, u1:84, v0:518, v1:561}, {k:'badge', u0:d.W - 89, u1:d.W - 3, v0:528, v1:550}]
+      : [{k:'greep', ...GREEP}, {k:'badge', u0:3, u1:89, v0:528, v1:550}, {k:'blink', u0:d.W - 84, u1:d.W - 12, v0:518, v1:561}],
+    checks:(d, y0, y1) => { const out = [];
+      if (y0 < d.crU - 3 && y1 > d.crU + 3) out.push(['warn', 'loopt over de lijn (vouw) in de deur. Folie sluit daar minder strak aan; liever helemaal onder de lijn.']);
+      if (y1 > d.crU + 60) out.push(['warn', 'komt boven de lijn, waar de deur bol naar het raam loopt. Folie plakt daar slecht.']);
+      return out; },
+    pdf:(doc, P, d, side, SC) => { let x, y;
+      doc.setDrawColor(20); doc.setLineWidth(0.25); doc.ellipse(...P(0, 552), 100 / SC, 48 / SC, 'S'); doc.circle(...P(-63, 560), 22 / SC, 'S');
+      for (const z of MODELS.topolino.zones(d, side)){
+        if (z.k === 'blink'){ doc.setDrawColor(190, 110, 20); [x, y] = P(z.u0, z.v1); doc.roundedRect(x, y, (z.u1 - z.u0) / SC, (z.v1 - z.v0) / SC, 1.5, 1.5, 'S'); }
+        if (z.k === 'badge'){ const bw = (z.u1 - z.u0) / 3; [[46, 139, 58], [200, 200, 200], [208, 32, 42]].forEach((c, i) => { doc.setFillColor(...c); [x, y] = P(z.u0 + i * bw, 541); doc.rect(x, y, bw / SC, 6 / SC, 'F'); }); }
+      } },
+    obst:{B:[{k:'kenteken', x0:-215, x1:215, y0:498, y1:798}]},
+    pref:{logo:['ruit','onder','paneel'], tekst:['ruit','onder','paneel'], qr:['rechts','links','ruit','paneel']},
+    spots:{
+      F:[{k:'paneel', u:0, v:505, W:860, H:130}],
+      B:[{k:'ruit', u:0, v:1192, W:860, H:250}, {k:'onder', u:0, v:440, W:760, H:96}, {k:'rechts', u:330, v:648, W:190, H:210}, {k:'links', u:-330, v:648, W:190, H:210}]
+    }
+  },
+  rocks: {
+    name:'Opel Rocks (2025)', short:'Opel Rocks', img:'rocks', zone:'rocks-zone',
+    // 3D-model "Opel Rocks HQ Interior 2026" (Creator 3D, RenderHub). Het bestand staat in cm maar is ±11% te klein;
+    // geschaald met ×1,1247 kloppen breedte (1386), met spiegels (1543), hoogte (1523) en wielbasis (1731) op ±0,3%.
+    // Beide deuren zijn hetzelfde onderdeel, 180° gedraaid: van buitenaf zie je links en rechts precies dezelfde deur.
+    // Onderaan zit een verdikking (±5 mm dikker) met een rand op ±250 mm (naar de naden ±200 mm); boven ±560 mm buigt
+    // de deur sterk naar het raam. Reflectortje rechtsboven in beeld, een afgeronde plaat onderin; de greep zit naast de deur.
+    def:{W:1088, H:690, top:1089, crU:250, marge:20},
+    vx:{L:-776, R:-776}, vy:-1281, sh:[544, 294, 1360, 46],
+    cars:[['Lichtgrijs (af fabriek)','#d5d8d9'],['Wit','#f3f1ec'],['Zwart','#262626'],['Verde Vita','#93bbae'],['Lichtblauw','#a9c9e0'],['Roze','#ecbcc6'],['Rood','#b8312f']],
+    roofs:[['Zwart (af fabriek)','#1d1f20'],['Lichtgrijs','#d5d8d9'],['Wit','#f3f1ec'],['Antraciet','#3a3f40']], roof:'#1d1f20',
+    credit:'Auto: gerenderd uit het 3D-model "Opel Rocks HQ Interior 2026" van Creator 3D (RenderHub), onder licentie van Spéciale45. Geschaald naar de fabrieksmaten: breedte, hoogte en wielbasis op ±0,3%.',
+    dimsTxt:'Gemeten uit het 3D-model van de Opel Rocks (Creator 3D), geschaald naar de fabrieksmaten: breedte, hoogte en wielbasis kloppen op ±0,3%. Onderaan de deur zit een verdikking die ongeveer 5 mm uitsteekt; de rand ligt midden op de deur op ±250 mm en zakt naar de naden tot ±200 mm. Daar sluit folie niet aan: zet stickers erboven. Meet voor de zekerheid één keer met een rolmaat de breedte (naad tot naad), de hoogte van het gelakte deel en de hoogte van die rand na.',
+    lineLbl:'Rand verdikking, boven onderrand', midLbl:'Midden boven de verdikking',
+    band:d => [d.crU + 30, 545],
+    zones:() => [{k:'refl', u0:968, u1:1050, v0:515, v1:575}, {k:'plaat', u0:552, u1:875, v0:12, v1:182}],
+    checks:(d, y0, y1) => { const out = [];
+      if (y1 <= d.crU - 10) out.push(['warn', 'zit op de verdikking onderaan de deur. Die steekt iets uit en is licht bol; plakken kan, maar de sticker zit dan erg laag.']);
+      else if (y0 < d.crU + 15) out.push(['bad', `loopt over (of zit te dicht op) de rand van de verdikking onderaan de deur, op ±${mm(d.crU)} mm. Daar sluit folie niet aan: zet de onderkant minstens ${mm(d.crU + 30)} mm boven de onderrand van de deur.`]);
+      if (y1 > 560) out.push(['warn', 'komt in het bovenste deel van de deur, dat bol naar het raam loopt. Folie plakt daar slecht.']);
+      return out; },
+    pdf:(doc, P, d, side, SC) => { let x, y;
+      doc.setDrawColor(120); doc.setLineWidth(0.25); doc.setLineDashPattern([1.2, 0.8], 0); doc.line(...P(0, d.crU), ...P(d.W, d.crU)); doc.setLineDashPattern([], 0);
+      doc.setFontSize(6.5); doc.setTextColor(120); doc.text('rand verdikking', ...P(d.W - 8, d.crU + 18), {align:'right'});
+      doc.setDrawColor(150); doc.setLineWidth(0.2); [x, y] = P(552, 182); doc.roundedRect(x, y, 323 / SC, 170 / SC, 2.5, 2.5, 'S');
+      doc.setDrawColor(190, 110, 20); [x, y] = P(968, 575); doc.roundedRect(x, y, 82 / SC, 60 / SC, 1.5, 1.5, 'S');
+      doc.setDrawColor(20); [x, y] = P(-92, 582); doc.roundedRect(x, y, 46 / SC, 46 / SC, 1, 1, 'S'); },
+    // Voor en achter zijn bij de Rocks bijna gelijk: een glad zwart paneel tussen de koplampen (met een flauwe knik op ±645 mm,
+    // daar blijven de standaardplekken onder), een strook over de volle breedte daaronder en achter de achterruit.
+    // Het kenteken zit in de ruwe, verzonken onderbumper; die telt al niet als plakvlak.
+    obst:{},
+    spots:{
+      F:[{k:'paneel', u:0, v:560, W:560, H:150}, {k:'onder', u:0, v:508, W:1150, H:66}],
+      B:[{k:'ruit', u:0, v:1190, W:760, H:230}, {k:'paneel', u:0, v:560, W:560, H:150}, {k:'onder', u:0, v:508, W:1150, H:66}]
+    },
+    pref:{logo:['ruit','paneel','onder'], tekst:['ruit','onder','paneel'], qr:['paneel','ruit']}
+  }
+};
+let MID = 'topolino', MODEL, DEF, CARS, ROOFS, DOOR, VIEW, OBST, SPOTS, SPOT_PREF;
+function applyModel(id){
+  MID = MODELS[id] ? id : 'topolino'; const m = DOOR = MODELS[MID];
+  MODEL = m.name; DEF = m.def; CARS = m.cars; ROOFS = m.roofs; OBST = m.obst; SPOTS = m.spots; SPOT_PREF = m.pref;
+  const f = (v, x) => `belettering/${m.img}-${v}${x}.webp`;
+  VIEW = {};
+  for (const v of ['L','R']) VIEW[v] = {base:f(v, ''), lak:f(v, '-lak'), dak:f(v, '-dak'), x:m.vx[v], y:m.vy, w:2640, h:1640, sh:m.sh};
+  for (const v of ['F','B']) VIEW[v] = {base:f(v, ''), lak:f(v, '-lak'), dak:f(v, '-dak'), zone:`belettering/${m.zone}-${v}.png`, x:-820, y:-1580, w:1640, h:1640, sh:[0, 4, 800, 40]};
+}
+applyModel('topolino');
+const DIMS_VERSION = 2;
+const midV = d => { const [a, b] = DOOR.band(d); return (a + b) / 2; };
 const FOILS = [['Zwart','#111111'],['Wit','#ffffff'],['Grijs','#8a8d8f'],['Rood','#c62828'],['Blauw','#1f4e9c'],['Groen','#2e7d32'],['Goud','#c9a24a']];
-const ROOFS = [['Antraciet (af fabriek)','#3a3f40'],['Zwart','#262626'],['Wit','#f3f1ec'],['Crème','#efe2c4']];
 const QRCOLS = [['Zwart','#111111'],['Donkerblauw','#14295a'],['Donkergroen','#1f4d2b'],['Donkerrood','#7a1c1c']];
 const KEY = 's45-belettering-v2', KEY_OLD = 's45-belettering-v1';
 const TYPES = {logo:'Logo', tekst:'Tekst', qr:'QR-code'};
@@ -453,7 +523,7 @@ const WHERE_SHORT = {LR:'Beide deuren', L:'Links', R:'Rechts', F:'Voor', B:'Acht
 
 const S = {
   job:{klant:'', order:'', kenteken:'', opm:''},
-  items:[], active:null, view:'L', zoom:'deur', car:CARS[0][1], roof:null, dims:{...DEF}
+  items:[], active:null, view:'L', zoom:'deur', model:'topolino', per:{}, car:CARS[0][1], roof:null, dims:{...DEF}
 };
 
 const $ = (s, r=document) => r.querySelector(s);
@@ -933,7 +1003,7 @@ function addItem(type){
   if (!onView(it, S.view)) S.view = viewsOf(it)[0];
   if (type === 'tekst' && first){ // op de ruit leest wit het best
     const v = viewsOf(it)[0], apply = () => { const p = placeOf(it, v); if (p && !it.L && onGlass(v, p)){ it.text.color = '#ffffff'; if (S.active === it.id) renderEditor(); } };
-    if (isDoor(v) || ZONE[v]) apply(); else { loadZone(v); if (_zoneJob[v]) _zoneJob[v].then(apply); }
+    if (isDoor(v) || ZONE[ZK(v)]) apply(); else { loadZone(v); if (_zoneJob[ZK(v)]) _zoneJob[ZK(v)].then(apply); }
   }
   hideTraceFor(it); renderAll(); save();
   return it;
@@ -1061,41 +1131,28 @@ async function qrToSvg(q){
 }
 
 /* ============================== aanzichten en vlakken ============================== */
-// De auto: renders uit het gekochte 3D-model ("Fiat Topolino 2024", Behr Bros, 3DExport), orthografisch op ware schaal.
-// topolino-X.webp = auto met witte lak; topolino-X-lak.webp = glans (rgb) + lakmasker (alfa).
+// De auto: renders uit de gekochte 3D-modellen (zie MODELS), orthografisch op ware schaal.
+// <model>-X.webp = auto met witte lak; <model>-X-lak.webp = glans (rgb) + lakmasker (alfa).
 // zone-X.png (voor/achter, 2 px per cm): rood = lak, blauw = glas, groen = hoe recht het vlak naar je toe staat, alfa = auto.
 // Het modelbestand zelf staat hier niet (licentie): alleen deze beelden.
-const VIEW = {
-  L:{base:'belettering/topolino-L.webp', lak:'belettering/topolino-L-lak.webp', dak:'belettering/topolino-L-dak.webp', x:-799, y:-1282, w:2640, h:1640, sh:[540, 293, 1360, 46]},
-  R:{base:'belettering/topolino-R.webp', lak:'belettering/topolino-R-lak.webp', dak:'belettering/topolino-R-dak.webp', x:-761, y:-1282, w:2640, h:1640, sh:[540, 293, 1360, 46]},
-  F:{base:'belettering/topolino-F.webp', lak:'belettering/topolino-F-lak.webp', dak:'belettering/topolino-F-dak.webp', zone:'belettering/zone-F.png', x:-820, y:-1580, w:1640, h:1640, sh:[0, 4, 800, 40]},
-  B:{base:'belettering/topolino-B.webp', lak:'belettering/topolino-B-lak.webp', dak:'belettering/topolino-B-dak.webp', zone:'belettering/zone-B.png', x:-820, y:-1580, w:1640, h:1640, sh:[0, 4, 800, 40]}
-};
 const AUTO_VB = [-880, -1340, 2860, 1720], FB_VB = [-880, -1600, 1760, 1690];
-// Vaste obstakels die niet in het 3D-model zitten.
-const OBST = {B:[{k:'kenteken', x0:-215, x1:215, y0:498, y1:798}]};
-// Standaardplekken voor/achter (W en H = ruimte in echte mm).
-const SPOTS = {
-  F:[{k:'paneel', u:0, v:505, W:860, H:130}],
-  B:[{k:'ruit', u:0, v:1192, W:860, H:250}, {k:'onder', u:0, v:440, W:760, H:96}, {k:'rechts', u:330, v:648, W:190, H:210}, {k:'links', u:-330, v:648, W:190, H:210}]
-};
-const SPOT_PREF = {logo:['ruit','onder','paneel'], tekst:['ruit','onder','paneel'], qr:['rechts','links','ruit','paneel']};
-const ZONE = {}, _zoneJob = {};
+const ZONE = {}, _zoneJob = {}, ZK = v => MID + v;
 function loadZone(v){
-  if (!VIEW[v].zone || ZONE[v] || _zoneJob[v]) return;
-  _zoneJob[v] = (async () => {
-    const r = await fetch(VIEW[v].zone); if (!r.ok) throw new Error('zone ' + r.status);
+  const k = ZK(v), url = VIEW[v].zone;
+  if (!url || ZONE[k] || _zoneJob[k]) return;
+  _zoneJob[k] = (async () => {
+    const r = await fetch(url); if (!r.ok) throw new Error('zone ' + r.status);
     const bm = await createImageBitmap(await r.blob(), {colorSpaceConversion:'none', premultiplyAlpha:'none'});
     const c = canvas(bm.width, bm.height), g = c.getContext('2d', {willReadFrequently:true}); g.drawImage(bm, 0, 0);
-    ZONE[v] = {w:c.width, h:c.height, d:g.getImageData(0, 0, c.width, c.height).data};
+    ZONE[k] = {w:c.width, h:c.height, d:g.getImageData(0, 0, c.width, c.height).data};
     renderStage(); renderPlaceInputs(); renderChecks(); renderItems(); renderExport();
-  })().catch(e => { console.warn('vlakken', e); delete _zoneJob[v]; });
+  })().catch(e => { console.warn('vlakken', e); delete _zoneJob[k]; });
 }
-function zonePx(v, u, vv){ const Z = ZONE[v], V = VIEW[v], s = Z.w / V.w; return [Math.floor((u - V.x) * s), Math.floor((-vv - V.y) * s)]; }
-function zoneAt(v, u, vv){ const Z = ZONE[v]; if (!Z) return null; const [x, y] = zonePx(v, u, vv); if (x < 0 || y < 0 || x >= Z.w || y >= Z.h) return {off:true}; const o = (y * Z.w + x) * 4, d = Z.d; return {off:d[o + 3] < 128, paint:d[o] > 127, glass:d[o + 2] > 127, g:d[o + 1]}; }
+function zonePx(v, u, vv){ const Z = ZONE[ZK(v)], V = VIEW[v], s = Z.w / V.w; return [Math.floor((u - V.x) * s), Math.floor((-vv - V.y) * s)]; }
+function zoneAt(v, u, vv){ const Z = ZONE[ZK(v)]; if (!Z) return null; const [x, y] = zonePx(v, u, vv); if (x < 0 || y < 0 || x >= Z.w || y >= Z.h) return {off:true}; const o = (y * Z.w + x) * 4, d = Z.d; return {off:d[o + 3] < 128, paint:d[o] > 127, glass:d[o + 2] > 127, g:d[o + 1]}; }
 // Hoe schuin het vlak staat: 1 = recht naar je toe, 0,85 = de achterruit. Een sticker op een schuin vlak lijkt in beeld lager.
 function kAt(v, p){
-  if (isDoor(v) || !p) return 1; if (!ZONE[v]){ loadZone(v); return 1; }
+  if (isDoor(v) || !p) return 1; if (!ZONE[ZK(v)]){ loadZone(v); return 1; }
   const gs = [];
   for (let i = -3; i <= 3; i++) for (let j = -3; j <= 3; j++){ const z = zoneAt(v, p.u + i * 8, p.v + j * 8); if (z && !z.off && (z.paint || z.glass)) gs.push(z.g); }
   if (gs.length < 10) return 1;
@@ -1105,7 +1162,7 @@ function kAt(v, p){
 function onGlass(v, p){ if (isDoor(v)) return false; const z = zoneAt(v, p.u, p.v); return !!(z && z.glass); }
 // Onderrand van de ruit recht onder een punt (null als het punt niet op glas zit).
 function glassBelow(v, u, vv){
-  if (isDoor(v) || !ZONE[v]) return null; const Z = ZONE[v], V = VIEW[v], s = Z.w / V.w;
+  if (isDoor(v) || !ZONE[ZK(v)]) return null; const Z = ZONE[ZK(v)], V = VIEW[v], s = Z.w / V.w;
   let [x, y] = zonePx(v, u, vv + 1); if (x < 0 || x >= Z.w) return null;
   const isG = py => py >= 0 && py < Z.h && Z.d[(py * Z.w + x) * 4 + 3] > 127 && Z.d[(py * Z.w + x) * 4 + 2] > 127;
   if (!isG(y)) return null;
@@ -1113,7 +1170,7 @@ function glassBelow(v, u, vv){
   return -(V.y + (y + 1) / s);
 }
 function zoneStats(v, r){
-  const Z = ZONE[v]; if (!Z) return null; const V = VIEW[v], s = Z.w / V.w;
+  const Z = ZONE[ZK(v)]; if (!Z) return null; const V = VIEW[v], s = Z.w / V.w;
   const px0 = Math.floor((r.x0 - V.x) * s), px1 = Math.ceil((r.x1 - V.x) * s), py0 = Math.floor((-r.y1 - V.y) * s), py1 = Math.ceil((-r.y0 - V.y) * s);
   const step = Math.max(1, Math.floor(Math.sqrt(Math.max(1, (px1 - px0) * (py1 - py0)) / 20000)));
   let n = 0, paint = 0, glass = 0, other = 0, off = 0; const gp = [];
@@ -1159,19 +1216,21 @@ function defaultPlace(it, v){
   if (isDoor(v)){
     const d = S.dims, m = d.marge, mid = midV(d);
     if (it.type === 'qr'){ const w = 150, rear = v === 'L' ? d.W - m - 40 - w / 2 : m + 40 + w / 2; cands.push({u:rear, v:mid, w}, {u:d.W - rear, v:mid, w}); }
-    else if (it.type === 'tekst'){ const w = Math.min(Math.min(55 * nl, 300) * a, d.W - 2 * m - 60), h2 = w / a; cands.push({u:d.W / 2, v:mid, w}, {u:d.W / 2, v:m + 25 + h2 / 2, w}, {u:d.W / 2, v:GREEP.v0 - 15 - h2 / 2, w}); }
+    else if (it.type === 'tekst'){ const w = Math.min(Math.min(55 * nl, 300) * a, d.W - 2 * m - 60), h2 = w / a; const [b0, b1] = DOOR.band(d); cands.push({u:d.W / 2, v:mid, w}, {u:d.W / 2, v:b0 + 5 + h2 / 2, w}, {u:d.W / 2, v:b1 - 5 - h2 / 2, w}); }
     else cands.push({u:d.W / 2, v:mid, w:Math.min(maxPlace(a).w * 0.8, 600)});
   } else {
-    for (const s of SPOT_PREF[it.type].map(k => SPOTS[v].find(x => x.k === k)).filter(Boolean)){
+    const spots = SPOT_PREF[it.type].map(k => SPOTS[v].find(x => x.k === k)).filter(Boolean);
+    for (const s of spots.length ? spots : SPOTS[v].slice(0, 1)){
       const w = it.type === 'qr' ? Math.min(160, s.W, s.H) : it.type === 'tekst' ? Math.min(s.W * 0.95, Math.min(s.H, 70 * nl) * a) : Math.min(s.W, s.H * a) * 0.85;
       cands.push({u:s.u, v:s.v, w:Math.round(w)});
     }
   }
+  if (!cands.length) cands.push({u:0, v:600, w:200});
   return cands.find(c => !overlapsOthers(it, v, c)) || cands[0];
 }
 function maxPlace(a){
-  // het vlak onder de lijn, onder greep, knipperlicht en vlaggetje, over de volle breedte
-  const d = S.dims, m = d.marge, h = (GREEP.v0 - 10) - m, w = Math.min(h * a, d.W - 2 * m);
+  // het vrije vlak van de deur (per model), over de volle breedte
+  const d = S.dims, m = d.marge, [b0, b1] = DOOR.band(d), h = b1 - b0, w = Math.min(h * a, d.W - 2 * m);
   return {w, v:midV(d), u:d.W / 2};
 }
 function fitPlace(it, p, v){
@@ -1197,10 +1256,10 @@ function fbMax(it, v, p){
 const _img = {}; const img = url => _img[url] || (_img[url] = loadImg(url).catch(e => { delete _img[url]; throw e; }));
 const _tint = new Map(), _tintUrl = new Map();
 // Auto in een lakkleur: wit beeld × kleur binnen het lakmasker, glans erover.
-// Het dak (topolino-X-dak.webp: glans + dakmasker) krijgt zijn eigen kleur; standaard dezelfde als de auto.
+// Het dak (<model>-X-dak.webp: glans + dakmasker) krijgt zijn eigen kleur; standaard dezelfde als de auto.
 const roofColor = () => S.roof || S.car;
 function tintedCar(v, color, roof = color){
-  const key = v + color + '|' + roof;
+  const key = MID + v + color + '|' + roof;
   if (_tint.has(key)) return _tint.get(key);
   const job = (async () => {
     const C = VIEW[v], [b, l, r] = await Promise.all([img(C.base), img(C.lak), img(C.dak)]);
@@ -1224,7 +1283,7 @@ function viewBox(v){ const d = S.dims; return !isDoor(v) ? FB_VB : S.zoom === 'd
 function logoHref(L){ return L.kind === 'svg' ? svgDataURL(L.svg) : L.kind === 'pdf' ? L.preview : L.raster.url; }
 // Vaste laag: schaduw op de grond en de auto in de gekozen kleur.
 function drawCar(svg, v){
-  const C = VIEW[v], defs = E('defs', null, svg), color = S.car, roof = roofColor(), key = v + color + '|' + roof, [cx, cy, rx, ry] = C.sh;
+  const C = VIEW[v], defs = E('defs', null, svg), color = S.car, roof = roofColor(), key = MID + v + color + '|' + roof, [cx, cy, rx, ry] = C.sh;
   const rg = E('radialGradient', {id:'gsh'}, defs);
   E('stop', {offset:0, 'stop-color':'#000', 'stop-opacity':0.3}, rg); E('stop', {offset:1, 'stop-color':'#000', 'stop-opacity':0}, rg);
   E('ellipse', {cx, cy, rx, ry, fill:'url(#gsh)'}, svg);
@@ -1248,7 +1307,7 @@ function drawSticker(parent, it, v, active, fs){
   return r;
 }
 function othersKey(v){
-  return [S.active, v, ZONE[v] ? 1 : 0, ...S.items.filter(it => it.id !== S.active && it.L && placeOf(it, v)).map(it => it.id + ':' + it.rev + ':' + JSON.stringify(placeOf(it, v)))].join('|');
+  return [MID, S.active, v, ZONE[ZK(v)] ? 1 : 0, ...S.items.filter(it => it.id !== S.active && it.L && placeOf(it, v)).map(it => it.id + ':' + it.rev + ':' + JSON.stringify(placeOf(it, v)))].join('|');
 }
 function drawOthers(g, v, vb){ g.innerHTML = ''; const fs = vb[2] / 44; for (const it of itemsOn(v)) if (it.id !== S.active) drawSticker(g, it, v, false, fs); }
 // Losse laag: de actieve sticker met maten en grepen (wordt bij elke beweging opnieuw getekend).
@@ -1272,7 +1331,7 @@ function drawActive(dyn, v, vb){
   const r = drawSticker(dyn, it, v, true, fs), w = p.w, hh = r.hh, x0 = r.x0, x1 = r.x1, y0 = r.y0, y1 = r.y1;
   if (it.thin && it.thin.overlay && it.thin.w === Math.round(w)) E('image', {href:it.thin.overlay, x:x0, y:-y1, width:w, height:hh, preserveAspectRatio:'none', 'pointer-events':'none'}, dyn);
   const dash = `${fs * 0.3} ${fs * 0.2}`;
-  if (door && drag){ // hulplijnen: rand van de deur en de lijn (vouw)
+  if (door && drag){ // hulplijnen: rand van de deur en de lijn (Topolino: vouw; Rocks: rand van de verdikking)
     E('rect', {x:0, y:-d.H, width:d.W, height:d.H, rx:30, class:'zone', 'stroke-width':fs * 0.06, 'stroke-dasharray':dash, 'pointer-events':'none'}, dyn);
     E('line', {x1:0, x2:d.W, y1:-d.crU, y2:-d.crU, class:'zone', 'stroke-width':fs * 0.06, 'stroke-dasharray':dash, 'pointer-events':'none'}, dyn);
   }
@@ -1305,7 +1364,7 @@ function drawActive(dyn, v, vb){
   }
 }
 function renderStage(){
-  const svg = $('#stage'), v = S.view, vb = viewBox(v), key = [v, isDoor(v) ? S.zoom : '', S.car, roofColor(), S.dims.W, S.dims.H].join('|');
+  const svg = $('#stage'), v = S.view, vb = viewBox(v), key = [MID, v, isDoor(v) ? S.zoom : '', S.car, roofColor(), S.dims.W, S.dims.H].join('|');
   if (!isDoor(v)) loadZone(v);
   if (svg.dataset.key !== key){
     svg.innerHTML = ''; svg.setAttribute('viewBox', vb.join(' ')); drawCar(svg, v); E('g', {id:'oth'}, svg); E('g', {id:'dyn'}, svg);
@@ -1486,7 +1545,7 @@ async function makeEditable(it){
 async function restoreBg(){ const it = cur(), L = it && it.L; if (!L || !L.srcText) return; const n = await normalizeSvg(L.srcText, {dropBg:false, vb:L.srcVb}); const nl = {...L, ...n}; delete nl.svgOrig; setItemL(it, nl); }
 
 /* ============================== controles ============================== */
-const ZONE_TXT = {greep:'raakt de deurgreep. Maak de sticker kleiner of schuif hem naar beneden of naar het midden.', blink:'raakt het zijknipperlicht op de deur.', badge:'raakt het Italiaanse vlaggetje op de deur.'};
+const ZONE_TXT = {greep:'raakt de deurgreep. Maak de sticker kleiner of schuif hem naar beneden of naar het midden.', blink:'raakt het zijknipperlicht op de deur.', badge:'raakt het Italiaanse vlaggetje op de deur.', plaat:'raakt de afgeronde plaat onderaan de deur. Houd de sticker daar vrij van.', refl:'raakt het reflectortje rechtsboven op de deur.'};
 const cap = t => t.charAt(0).toUpperCase() + t.slice(1);
 const RANK = {bad:3, warn:2, ok:1, info:0};
 function placeChecks(it, v){
@@ -1496,9 +1555,8 @@ function placeChecks(it, v){
     if (x0 < m || x1 > d.W - m || y0 < m || y1 > d.H - m) out.push(['bad', `te dicht bij de rand van de deur. Houd minimaal ${m} mm vrij tot de naden, de onderrand en het raam.`]);
     else out.push(['ok', 'past op de deur.']);
     const hit = (q, c) => x0 < q.u1 + c && x1 > q.u0 - c && y0 < q.v1 + c && y1 > q.v0 - c;
-    for (const z of zonesFor(d, v)) if (hit(z, 10)) out.push(['bad', ZONE_TXT[z.k]]);
-    if (y0 < d.crU - 3 && y1 > d.crU + 3) out.push(['warn', 'loopt over de lijn (vouw) in de deur. Folie sluit daar minder strak aan; liever helemaal onder de lijn.']);
-    if (y1 > d.crU + 60) out.push(['warn', 'komt boven de lijn, waar de deur bol naar het raam loopt. Folie plakt daar slecht.']);
+    for (const z of DOOR.zones(d, v)) if (hit(z, 10)) out.push(['bad', ZONE_TXT[z.k]]);
+    out.push(...DOOR.checks(d, y0, y1));
     return out;
   }
   const st = zoneStats(v, r);
@@ -1615,6 +1673,7 @@ function renderJob(){
   $$('#cars button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === S.car)));
   $$('#roofs button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === (S.roof || ''))));
   for (const k of ['W','H','crU','marge']) $('#d-' + k).value = S.dims[k];
+  $('#f-model').value = MID; $('#credit').textContent = DOOR.credit; $('#dims-txt').textContent = DOOR.dimsTxt; $('#lbl-crU').textContent = DOOR.lineLbl;
 }
 function thumbOf(it){
   const light = it.shares && it.shares[0] && hexLab(it.shares[0].hex)[0] > 80; // lichte stickers op een donkere ondergrond tonen
@@ -1738,7 +1797,7 @@ function renderPlaceInputs(){
   const door = isDoor(S.view), pm = placeMode();
   $('#fld-r').classList.toggle('hidden', !door);
   $('#b-hc').textContent = door ? 'Midden op de deur' : 'Midden op de auto';
-  $('#b-vc').textContent = door ? 'Midden onder de lijn' : 'Standaardplek';
+  $('#b-vc').textContent = door ? DOOR.midLbl : 'Standaardplek';
   $('#place').querySelectorAll('input,button').forEach(x => x.disabled = !pm);
   if (!pm){ $('#lbl-b').textContent = door ? 'Boven onderrand deur' : 'Onderkant boven de grond'; $('#lbl-l').textContent = door ? 'Vanaf voornaad' : 'Uit het midden (+ = rechts)'; ['w','h','b','l','r'].forEach(k => { if (document.activeElement !== $('#p-' + k)) $('#p-' + k).value = ''; }); return; }
   const {it, v, p} = pm, r = rectOf(it, v, p);
@@ -1943,12 +2002,8 @@ function werkDoor(doc, pg, pngs){
   doc.setFillColor(232, 238, 241); [x, y] = P(42, d.top - 62); doc.rect(x, y, (d.W - 86) / SC, (d.top - d.H - 98) / SC, 'F');
   // paneel
   doc.setFillColor(247, 247, 245); doc.setDrawColor(20); doc.setLineWidth(0.35); [x, y] = P(0, d.H); doc.roundedRect(x, y, d.W / SC, d.H / SC, 2, 2, 'FD');
-  doc.setDrawColor(150); doc.setLineWidth(0.25); doc.line(...P(0, d.crU), ...P(d.W, d.crU));
-  doc.setDrawColor(20); doc.setLineWidth(0.25); doc.ellipse(...P(0, 552), 100 / SC, 48 / SC, 'S'); doc.circle(...P(-63, 560), 22 / SC, 'S');
-  for (const z of zonesFor(d, side)){
-    if (z.k === 'blink'){ doc.setDrawColor(190, 110, 20); [x, y] = P(z.u0, z.v1); doc.roundedRect(x, y, (z.u1 - z.u0) / SC, (z.v1 - z.v0) / SC, 1.5, 1.5, 'S'); }
-    if (z.k === 'badge'){ const bw = (z.u1 - z.u0) / 3; [[46, 139, 58], [200, 200, 200], [208, 32, 42]].forEach((c, i) => { doc.setFillColor(...c); [x, y] = P(z.u0 + i * bw, 541); doc.rect(x, y, bw / SC, 6 / SC, 'F'); }); }
-  }
+  if (MID === 'topolino'){ doc.setDrawColor(150); doc.setLineWidth(0.25); doc.line(...P(0, d.crU), ...P(d.W, d.crU)); }
+  DOOR.pdf(doc, P, d, side, SC);
   const [, ty] = P(0, d.top); doc.setFontSize(7.5); doc.setTextColor(110);
   doc.text(side === 'L' ? 'voornaad' : 'achternaad', ox, ty - 1.6); doc.text(side === 'L' ? 'achternaad' : 'voornaad', ox + d.W / SC, ty - 1.6, {align:'right'});
   doc.text(side === 'L' ? '<- voorkant auto' : 'voorkant auto ->', ox + d.W / SC / 2, ty - 1.6, {align:'center'});
@@ -2097,7 +2152,7 @@ function deL(l){ if (l && l.kind === 'pdf') l.pdf = {bytes:unb64(l.pdf.b64), cro
 let saveT;
 function save(){ clearTimeout(saveT); saveT = setTimeout(() => {
   try {
-    const o = {v:2, job:S.job, active:S.active, view:S.view, zoom:S.zoom, car:S.car, roof:S.roof, dims:S.dims, dimsVer:DIMS_VERSION,
+    const o = {v:2, job:S.job, active:S.active, view:S.view, zoom:S.zoom, model:MID, per:S.per, car:S.car, roof:S.roof, dims:S.dims, dimsVer:DIMS_VERSION,
       items:S.items.map(it => ({id:it.id, type:it.type, text:it.text, qr:it.qr, where:it.where, linked:it.linked, place:it.place, soort:it.soort, foil:it.foil, L:it.L ? serL(it.L) : null}))};
     let s = JSON.stringify(o);
     if (s.length > 4.5e6){ for (const x of o.items) if (x.L){ delete x.L.srcText; delete x.L.traceSrc; delete x.L.svgOrig; if (x.L.raster) delete x.L.raster.src; } s = JSON.stringify(o); }
@@ -2115,7 +2170,8 @@ function load(){
     }
     if (!o) return;
     const j = o.job || {}; S.job = {klant:j.klant || '', order:j.order || '', kenteken:j.kenteken || '', opm:j.opm || ''};
-    S.zoom = o.zoom || 'deur'; S.car = o.car || S.car; S.roof = o.roof || null; S.dims = o.dimsVer === DIMS_VERSION ? {...DEF, ...(o.dims || {})} : {...DEF};
+    applyModel(o.model || 'topolino'); S.model = MID; S.per = o.per || {};
+    S.zoom = o.zoom || 'deur'; S.car = o.car || CARS[0][1]; S.roof = 'roof' in o ? (o.roof || null) : MODELS[MID].roof; S.dims = o.dimsVer === DIMS_VERSION ? {...DEF, ...(o.dims || {})} : {...DEF};
     S.items = (o.items || []).map(x => { const it = newItem(x.type || 'logo'); Object.assign(it, {id:x.id || it.id, where:x.where || it.where, linked:x.linked !== false, place:x.place || {}, soort:x.soort || it.soort, foil:x.foil || {}});
       if (x.text) it.text = {...it.text, ...x.text}; if (x.qr) it.qr = {...it.qr, ...x.qr}; it.L = deL(x.L); for (const k of Object.keys(it.place)) if (!it.place[k]) delete it.place[k]; return it; });
     for (const it of S.items){ if (it.where === 'LR' && it.linked && it.place.L) it.place.R = mirrorP(it.place.L); ensurePlaces(it, false); }
@@ -2148,13 +2204,8 @@ function bind(){
     renderAll(); save(); });
   $('#s-zoom').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; S.zoom = b.dataset.v; renderJob(); renderStage(); save(); });
   $('#f-linked').addEventListener('change', e => { const it = cur(); if (!it) return; it.linked = e.target.checked; if (it.linked){ const v = isDoor(S.view) ? S.view : 'L'; if (it.place[v]) it.place[otherSide(v)] = mirrorP(it.place[v]); } else ensurePlaces(it, false); renderAll(); scheduleThin(it); save(); });
-  const cars = $('#cars');
-  for (const [n, c] of CARS) cars.append(h('button', {type:'button', title:n, 'aria-label':n, 'data-v':c, style:`background:${c}`, onclick:() => { S.car = c; renderJob(); renderStage(); renderChecks(); renderItems(); save(); }}));
-  let carT; cars.append(h('input', {type:'color', title:'Eigen kleur', 'aria-label':'Eigen autokleur', value:'#93bbae', oninput:e => { clearTimeout(carT); const v = e.target.value; carT = setTimeout(() => { S.car = v; renderJob(); renderStage(); renderChecks(); renderItems(); save(); }, 180); }}));
-  const roofs = $('#roofs'), setRoof = v => { S.roof = v || null; renderJob(); renderStage(); save(); };
-  roofs.append(h('button', {type:'button', class:'pill', 'data-v':'', title:'Dak in dezelfde kleur als de auto', onclick:() => setRoof(null)}, 'Zelfde'));
-  for (const [n, c] of ROOFS) roofs.append(h('button', {type:'button', title:n, 'aria-label':'Dak ' + n.toLowerCase(), 'data-v':c, style:`background:${c}`, onclick:() => setRoof(c)}));
-  let roofT; roofs.append(h('input', {type:'color', title:'Eigen dakkleur', 'aria-label':'Eigen dakkleur', value:'#3a3f40', oninput:e => { clearTimeout(roofT); const v = e.target.value; roofT = setTimeout(() => setRoof(v), 180); }}));
+  buildCarSwatches();
+  $('#f-model').addEventListener('change', e => setModel(e.target.value));
   // bestand
   const drop = $('#drop');
   $('#file').addEventListener('change', e => onFile(e.target.files[0]));
@@ -2193,7 +2244,7 @@ function bind(){
   $('#x-voorbeeld').addEventListener('click', e => busy(e.currentTarget, exportVoorbeeld));
   $('#x-copy').addEventListener('click', async () => { try { await navigator.clipboard.writeText($('#mail').value); toast('Mailtekst gekopieerd'); } catch (e) { $('#mail').select(); document.execCommand('copy'); toast('Mailtekst gekopieerd'); } });
   // deurmaten
-  for (const k of ['W','H','crU','marge']) $('#d-' + k).addEventListener('change', e => { const v = parseFloat(e.target.value); if (isFinite(v) && v > 0){ S.dims[k] = v; if (k === 'H') S.dims.top = v + 350; renderAll(); S.items.forEach(scheduleThin); save(); } });
+  for (const k of ['W','H','crU','marge']) $('#d-' + k).addEventListener('change', e => { const v = parseFloat(e.target.value); if (isFinite(v) && v > 0){ S.dims[k] = v; if (k === 'H') S.dims.top = v + (DEF.top - DEF.H); renderAll(); S.items.forEach(scheduleThin); save(); } });
   $('#d-reset').addEventListener('click', () => { S.dims = {...DEF}; renderAll(); save(); toast('Standaardmaten teruggezet'); });
   $('#b-reset').addEventListener('click', () => {
     if (!confirm('Alles leegmaken en met een nieuwe opdracht beginnen?')) return;
@@ -2201,6 +2252,38 @@ function bind(){
     $('#c-trace').classList.add('hidden'); TR.run++; TR.item = null; showErr(null); addItem('logo');
   });
   window.addEventListener('resize', () => renderStage());
+}
+// Kleurknoppen voor auto en dak (per model andere kleuren).
+function buildCarSwatches(){
+  const cars = $('#cars'), roofs = $('#roofs'); cars.innerHTML = ''; roofs.innerHTML = '';
+  for (const [n, c] of CARS) cars.append(h('button', {type:'button', title:n, 'aria-label':n, 'data-v':c, style:`background:${c}`, onclick:() => { S.car = c; renderJob(); renderStage(); renderChecks(); renderItems(); save(); }}));
+  let carT; cars.append(h('input', {type:'color', title:'Eigen kleur', 'aria-label':'Eigen autokleur', value:CARS[0][1], oninput:e => { clearTimeout(carT); const v = e.target.value; carT = setTimeout(() => { S.car = v; renderJob(); renderStage(); renderChecks(); renderItems(); save(); }, 180); }}));
+  const setRoof = v => { S.roof = v || null; renderJob(); renderStage(); save(); };
+  roofs.append(h('button', {type:'button', class:'pill', 'data-v':'', title:'Dak in dezelfde kleur als de auto', onclick:() => setRoof(null)}, 'Zelfde'));
+  for (const [n, c] of ROOFS) roofs.append(h('button', {type:'button', title:n, 'aria-label':'Dak ' + n.toLowerCase(), 'data-v':c, style:`background:${c}`, onclick:() => setRoof(c)}));
+  let roofT; roofs.append(h('input', {type:'color', title:'Eigen dakkleur', 'aria-label':'Eigen dakkleur', value:ROOFS[0][1], oninput:e => { clearTimeout(roofT); const v = e.target.value; roofT = setTimeout(() => setRoof(v), 180); }}));
+}
+// Ander automodel: kleuren en deurmaten per model bewaren. Op de deur blijft een sticker even breed en even ver van de naad,
+// maar komt hij midden in het vrije vlak van de nieuwe deur (de deuren verschillen per model); voor/achter naar de standaardplek.
+function setModel(id){
+  if (id === MID || !MODELS[id]) return;
+  S.per[MID] = {car:S.car, roof:S.roof, dims:S.dims};
+  applyModel(id); S.model = MID;
+  const p = S.per[MID] || {};
+  S.car = p.car || CARS[0][1]; S.roof = p && 'roof' in p ? p.roof : MODELS[MID].roof; S.dims = p.dims ? {...DEF, ...p.dims} : {...DEF};
+  buildCarSwatches();
+  const d = S.dims, [b0, b1] = DOOR.band(d);
+  for (const it of S.items){
+    for (const v of Object.keys(it.place)){
+      const p = it.place[v]; if (!p) continue;
+      if (isDoor(v)){ const w = Math.min(p.w, (b1 - b0) * aspectOf(it), d.W - 2 * d.marge); it.place[v] = fitPlace(it, {u:p.u, v:midV(d), w}, v); }
+      else it.place[v] = defaultPlace(it, v);
+    }
+    it.thin = null;
+  }
+  if (!isDoor(S.view)) loadZone(S.view);
+  renderAll(); S.items.forEach(scheduleThin); save();
+  toast(MODEL + ' gekozen');
 }
 function renderAll(){ renderJob(); renderItems(); renderEditor(); renderStage(); renderPlaceInputs(); renderChecks(); renderExport(); }
 
