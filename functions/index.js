@@ -7,7 +7,7 @@
 // - 1stop en Spéciale45 krijgen kenteken (of meldcode) + model + klant;
 // - geen foto's of andere privégegevens in een melding.
 'use strict';
-const { onDocumentCreated, onDocumentUpdated, onDocumentWritten } = require('firebase-functions/v2/firestore');
+const { onDocumentWritten } = require('firebase-functions/v2/firestore');
 const { setGlobalOptions } = require('firebase-functions/v2');
 const logger = require('firebase-functions/logger');
 const admin = require('firebase-admin');
@@ -67,7 +67,7 @@ async function stuur(rol, m) {
 }
 
 // 1. Nieuwe order → iedereen die er werk aan heeft, en altijd Spéciale45
-exports.nieuweOrder = onDocumentCreated('orders/{nr}', async ev => {
+async function nieuweOrder(ev) {
   const o = ev.data && ev.data.data(); if (!o) return;
   const nr = ev.params.nr;
   const rollen = new Set(['Spéciale45', ...rollenMetWerk(o)]);
@@ -78,10 +78,10 @@ exports.nieuweOrder = onDocumentCreated('orders/{nr}', async ev => {
     const body = [autoTekst(o, rol), werk.length ? kort(werk.join(', '), 60) : '', deadlineTekst(o, rol)].filter(Boolean).join(' · ');
     await stuur(rol, { nr, tag: 'nieuw-' + nr, title: titel, body });
   }
-});
+}
 
 // 2. Wijziging op een order (nieuwe regel in `wijzigingen`, of een andere datum) → de rollen voor wie het is
-exports.orderGewijzigd = onDocumentUpdated('orders/{nr}', async ev => {
+async function orderGewijzigd(ev) {
   const b = ev.data.before.data() || {}, a = ev.data.after.data() || {};
   const nr = ev.params.nr;
   const oud = new Set((b.wijzigingen || []).map(w => w.id));
@@ -96,10 +96,10 @@ exports.orderGewijzigd = onDocumentUpdated('orders/{nr}', async ev => {
       await stuur(rol, { nr, tag: 'datum-' + nr, title: 'Andere datum · ' + autoTekst(a, rol), body: deadlineTekst(a, rol) });
     }
   }
-});
+}
 
 // 3. Vinkje gezet → als daarmee een hele stap klaar is: wie daarop wachtte krijgt een seintje, en Spéciale45 bij de mijlpalen
-exports.stapKlaar = onDocumentWritten('orders/{nr}/checks/{item}', async ev => {
+async function stapKlaar(ev) {
   const na = ev.data.after.exists ? ev.data.after.data() : null;
   const voor = ev.data.before.exists ? ev.data.before.data() : null;
   if (!na || !na.done || (voor && voor.done)) return; // alleen een nieuw gezet vinkje
@@ -123,11 +123,11 @@ exports.stapKlaar = onDocumentWritten('orders/{nr}/checks/{item}', async ev => {
     const mijlpaal = { klaar: '✓ Klaar bij 1stop', afleveren: 'Afgeleverd', interieur: 'Interieurset verstuurd', 'voorkap-los': 'Voorkap is los' }[stap.id];
     if (mijlpaal) await stuur('Spéciale45', { nr, tag: 'stap-' + nr, title: mijlpaal + ' · ' + autoTekst(o, 'Spéciale45'), body: `${stap.titel} afgevinkt door ${door}` });
   }
-});
+}
 
 // 4. Opmerking of probleem in het logboek → Spéciale45; een bericht van Spéciale45 → wie er werk aan heeft
-exports.opmerking = onDocumentCreated('orders/{nr}/log/{id}', async ev => {
-  const e = ev.data && ev.data.data(); if (!e || !e.tekst) return;
+async function opmerking(ev) {
+  const e = ev.data.after.data(); if (!e || !e.tekst) return;
   const nr = ev.params.nr;
   const oSnap = await db.doc('orders/' + nr).get(); if (!oSnap.exists) return;
   const o = oSnap.data(); const van = e.rol || '';
@@ -137,13 +137,26 @@ exports.opmerking = onDocumentCreated('orders/{nr}/log/{id}', async ev => {
   } else {
     await stuur('Spéciale45', { nr, tag: 'opm-' + nr, title: 'Opmerking ' + (van || 'werkplaats') + ' · ' + autoTekst(o, 'Spéciale45'), body: e.tekst });
   }
-});
+}
 
 // 5. Probleem opgelost → wie het meldde
-exports.probleemOpgelost = onDocumentUpdated('orders/{nr}/log/{id}', async ev => {
+async function probleemOpgelost(ev) {
   const b = ev.data.before.data() || {}, a = ev.data.after.data() || {};
   if (!a.probleem || !a.opgelost || b.opgelost) return;
   const nr = ev.params.nr; const rol = a.rol; if (!ROLLEN.includes(rol) || rol === 'Spéciale45') return;
   const oSnap = await db.doc('orders/' + nr).get(); if (!oSnap.exists) return;
   await stuur(rol, { nr, tag: 'prob-' + nr, title: 'Probleem opgelost · ' + autoTekst(oSnap.data(), rol), body: a.tekst });
+}
+
+// Twee triggers: alles op een order, en alles in de subcollecties (checks, log)
+exports.orderEvent = onDocumentWritten('orders/{nr}', async ev => {
+  const voor = ev.data.before.exists, na = ev.data.after.exists;
+  if (!na) return; // verwijderd
+  if (!voor) return nieuweOrder({ params: ev.params, data: ev.data.after });
+  return orderGewijzigd(ev);
+});
+exports.subEvent = onDocumentWritten('orders/{nr}/{sub}/{id}', async ev => {
+  if (!ev.data.after.exists) return;
+  if (ev.params.sub === 'checks') return stapKlaar({ params: { nr: ev.params.nr, item: ev.params.id }, data: ev.data });
+  if (ev.params.sub === 'log') return ev.data.before.exists ? probleemOpgelost(ev) : opmerking(ev);
 });
