@@ -9,4 +9,4 @@ self.FIREBASE_CONFIG = {
   appId: "1:646038599212:web:244d8273ff125a301f4389"
 };
 // Publieke sleutel voor webmeldingen (Firebase → Projectinstellingen → Cloud Messaging → Web Push-certificaten). Leeg = meldingen uit.
-self.VAPID_KEY = "";
+self.VAPID_KEY = "BD7u0jAeHY8_UN_9HyHgny5sSrwXG4pyXpxcaL6t7RAEq4OGvkhLlLiK-ulTsIhrLwqkN1UneH8SFtKV7aeyfRc";
