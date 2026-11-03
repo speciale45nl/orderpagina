@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+# Publiceren vanuit Google Cloud Shell:  bash deploy rules | functions | alles
+# (Cloud Shell: https://shell.cloud.google.com/cloudshell/open?cloudshell_git_repo=https://github.com/speciale45nl/orderpagina&shellonly=true)
+set -uo pipefail
+cd "$(dirname "$0")"
+WAT="${1:-alles}"; P=speciale45-orders
+echo "== deploy $WAT ($(date +%H:%M)) =="
+git pull -q --rebase origin main 2>/dev/null || true
+if [ "$WAT" = rules ] || [ "$WAT" = alles ]; then
+  # veiligheidscheck: de live regels moeten gelijk zijn aan de vorige versie in git (anders is er buitenom iets gewijzigd)
+  TOK=$(gcloud auth print-access-token 2>/dev/null)
+  REL=$(curl -s -H "Authorization: Bearer $TOK" "https://firebaserules.googleapis.com/v1/projects/$P/releases/cloud.firestore" | python3 -c 'import sys,json; print(json.load(sys.stdin).get("rulesetName",""))')
+  curl -s -H "Authorization: Bearer $TOK" "https://firebaserules.googleapis.com/v1/$REL" | python3 -c 'import sys,json; d=json.load(sys.stdin); print(d["source"]["files"][0]["content"])' > /tmp/live.rules
+  git show HEAD~1:firestore.rules > /tmp/vorige.rules 2>/dev/null || git log --format=%H -n 2 -- firestore.rules | tail -1 | xargs -I{} git show {}:firestore.rules > /tmp/vorige.rules
+  if diff -q <(sed 's/[[:space:]]*$//' /tmp/live.rules) <(sed 's/[[:space:]]*$//' /tmp/vorige.rules) >/dev/null; then
+    echo "live regels = vorige git-versie, ok"
+  else
+    echo "LET OP: live regels wijken af van de vorige git-versie:"; diff /tmp/live.rules /tmp/vorige.rules | head -40
+    [ "${2:-}" = force ] || { echo "regels NIET gepubliceerd (bash deploy rules force om toch te doen)"; exit 1; }
+  fi
+  firebase deploy --only firestore:rules --project "$P" --non-interactive && echo "REGELS OK"
+fi
+if [ "$WAT" = functions ] || [ "$WAT" = alles ]; then
+  (cd functions && npm install --no-audit --no-fund --silent) && firebase deploy --only functions --project "$P" --non-interactive --force && echo "FUNCTIES OK"
+fi
