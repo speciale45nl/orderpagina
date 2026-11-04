@@ -306,7 +306,7 @@
 <script>
 (function(){
   'use strict';
-  const BUILD='2026-11-03T11:47';
+  const BUILD='2026-11-04T20:51';
   let laatsteCheck=0;
   async function checkVersie(){ // als app op het beginscherm blijft de oude pagina anders hangen
     const nu=Date.now(); if(nu-laatsteCheck<90000) return; laatsteCheck=nu;
@@ -445,7 +445,7 @@
     if(isS45()&&S.tab==='interieur'){ renderInterieur(main); return; }
     setTop('Orders', isS45()?'Alle auto\'s in bewerking':'Auto\'s met werk voor jou', null);
     let list=S.orders.filter(o=>mySteps(o).length&&!(isS45()&&o.type==='los'&&o.los!=='1stop')).map(o=>Object.assign({_st:statusVan(o)},o));
-    list.sort((a,b)=>(b._st.open-a._st.open)||((b._st.controle?1:0)-(a._st.controle?1:0))||((daysUntil(a.deadline)??9999)-(daysUntil(b.deadline)??9999)));
+    list.sort((a,b)=>((b.prio?1:0)-(a.prio?1:0))||(b._st.open-a._st.open)||((b._st.controle?1:0)-(a._st.controle?1:0))||((daysUntil(a.deadline)??9999)-(daysUntil(b.deadline)??9999)));
     let h = isS45()?tabsHtml():'';
     if(isS45()){ h+=`<div class="zoekrij" style="justify-content:flex-end;margin-top:10px"><button type="button" class="btn" id="nieuwKlusBtn">+ Losse klus voor 1stop</button></div>`;
       if(S.nieuwKlus) h+=`<form class="bewerk nieuw vz" id="nieuwKlusForm" style="margin-top:8px"><b>Losse klus voor 1stop</b>
@@ -458,6 +458,7 @@
     h += isInt()?'':`<form class="snel" id="snelForm"><label for="snelTag">Meldcode van de auto <span class="hint" style="font-weight:500">(4 cijfers, sticker in de deurstijl)</span></label><input id="snelTag" inputmode="numeric" placeholder="0240" aria-label="Meldcode, kenteken of stickernummer"><button type="submit" class="btn primary">Open</button></form>`;
     const li=o=>{ const st=mySteps(o), p=progress(st,o._checks||{}), x=o._st, dl=mijnDeadline(o), du=daysUntil(dl);
       const pills=[];
+      if(o.prio) pills.push('<span class="pill cur">⬆ Voorrang</span>');
       if(x.open) pills.push(`<span class="pill bad">⚠ ${x.open} probleem${x.open>1?'en':''}</span>`);
       if(isS45()&&x.ongezien.length) pills.push(`<span class="pill bad">✎ wijziging niet gezien: ${esc(x.ongezien.join(', '))}</span>`);
       if(!isS45()&&wijzVoorMij(o).some(w=>!wijzGezien(o._checks||{},w,S.role))) pills.push('<span class="pill bad">✎ gewijzigd, bekijk</span>');
@@ -719,6 +720,7 @@
     const log=zichtbaarLog();
     const openProb=log.filter(e=>e.probleem&&!e.opgelost);
     let h='';
+    if(isS45()&&canTick&&!(o.type==='los'&&o.los!=='1stop')) h+=`<div class="zoekrij" style="justify-content:flex-end;margin-top:10px"><button type="button" class="btn${o.prio?' primary':''}" data-prio="${esc(o.nummer)}">${o.prio?'⬆ Staat bovenaan · uitzetten':'⬆ Bovenaan zetten'}</button></div>`;
     if(openProb.length) h+=`<div class="alarm"><span>⚠ Probleem gemeld: ${esc(openProb[0].tekst)}</span>${isS45()&&canTick?`<button type="button" class="btn" data-opgelost="${esc(openProb[0].id)}">Opgelost</button>`:''}</div>`;
     const wijz=wijzVoorMij(o).slice().sort((a,b)=>String(b.at).localeCompare(String(a.at)));
     if(!isS45()) wijz.filter(w=>!wijzGezien(S.checks,w,S.role)).forEach(w=>{ h+=`<div class="alarm wijziging"><span>✎ Gewijzigd ${esc(fmt(w.at))}: ${esc(w.tekst)}</span>${canTick?`<button type="button" class="btn" data-gezien="${esc(wijzId(w,S.role))}">Gezien</button>`:''}</div>`; });
@@ -789,6 +791,7 @@
     if(e.target.closest('#nieuwAutoWeg')){ S.nieuwAuto=false; render(); return; }
     if(e.target.closest('#nieuwLosBtn')){ S.nieuwLos=!S.nieuwLos; render(); const f=$('nieuwLosForm'); if(f){ const i=f.querySelector('input'); if(i) i.focus(); } return; }
     if(e.target.closest('#nieuwLosWeg')){ S.nieuwLos=false; render(); return; }
+    const pr=e.target.closest('button[data-prio]'); if(pr){ try{ await S.db.doc('orders/'+pr.dataset.prio).update({prio:!(S.order&&S.order.prio)}); toast(S.order&&S.order.prio?'Niet meer bovenaan':'Staat bovenaan'); }catch(err){ fail(err); } return; }
     if(e.target.closest('#nieuwKlusBtn')){ S.nieuwKlus=!S.nieuwKlus; render(); const f=$('nieuwKlusForm'); if(f){ const i=f.querySelector('input'); if(i) i.focus(); } return; }
     if(e.target.closest('#nieuwKlusWeg')){ S.nieuwKlus=false; render(); return; }
     const ifl=e.target.closest('[data-intfilter]'); if(ifl){ S.intFilter=S.intFilter===ifl.dataset.intfilter?'':ifl.dataset.intfilter; render(); window.scrollTo({top:0,behavior:'smooth'}); return; }
