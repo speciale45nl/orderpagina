@@ -18,6 +18,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging-compat.js"></script>
 <script src="firebase-config.js"></script>
+<script src="werkbon.js" defer></script>
 <style>
   /* Layout: wie-ben-je als eerste scherm, daarna één kolom: kop met voortgang, opdracht, de eigen stappen, opmerkingen. */
   :root{
@@ -306,7 +307,7 @@
 <script>
 (function(){
   'use strict';
-  const BUILD='2026-11-05T15:38';
+  const BUILD='2026-11-05T16:03';
   let laatsteCheck=0;
   async function checkVersie(){ // als app op het beginscherm blijft de oude pagina anders hangen
     const nu=Date.now(); if(nu-laatsteCheck<90000) return; laatsteCheck=nu;
@@ -740,6 +741,7 @@
         return `<div class="refs"><b>Referentiefoto's${isS45()?' <span class="hint">(kleur, voorbeeld, detail)</span>':''}</b>${refs.length?`<div class="grid">${refs.map(f=>{ const mag=canTick&&(isS45()||f.uid===S.uid); const vraag=S.fotoWeg===f.id; return `<div class="ph ${vraag?'vraag':''}"><img src="${esc(f.data||f.url||'')}" alt="Referentiefoto" loading="lazy" data-groot="${esc(f.id)}"><span>${esc(f.omschrijving||(f.voor&&f.voor!=='alle'?'voor '+f.voor:'voor iedereen'))}</span>${mag&&!vraag?`<button type="button" class="weg" data-fotoweg="${esc(f.id)}" aria-label="Verwijderen">×</button>`:''}${vraag?`<div class="bevestig"><button type="button" class="ja" data-fotoja="${esc(f.id)}">Weg</button><button type="button" class="nee" data-fotonee="1">Nee</button></div>`:''}</div>`; }).join('')}</div><div class="hint">Tik op een foto om hem groot te zien.</div>`:'<div class="hint">Nog geen referentiefoto\'s.</div>'}
         ${isS45()&&canPhoto?`<div class="refknoppen"><label class="btn photo" for="ref-1stop">📷 Voor 1stop<input type="file" id="ref-1stop" data-ref="1stop" accept="image/*" hidden></label><label class="btn photo" for="ref-int">📷 Voor de interieurspecialist<input type="file" id="ref-int" data-ref="Interieurspecialist" accept="image/*" hidden></label></div>`:''}</div>`; })()}
       ${o.letop&&!isInt()?`<span class="req">${esc(o.letop)}</span>`:''}${o.letopInterieur&&(isInt()||isS45())?`<span class="req">${esc(o.letopInterieur)}</span>`:''}
+      ${(isInt()||isS45())&&(o.stappen||[]).some(x=>x.wie==='Interieurspecialist')?`<div class="refknoppen"><button type="button" class="btn" data-werkbon="${esc(o.nummer)}">📄 Werkbon (PDF) voor het personeel</button><span class="hint">Eén A4 met uitvoering, afvinklijst, werkinstructie en referentiefoto's — delen via WhatsApp of printen.</span></div>`:''}
       ${wijz.length?`<div class="wijz"><b>Wijzigingen</b>${wijz.map(w=>`<div><span class="meta">✎ ${esc(fmt(w.at))} · </span>${esc(w.tekst)}${isS45()?' <span class="meta">— '+(w.voor||WIJZ_VOOR).map(r=>{ const c=S.checks[wijzId(w,r)]; return c&&c.done?`<span class="ok">${esc(r)} gezien ${esc(fmt(c.at))}</span>`:`<span class="nee">${esc(r)} nog niet gezien</span>`; }).join(', ')+'</span>':(wijzGezien(S.checks,w,S.role)?' <span class="meta ok">gezien</span>':'')}</div>`).join('')}</div>`:''}
     </div>${isS45()?`<div class="tools"><button type="button" class="btn" id="qrBtn">QR / link van deze auto</button></div><div class="qr ${S.qrOpen?'open':''}" id="qrBox"></div>`:''}</section>`;
     if(!steps.length) h+=`<div class="empty">Geen stappen voor jou in deze order.</div>`;
@@ -791,6 +793,7 @@
     if(e.target.closest('#nieuwAutoWeg')){ S.nieuwAuto=false; render(); return; }
     if(e.target.closest('#nieuwLosBtn')){ S.nieuwLos=!S.nieuwLos; render(); const f=$('nieuwLosForm'); if(f){ const i=f.querySelector('input'); if(i) i.focus(); } return; }
     if(e.target.closest('#nieuwLosWeg')){ S.nieuwLos=false; render(); return; }
+    const wb=e.target.closest('button[data-werkbon]'); if(wb&&S.order){ wb.disabled=true; const oud=wb.textContent; wb.textContent='Werkbon wordt gemaakt…'; try{ if(!window.jspdf){ await new Promise((res,rej)=>{ const sc=document.createElement('script'); sc.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'; sc.onload=res; sc.onerror=()=>rej(new Error('PDF-bibliotheek laden mislukt')); document.head.appendChild(sc); }); } const r=await window.werkbonInterieur(S.order,S.photos,{deadline:intDeadline(S.order),datum:fmtD(new Date().toISOString().slice(0,10))}); toast(r==='gedeeld'?'Werkbon gedeeld':(r==='geannuleerd'?'Delen geannuleerd':'Werkbon gedownload')); }catch(err){ toast('Werkbon maken lukt niet: '+(err&&err.message||err)); } wb.disabled=false; wb.textContent=oud; return; }
     const pr=e.target.closest('button[data-prio]'); if(pr){ try{ await S.db.doc('orders/'+pr.dataset.prio).update({prio:!(S.order&&S.order.prio)}); toast(S.order&&S.order.prio?'Niet meer bovenaan':'Staat bovenaan'); }catch(err){ fail(err); } return; }
     if(e.target.closest('#nieuwKlusBtn')){ S.nieuwKlus=!S.nieuwKlus; render(); const f=$('nieuwKlusForm'); if(f){ const i=f.querySelector('input'); if(i) i.focus(); } return; }
     if(e.target.closest('#nieuwKlusWeg')){ S.nieuwKlus=false; render(); return; }
