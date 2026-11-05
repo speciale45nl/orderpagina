@@ -307,7 +307,7 @@
 <script>
 (function(){
   'use strict';
-  const BUILD='2026-11-05T16:03';
+  const BUILD='2026-11-05T16:05';
   let laatsteCheck=0;
   async function checkVersie(){ // als app op het beginscherm blijft de oude pagina anders hangen
     const nu=Date.now(); if(nu-laatsteCheck<90000) return; laatsteCheck=nu;
@@ -743,7 +743,7 @@
       ${o.letop&&!isInt()?`<span class="req">${esc(o.letop)}</span>`:''}${o.letopInterieur&&(isInt()||isS45())?`<span class="req">${esc(o.letopInterieur)}</span>`:''}
       ${(isInt()||isS45())&&(o.stappen||[]).some(x=>x.wie==='Interieurspecialist')?`<div class="refknoppen"><button type="button" class="btn" data-werkbon="${esc(o.nummer)}">📄 Werkbon (PDF) voor het personeel</button><span class="hint">Eén A4 met uitvoering, afvinklijst, werkinstructie en referentiefoto's — delen via WhatsApp of printen.</span></div>`:''}
       ${wijz.length?`<div class="wijz"><b>Wijzigingen</b>${wijz.map(w=>`<div><span class="meta">✎ ${esc(fmt(w.at))} · </span>${esc(w.tekst)}${isS45()?' <span class="meta">— '+(w.voor||WIJZ_VOOR).map(r=>{ const c=S.checks[wijzId(w,r)]; return c&&c.done?`<span class="ok">${esc(r)} gezien ${esc(fmt(c.at))}</span>`:`<span class="nee">${esc(r)} nog niet gezien</span>`; }).join(', ')+'</span>':(wijzGezien(S.checks,w,S.role)?' <span class="meta ok">gezien</span>':'')}</div>`).join('')}</div>`:''}
-    </div>${isS45()?`<div class="tools"><button type="button" class="btn" id="qrBtn">QR / link van deze auto</button></div><div class="qr ${S.qrOpen?'open':''}" id="qrBox"></div>`:''}</section>`;
+    </div></section>`; // QR/stickerlink komt pas als de QR-stickers er zijn
     if(!steps.length) h+=`<div class="empty">Geen stappen voor jou in deze order.</div>`;
     steps.forEach((st,i)=>{
       const items=st.items||[], done=p.states[i], photos=S.photos.filter(f=>f.stap===st.id);
