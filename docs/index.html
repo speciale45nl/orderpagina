@@ -306,7 +306,7 @@
 <script>
 (function(){
   'use strict';
-  const BUILD='2026-11-04T20:51';
+  const BUILD='2026-11-05T15:25';
   let laatsteCheck=0;
   async function checkVersie(){ // als app op het beginscherm blijft de oude pagina anders hangen
     const nu=Date.now(); if(nu-laatsteCheck<90000) return; laatsteCheck=nu;
@@ -324,7 +324,7 @@
   const kKey=k=>String(k||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
   const tagVan=(kenteken,meldcode)=>{ const key=kKey(kenteken); for(const nn in S.tags){ const t=S.tags[nn]; if(key&&kKey(t.kenteken)===key) return nn; if(!key&&meldcode&&!kKey(t.kenteken)&&t.meldcode===meldcode) return nn; } return ''; };
   const autoLabel=o=>o.kenteken||(o.meldcode?'Meldcode '+o.meldcode:(o.klant||'—'));
-  const PARTS=[{id:'marshall',naam:'Marshall speakers',min:2},{id:'speakerband',naam:'Speakerbanden',min:2},{id:'oplader',naam:'Opladers (oplaadstuk laadpaal)',min:2}];
+  const PARTS=[{id:'marshall',naam:'Marshall speakers',min:2},{id:'speakerband',naam:'Speakerbanden sets (1 set per Marshall)',min:2},{id:'oplader',naam:'Opladers (oplaadstuk laadpaal)',min:2}];
   const partNaam=id=>{ const x=PARTS.find(p=>p.id===id); return x?x.naam:id; };
   const $=id=>document.getElementById(id);
   const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
