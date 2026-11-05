@@ -306,7 +306,7 @@
 <script>
 (function(){
   'use strict';
-  const BUILD='2026-11-05T15:25';
+  const BUILD='2026-11-05T15:38';
   let laatsteCheck=0;
   async function checkVersie(){ // als app op het beginscherm blijft de oude pagina anders hangen
     const nu=Date.now(); if(nu-laatsteCheck<90000) return; laatsteCheck=nu;
@@ -607,7 +607,7 @@
     if(!regels.length){ toast('Typ minstens één onderdeel.'); return; }
     const nr=volgendLosNummer(); const klant=/^voorraad/i.test(voor)?voor:'Nabestelling '+voor;
     const o={nummer:nr,type:'los',aangemaakt:new Date().toISOString().slice(0,10),klant,kenteken:'',meldcode:'',model:'',basis:'',deadline:String(fd.get('deadline')||''),opdracht:{spuitwerk:[],montage:[],interieur:regels},referentie:'',letop:'',letopInterieur:letop||'Losse onderdelen — graag in een aparte doos met dit label.',
-      stappen:[{id:'interieur',titel:'Losse onderdelen',wie:'Interieurspecialist',foto:false,items:regels.map((t,i)=>({id:'l-'+(i+1),tekst:t})).concat([{id:'i-doos',tekst:'Verstuurd in een aparte doos met label: '+klant+' · order '+nr}])},{id:'ontvangst',titel:'Ontvangen',wie:'Spéciale45',foto:false,vereistStappen:['interieur'],items:[{id:'o-ontvangen',tekst:'Onderdelen ontvangen en gecontroleerd'}]}]};
+      stappen:[{id:'interieur',titel:'Losse onderdelen',wie:'Interieurspecialist',foto:true,fotoLabel:'Snelle foto van de onderdelen',items:regels.map((t,i)=>({id:'l-'+(i+1),tekst:t})).concat([{id:'i-doos',tekst:'Verstuurd in een aparte doos met label: '+klant+' · order '+nr}])},{id:'ontvangst',titel:'Ontvangen',wie:'Spéciale45',foto:false,vereistStappen:['interieur'],items:[{id:'o-ontvangen',tekst:'Onderdelen ontvangen en gecontroleerd'}]}]};
     try{ await S.db.doc('orders/'+nr).set(o); S.nieuwLos=false; toast('Losse bestelling '+nr+' aangemaakt'); }catch(err){ fail(err); }
   }
   async function losRegelErbij(form){
