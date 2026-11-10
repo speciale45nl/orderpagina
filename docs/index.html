@@ -308,7 +308,7 @@
 <script>
 (function(){
   'use strict';
-  const BUILD='2026-11-05T17:47';
+  const BUILD='2026-11-10T12:00';
   let laatsteCheck=0;
   async function checkVersie(){ // als app op het beginscherm blijft de oude pagina anders hangen
     const nu=Date.now(); if(nu-laatsteCheck<90000) return; laatsteCheck=nu;
@@ -460,7 +460,8 @@
     h += isInt()?'':`<form class="snel" id="snelForm"><label for="snelTag">Meldcode van de auto <span class="hint" style="font-weight:500">(4 cijfers, sticker in de deurstijl)</span></label><input id="snelTag" inputmode="numeric" placeholder="0240" aria-label="Meldcode, kenteken of stickernummer"><button type="submit" class="btn primary">Open</button></form>`;
     const li=o=>{ const st=mySteps(o), p=progress(st,o._checks||{}), x=o._st, dl=mijnDeadline(o), du=daysUntil(dl);
       const pills=[];
-      if(o.prio) pills.push('<span class="pill cur">⬆ Voorrang</span>');
+      if(o.prio&&!o.pauze) pills.push('<span class="pill cur">⬆ Voorrang</span>');
+      if(o.pauze) pills.push('<span class="pill">⏸ Geparkeerd</span>');
       if(x.open) pills.push(`<span class="pill bad">⚠ ${x.open} probleem${x.open>1?'en':''}</span>`);
       if(isS45()&&x.ongezien.length) pills.push(`<span class="pill bad">✎ wijziging niet gezien: ${esc(x.ongezien.join(', '))}</span>`);
       if(!isS45()&&wijzVoorMij(o).some(w=>!wijzGezien(o._checks||{},w,S.role))) pills.push('<span class="pill bad">✎ gewijzigd, bekijk</span>');
@@ -481,8 +482,9 @@
         <div class="flags">${pills.join('')}</div>
         <div class="mini">${p.states.map((d,i)=>`<span class="${d?'done':(i===p.cur?'cur':'')}"></span>`).join('')}</div></a></li>`; };
     const klaarVoorMij=o=>{ const p=progress(mySteps(o),o._checks||{}); return p.cur<0||(isS45()&&o._st.afgeleverd); };
-    const actief=list.filter(o=>!klaarVoorMij(o)), af=list.filter(klaarVoorMij);
+    const pauze=list.filter(o=>o.pauze&&!klaarVoorMij(o)); const actief=list.filter(o=>!klaarVoorMij(o)&&!o.pauze), af=list.filter(klaarVoorMij);
     h += !actief.length ? `<div class="empty">${isS45()?'Geen lopende orders.':'Niets te doen op dit moment.'}</div>` : `<ul class="orders">${actief.map(li).join('')}</ul>`;
+    if(pauze.length) h+=`<details class="archief" style="margin-top:14px"><summary style="cursor:pointer;font-weight:700;padding:8px 0;color:var(--muted)">⏸ Even geparkeerd (${pauze.length})</summary><ul class="orders" style="margin-top:8px">${pauze.map(li).join('')}</ul></details>`;
     if(af.length) h+=`<details class="archief" style="margin-top:14px"><summary style="cursor:pointer;font-weight:700;padding:8px 0;color:var(--muted)">${isS45()?'Afgeleverd':'Afgehandeld'} (${af.length})</summary><ul class="orders" style="margin-top:8px">${af.map(li).join('')}</ul></details>`;
     if(S.role==='1stop'||isS45()) h+=voorraadKaart();
     if(isS45()) h+=`<section class="card"><div class="hd"><h2>Beheer</h2><span class="hint">Orders en auto's uit de chat inlezen</span></div><div class="bd">
@@ -722,7 +724,7 @@
     const log=zichtbaarLog();
     const openProb=log.filter(e=>e.probleem&&!e.opgelost);
     let h='';
-    if(isS45()&&canTick&&!(o.type==='los'&&o.los!=='1stop')) h+=`<div class="zoekrij" style="justify-content:flex-end;margin-top:10px"><button type="button" class="btn${o.prio?' primary':''}" data-prio="${esc(o.nummer)}">${o.prio?'⬆ Staat bovenaan · uitzetten':'⬆ Bovenaan zetten'}</button></div>`;
+    if(isS45()&&canTick&&!(o.type==='los'&&o.los!=='1stop')) h+=`<div class="zoekrij" style="justify-content:flex-end;margin-top:10px"><button type="button" class="btn${o.prio?' primary':''}" data-prio="${esc(o.nummer)}">${o.prio?'⬆ Staat bovenaan · uitzetten':'⬆ Bovenaan zetten'}</button><button type="button" class="btn${o.pauze?' primary':''}" data-pauze="${esc(o.nummer)}">${o.pauze?'▶ Weer in de planning':'⏸ Even parkeren'}</button></div>`;
     if(openProb.length) h+=`<div class="alarm"><span>⚠ Probleem gemeld: ${esc(openProb[0].tekst)}</span>${isS45()&&canTick?`<button type="button" class="btn" data-opgelost="${esc(openProb[0].id)}">Opgelost</button>`:''}</div>`;
     const wijz=wijzVoorMij(o).slice().sort((a,b)=>String(b.at).localeCompare(String(a.at)));
     if(!isS45()) wijz.filter(w=>!wijzGezien(S.checks,w,S.role)).forEach(w=>{ h+=`<div class="alarm wijziging"><span>✎ Gewijzigd ${esc(fmt(w.at))}: ${esc(w.tekst)}</span>${canTick?`<button type="button" class="btn" data-gezien="${esc(wijzId(w,S.role))}">Gezien</button>`:''}</div>`; });
@@ -802,6 +804,7 @@
         await S.db.doc('orders/'+S.orderId).update({stappen,wijzigingen:firebase.firestore.FieldValue.arrayUnion(w)});
         await S.db.collection('orders/'+S.orderId+'/log').add({tekst:'Teruggestuurd naar '+(st?st.wie:'')+': '+txt,by:who(),rol:S.role,uid:S.uid,at:new Date().toISOString(),probleem:false,opgelost:false});
         toast('Teruggestuurd naar '+(st?st.wie:'')); }catch(err){ fail(err); } return; }
+    const pz=e.target.closest('button[data-pauze]'); if(pz){ try{ const aan=!(S.order&&S.order.pauze); await S.db.doc('orders/'+pz.dataset.pauze).update(aan?{pauze:true,prio:false}:{pauze:false}); toast(aan?'Geparkeerd: staat onder "Even geparkeerd"':'Weer in de planning'); }catch(err){ fail(err); } return; }
     const pr=e.target.closest('button[data-prio]'); if(pr){ try{ await S.db.doc('orders/'+pr.dataset.prio).update({prio:!(S.order&&S.order.prio)}); toast(S.order&&S.order.prio?'Niet meer bovenaan':'Staat bovenaan'); }catch(err){ fail(err); } return; }
     if(e.target.closest('#nieuwKlusBtn')){ S.nieuwKlus=!S.nieuwKlus; render(); const f=$('nieuwKlusForm'); if(f){ const i=f.querySelector('input'); if(i) i.focus(); } return; }
     if(e.target.closest('#nieuwKlusWeg')){ S.nieuwKlus=false; render(); return; }
