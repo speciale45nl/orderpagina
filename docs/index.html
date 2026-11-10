@@ -308,7 +308,7 @@
 <script>
 (function(){
   'use strict';
-  const BUILD='2026-11-10T12:00';
+  const BUILD='2026-11-10T12:03';
   let laatsteCheck=0;
   async function checkVersie(){ // als app op het beginscherm blijft de oude pagina anders hangen
     const nu=Date.now(); if(nu-laatsteCheck<90000) return; laatsteCheck=nu;
@@ -482,6 +482,7 @@
         <div class="flags">${pills.join('')}</div>
         <div class="mini">${p.states.map((d,i)=>`<span class="${d?'done':(i===p.cur?'cur':'')}"></span>`).join('')}</div></a></li>`; };
     const klaarVoorMij=o=>{ const p=progress(mySteps(o),o._checks||{}); return p.cur<0||(isS45()&&o._st.afgeleverd); };
+    if(!isS45()) list=list.filter(o=>!o.pauze); // geparkeerde orders ziet de werkplaats helemaal niet, tot Spéciale45 ze weer inplant
     const pauze=list.filter(o=>o.pauze&&!klaarVoorMij(o)); const actief=list.filter(o=>!klaarVoorMij(o)&&!o.pauze), af=list.filter(klaarVoorMij);
     h += !actief.length ? `<div class="empty">${isS45()?'Geen lopende orders.':'Niets te doen op dit moment.'}</div>` : `<ul class="orders">${actief.map(li).join('')}</ul>`;
     if(pauze.length) h+=`<details class="archief" style="margin-top:14px"><summary style="cursor:pointer;font-weight:700;padding:8px 0;color:var(--muted)">⏸ Even geparkeerd (${pauze.length})</summary><ul class="orders" style="margin-top:8px">${pauze.map(li).join('')}</ul></details>`;
@@ -718,13 +719,14 @@
     if(isS45()&&p.cur>=0){ const l=bezig.filter(b=>!b.locked).map(b=>b.titel); if(l.length) p.label=l.join(' + '); }
     const nn=isInt()?'':tagVan(o.kenteken,o.meldcode);
     setTop(isInt()?o.klant:autoLabel(o), `<a class="back" href="#" id="back">← Alle orders</a>${nn?`<span class="tagnr" title="Stickernummer op de auto">${esc(nn)}</span>`:''}${isInt()?`<span>order ${esc(o.nummer)}</span>`:(o.type==='los'?`<span>${o.los==='1stop'?'losse klus':'losse interieurbestelling'} · order ${esc(o.nummer)}</span>`:`<span>${esc(o.model||'')}</span><span>meldcode ${esc(o.meldcode||'—')}</span>`)}${dlO?`<span><b>${deadlineLabel()} ${esc(fmtD(dlO))}</b></span>`:''}`, p);
-    const canTick=!!S.db&&!S.readOnly&&S.canWrite!==false, canPhoto=canTick;
+    const canTick=!!S.db&&!S.readOnly&&S.canWrite!==false&&!(o.pauze&&!isS45()), canPhoto=canTick; // geparkeerd: werkplaats kan alleen kijken
     const specKeys = isS45() ? ['spuitwerk','montage','interieur','extern'] : (S.role==='1stop'?['spuitwerk','montage']:['interieur']);
     const spec=(o.opdracht||{});
     const log=zichtbaarLog();
     const openProb=log.filter(e=>e.probleem&&!e.opgelost);
     let h='';
     if(isS45()&&canTick&&!(o.type==='los'&&o.los!=='1stop')) h+=`<div class="zoekrij" style="justify-content:flex-end;margin-top:10px"><button type="button" class="btn${o.prio?' primary':''}" data-prio="${esc(o.nummer)}">${o.prio?'⬆ Staat bovenaan · uitzetten':'⬆ Bovenaan zetten'}</button><button type="button" class="btn${o.pauze?' primary':''}" data-pauze="${esc(o.nummer)}">${o.pauze?'▶ Weer in de planning':'⏸ Even parkeren'}</button></div>`;
+    if(o.pauze) h+=`<div class="banner">⏸ Even geparkeerd door Spéciale45 — de auto is er nu niet. ${isS45()?'Tik op "Weer in de planning" zodra hij terug is.':'Deze order komt vanzelf terug in je lijst zodra hij weer is ingepland.'}</div>`;
     if(openProb.length) h+=`<div class="alarm"><span>⚠ Probleem gemeld: ${esc(openProb[0].tekst)}</span>${isS45()&&canTick?`<button type="button" class="btn" data-opgelost="${esc(openProb[0].id)}">Opgelost</button>`:''}</div>`;
     const wijz=wijzVoorMij(o).slice().sort((a,b)=>String(b.at).localeCompare(String(a.at)));
     if(!isS45()) wijz.filter(w=>!wijzGezien(S.checks,w,S.role)).forEach(w=>{ h+=`<div class="alarm wijziging"><span>✎ Gewijzigd ${esc(fmt(w.at))}: ${esc(w.tekst)}</span>${canTick?`<button type="button" class="btn" data-gezien="${esc(wijzId(w,S.role))}">Gezien</button>`:''}</div>`; });
@@ -804,7 +806,7 @@
         await S.db.doc('orders/'+S.orderId).update({stappen,wijzigingen:firebase.firestore.FieldValue.arrayUnion(w)});
         await S.db.collection('orders/'+S.orderId+'/log').add({tekst:'Teruggestuurd naar '+(st?st.wie:'')+': '+txt,by:who(),rol:S.role,uid:S.uid,at:new Date().toISOString(),probleem:false,opgelost:false});
         toast('Teruggestuurd naar '+(st?st.wie:'')); }catch(err){ fail(err); } return; }
-    const pz=e.target.closest('button[data-pauze]'); if(pz){ try{ const aan=!(S.order&&S.order.pauze); await S.db.doc('orders/'+pz.dataset.pauze).update(aan?{pauze:true,prio:false}:{pauze:false}); toast(aan?'Geparkeerd: staat onder "Even geparkeerd"':'Weer in de planning'); }catch(err){ fail(err); } return; }
+    const pz=e.target.closest('button[data-pauze]'); if(pz){ try{ const aan=!(S.order&&S.order.pauze); await S.db.doc('orders/'+pz.dataset.pauze).update(aan?{pauze:true,prio:false,deadlineVoorPauze:S.order.deadline||'',deadline:''}:{pauze:false,deadline:S.order.deadlineVoorPauze||''}); toast(aan?'Geparkeerd: 1stop en de interieurspecialist zien deze order niet meer tot je hem weer inplant':'Weer in de planning'); }catch(err){ fail(err); } return; }
     const pr=e.target.closest('button[data-prio]'); if(pr){ try{ await S.db.doc('orders/'+pr.dataset.prio).update({prio:!(S.order&&S.order.prio)}); toast(S.order&&S.order.prio?'Niet meer bovenaan':'Staat bovenaan'); }catch(err){ fail(err); } return; }
     if(e.target.closest('#nieuwKlusBtn')){ S.nieuwKlus=!S.nieuwKlus; render(); const f=$('nieuwKlusForm'); if(f){ const i=f.querySelector('input'); if(i) i.focus(); } return; }
     if(e.target.closest('#nieuwKlusWeg')){ S.nieuwKlus=false; render(); return; }
