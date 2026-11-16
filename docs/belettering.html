@@ -115,6 +115,9 @@
   .crow button{border:1px solid var(--line-strong);background:transparent;border-radius:7px;font-size:12px;padding:3px 8px;min-height:30px;white-space:nowrap}
   .crow input.sqc{width:24px;height:24px;border:1px solid rgba(0,0,0,.25);border-radius:6px;padding:0;background:none;flex:none;cursor:pointer;min-height:0}
   .crow input.sqc::-webkit-color-swatch-wrapper{padding:0} .crow input.sqc::-webkit-color-swatch{border:none;border-radius:5px} .crow input.sqc::-moz-color-swatch{border:none;border-radius:5px}
+  .crow2{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--muted);margin:-2px 0 4px 30px}
+  .crow2 input{width:118px;min-height:28px;border:1px solid var(--line);border-radius:7px;padding:2px 8px;font-size:12.5px;font-family:"SF Mono",Menlo,Consolas,monospace;background:var(--paper);color:var(--ink)}
+  .crow2 .src{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .crow.off{opacity:.45} .crow.off .sq{background-image:linear-gradient(45deg,transparent 45%,#a9322a 45%,#a9322a 55%,transparent 55%)}
 
   .stagecard .hd{flex-wrap:wrap;row-gap:8px}
@@ -273,6 +276,13 @@
             <button type="button" data-v="snij">Gesneden folie</button>
             <button type="button" data-v="print">Geprinte sticker</button>
           </div>
+          <div class="lbl">Afwerking</div>
+          <div class="seg" id="s-finish">
+            <button type="button" data-v="glans">Glans</button>
+            <button type="button" data-v="mat">Mat</button>
+            <button type="button" data-v="metallic">Metallic</button>
+          </div>
+          <p class="small muted hidden" id="finish-tip" style="margin:6px 0 0"></p>
           <div id="ed-colors"></div>
         </div>
       </div>
@@ -574,6 +584,68 @@ function rgb2lab(r, g, b){ const R = LIN[r|0], G = LIN[g|0], B = LIN[b|0];
 const hexLab = hx => { const c = parseColor(hx); return rgb2lab(c[0], c[1], c[2]); };
 const dE = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
 const NAMES = [['wit','#ffffff'],['zwart','#000000'],['grijs','#808080'],['lichtgrijs','#c8c8c8'],['donkergrijs','#404040'],['rood','#d0202a'],['donkerrood','#8a1c22'],['oranje','#f08a1c'],['geel','#f5d000'],['goud','#c9a24a'],['goud','#93845a'],['brons','#8b6248'],['groen','#2e8b3a'],['donkergroen','#1f4d2b'],['lichtgroen','#9ccc65'],['mintgroen','#9fd6bf'],['blauw','#1f5fbf'],['donkerblauw','#14295a'],['lichtblauw','#8ec5ee'],['turquoise','#2bb3b1'],['paars','#6a3d9a'],['roze','#f2a0b8'],['fuchsia','#d6267a'],['bruin','#7a4a26'],['beige','#e2d2b4'],['crème','#f3ead2'],['zilver','#bfc3c7']].map(([n, x]) => [n, hexLab(x)]);
+// CMYK. Omrekenen naar RGB gaat net als in pdf.js (benadert een gewoon drukprofiel); terug zoekt de tool de
+// CMYK-waarde die precies die kleur geeft, met zo min mogelijk zwart. Grijs en zwart worden alleen zwart (K).
+function cmyk2rgb(c, m, y, k){
+  const r = 255 + c * (-4.387332384609988 * c + 54.48615194189176 * m + 18.82290502165302 * y + 212.25662451639585 * k - 285.2331026137004) + m * (1.7149763477362134 * m - 5.6096736904047315 * y - 17.873870861415444 * k - 5.497006427196366) + y * (-2.5217340131683033 * y - 21.248923337353073 * k + 17.5119270841813) + k * (-21.86122147463605 * k - 189.48180835922747);
+  const g = 255 + c * (8.841041422036149 * c + 60.118027045597366 * m + 6.871425592049007 * y + 31.159100130055922 * k - 79.2970844816548) + m * (-15.310361306967817 * m + 17.575251261109482 * y + 131.35250912493976 * k - 190.9453302588951) + y * (4.444339102852739 * y + 9.8632861493405 * k - 24.86741582555878) + k * (-20.737325471181034 * k - 187.80453709719578);
+  const b = 255 + c * (0.8842522430003296 * c + 8.078677503112928 * m + 30.89978309703729 * y - 0.23883238689178934 * k - 14.183576799673286) + m * (10.49593273432072 * m + 63.02378494754052 * y + 50.606957656360734 * k - 112.23884253719248) + y * (0.03296041114873217 * y + 115.60384449646641 * k - 193.58209356861505) + k * (-22.33816807309886 * k - 180.12613974708367);
+  return [r, g, b].map(v => Math.max(0, Math.min(255, v)));
+}
+const rgbHex = a => '#' + a.map(v => Math.round(v).toString(16).padStart(2, '0')).join('');
+const _cmykCache = new Map();
+function rgb2cmyk(hx){
+  if (_cmykCache.has(hx)) return _cmykCache.get(hx);
+  const t = parseColor(hx), lab = rgb2lab(t[0], t[1], t[2]), chroma = Math.hypot(lab[1], lab[2]);
+  const err = q => { const r = cmyk2rgb(...q); return Math.hypot(r[0] - t[0], r[1] - t[1], r[2] - t[2]); };
+  let out;
+  if (lab[0] > 97 && chroma < 3) out = [0, 0, 0, 0];
+  else if (chroma < 4){ // grijs of zwart: alleen K
+    let lo = 0, hi = 1;
+    for (let i = 0; i < 28; i++){ const k = (lo + hi) / 2, r = cmyk2rgb(0, 0, 0, k); if (rgb2lab(r[0] | 0, r[1] | 0, r[2] | 0)[0] > lab[0]) lo = k; else hi = k; }
+    out = [0, 0, 0, (lo + hi) / 2];
+  } else {
+    let best = null, first = null;
+    for (let k = 0; k <= 0.951; k += 0.025){
+      const q = [0.3, 0.3, 0.3, k];
+      for (let n = 0; n < 25; n++){ // Gauss-Newton op C, M en Y
+        const r0 = cmyk2rgb(...q), e = [r0[0] - t[0], r0[1] - t[1], r0[2] - t[2]];
+        if (Math.hypot(...e) < 0.2) break;
+        const J = [0, 1, 2].map(j => { const hq = q.slice(); hq[j] += 1e-4; const r1 = cmyk2rgb(...hq); return [0, 1, 2].map(i => (r1[i] - r0[i]) / 1e-4); });
+        const A = [0, 1, 2].map(i => [J[0][i], J[1][i], J[2][i]]), d = solve3(A, e); if (!d) break;
+        for (let j = 0; j < 3; j++) q[j] = Math.max(0, Math.min(1, q[j] - d[j]));
+      }
+      const e = err(q);
+      if (!first) first = {q: q.slice(), e};
+      if (!best || e < best.e - 0.3) best = {q: q.slice(), e};
+      if (e < 2 && q[0] + q[1] + q[2] + q[3] <= 3.2){ best = {q: q.slice(), e}; break; }
+    }
+    // Felle kleur die drukwerk niet helemaal haalt (bijv. puur rood): geen zwart toevoegen, dan blijft hij het felst.
+    out = best.e > 2 && first.e - best.e < 10 ? first.q : best.q;
+  }
+  out = out.map(v => Math.round(v * 100));
+  if (Math.max(...out) >= 40) out = out.map(v => v <= 2 ? 0 : v); // 1-2% naast een volle kleur is ruis
+  if (out[3] >= 92 && out[0] + out[1] + out[2] === 0) out[3] = 100; // (bijna) zwart = gewoon zwart
+  _cmykCache.set(hx, out); return out;
+}
+function solve3(A, b){
+  const det = M => M[0][0] * (M[1][1] * M[2][2] - M[1][2] * M[2][1]) - M[0][1] * (M[1][0] * M[2][2] - M[1][2] * M[2][0]) + M[0][2] * (M[1][0] * M[2][1] - M[1][1] * M[2][0]);
+  const D = det(A); if (Math.abs(D) < 1e-9) return null;
+  return [0, 1, 2].map(j => det(A.map((row, i) => row.map((v, c) => c === j ? b[i] : v))) / D);
+}
+const cmykStr = v => v.map(x => Math.round(x)).join('/');
+function parseCmyk(txt){ const n = String(txt).match(/\d+(?:[.,]\d+)?/g); if (!n || n.length !== 4) return null; const v = n.map(x => Math.round(parseFloat(x.replace(',', '.')))); return v.every(x => x >= 0 && x <= 100) ? v : null; }
+// De CMYK-waarde van een kleur in een sticker: zelf ingevuld, uit het bestand (PDF/AI), of omgerekend.
+function cmykOf(it, hex){
+  const u = it.cmyk && it.cmyk[hex]; if (u) return {v:u, src:'user'};
+  const s = it.L && it.L.cmykSrc;
+  if (s && s.length){
+    const l = hexLab(hex); let best = null, bd = 1e9;
+    for (const x of s){ const d = dE(l, hexLab(x.hex)); if (d < bd){ bd = d; best = x; } }
+    if (best && bd < (it.L.kind === 'svg' ? 3 : 9)) return {v:best.c.map(x => Math.round(x)), src:'file', name:best.name};
+  }
+  return {v:rgb2cmyk(hex), src:'calc'};
+}
 function colorName(hx){ const l = hexLab(hx); let best = NAMES[0], bd = 1e9; for (const p of NAMES){ const d = dE(l, p[1]); if (d < bd){ bd = d; best = p; } } return best[0]; }
 function shade(hx, amt){ const c = parseColor(hx); const f = amt < 0 ? 0 : 255, t = Math.abs(amt); return toHex(c[0] + (f - c[0]) * t, c[1] + (f - c[1]) * t, c[2] + (f - c[2]) * t); }
 
@@ -725,6 +797,60 @@ async function renderPdfCrop(L, ctx, pxW, pad = 0){
   const [px, py] = vp.convertToViewportPoint(c.left, c.top);
   await page.render({canvasContext: ctx, viewport: vp, transform:[1, 0, 0, 1, pad - px, pad - py], background:'rgba(0,0,0,0)'}).promise;
 }
+// Bytes <-> tekst, één teken per byte (geen tekenset-omzetting).
+function bin2str(u8){ let s = ''; for (let i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000)); return s; }
+// Welke CMYK-kleuren staan er in een PDF/AI? Leest de opdrachten in de pagina (en in de vormen die erin staan):
+// k/K, DeviceCMYK, ICC-kleuren met 4 kanalen en steunkleuren (bijv. Pantone) met een CMYK-alternatief.
+async function pdfCmykColors(bytes){
+  const P = await getPdfLib(), {PDFDocument, PDFName, PDFDict, PDFArray, PDFRawStream, PDFNumber, decodePDFRawStream} = P;
+  const doc = await PDFDocument.load(bytes, {ignoreEncryption:true, updateMetadata:false}), ctx = doc.context;
+  const look = o => o ? ctx.lookup(o) : o, nameOf = o => o instanceof PDFName ? (o.decodeText ? o.decodeText() : String(o).slice(1)) : '';
+  const num = o => { o = look(o); return o instanceof PDFNumber ? o.asNumber() : 0; };
+  const arr = o => { o = look(o); return o instanceof PDFArray ? o.asArray().map(num) : null; };
+  const found = new Map(), seen = new Set();
+  const add = (c, name) => { if (!c || c.length !== 4 || c.some(x => !isFinite(x))) return; const v = c.map(x => Math.max(0, Math.min(1, x))); const key = v.map(x => x.toFixed(3)).join(',') + '|' + (name || '');
+    if (!found.has(key)) found.set(key, {c:v.map(x => Math.round(x * 1000) / 10), name:name || '', hex:rgbHex(cmyk2rgb(...v))}); };
+  function csInfo(cs, res, depth = 0){
+    cs = look(cs); if (depth > 4) return {type:'other'};
+    if (cs instanceof PDFName){
+      const n = nameOf(cs);
+      if (n === 'DeviceCMYK' || n === 'CMYK') return {type:'cmyk'};
+      const d = res && look(res.get(PDFName.of('ColorSpace')));
+      if (d instanceof PDFDict && d.get(PDFName.of(n))) return csInfo(d.get(PDFName.of(n)), null, depth + 1);
+      return {type:'other'};
+    }
+    if (cs instanceof PDFArray){
+      const t = nameOf(look(cs.get(0)));
+      if (t === 'ICCBased'){ const st = look(cs.get(1)); return st && st.dict && num(st.dict.get(PDFName.of('N'))) === 4 ? {type:'cmyk'} : {type:'other'}; }
+      if (t === 'Separation'){ const alt = csInfo(cs.get(2), null, depth + 1), fn = look(cs.get(3)), fd = fn instanceof PDFDict ? fn : fn && fn.dict;
+        if (alt.type === 'cmyk' && fd && num(fd.get(PDFName.of('FunctionType'))) === 2) return {type:'sep', name:nameOf(look(cs.get(1))), c0:arr(fd.get(PDFName.of('C0'))) || [0, 0, 0, 0], c1:arr(fd.get(PDFName.of('C1'))) || [0, 0, 0, 1], N:num(fd.get(PDFName.of('N'))) || 1}; }
+    }
+    return {type:'other'};
+  }
+  const sepColor = (cs, t) => cs.c0.map((a, i) => a + Math.pow(Math.max(0, t), cs.N) * (cs.c1[i] - a));
+  function run(stream, res, depth){
+    if (!stream || depth > 6) return;
+    if (seen.has(stream)) return; seen.add(stream);
+    let txt; try { txt = bin2str(decodePDFRawStream(stream).decode()); } catch (e) { return; }
+    txt = txt.replace(/\((?:\\.|[^\\()])*\)/g, ' ').replace(/\bBI\b[\s\S]*?\bEI\b/g, ' ');
+    let fill = {type:'other'}, stroke = {type:'other'}, ops = [];
+    for (const m of txt.matchAll(/\/[^\s\/\[\]()<>{}%]+|[-+]?(?:\d+\.?\d*|\.\d+)|[A-Za-z'"*]+/g)){
+      const t = m[0];
+      if (t[0] === '/'){ ops.push(t.slice(1)); continue; }
+      if (/^[-+.\d]/.test(t)){ ops.push(parseFloat(t)); continue; }
+      const nums = ops.filter(x => typeof x === 'number');
+      if (t === 'k' || t === 'K') add(nums.slice(-4));
+      else if (t === 'cs' || t === 'CS'){ const n = ops[ops.length - 1]; const info = typeof n === 'string' ? csInfo(PDFName.of(n), res) : {type:'other'}; if (t === 'cs') fill = info; else stroke = info; }
+      else if (t === 'sc' || t === 'scn' || t === 'SC' || t === 'SCN'){ const cs = t[0] === 's' ? fill : stroke; if (typeof ops[ops.length - 1] !== 'string'){ if (cs.type === 'cmyk') add(nums.slice(-4)); else if (cs.type === 'sep') add(sepColor(cs, nums[nums.length - 1]), cs.name); } }
+      else if (t === 'Do'){ const n = ops[ops.length - 1], xo = res && look(res.get(PDFName.of('XObject'))), x = xo instanceof PDFDict && typeof n === 'string' ? look(xo.get(PDFName.of(n))) : null;
+        if (x instanceof PDFRawStream && nameOf(x.dict.get(PDFName.of('Subtype'))) === 'Form') run(x, look(x.dict.get(PDFName.of('Resources'))) || res, depth + 1); }
+      ops = [];
+    }
+  }
+  const page = doc.getPage(0), res = page.node.Resources(), cont = look(page.node.get(PDFName.of('Contents')));
+  for (const c of cont instanceof PDFArray ? cont.asArray().map(look) : [cont]) if (c instanceof PDFRawStream) run(c, res, 0);
+  return [...found.values()];
+}
 async function importPdf(bytes, name){
   const pdfjs = await getPdfjs();
   const L = {kind:'pdf', name, pdf:{bytes}};
@@ -750,6 +876,7 @@ async function importPdf(bytes, name){
   L.preview = pc.toDataURL('image/png'); L.aspect = cw / ch;
   L.flags = {text: txt > 0, gradient: shade > 0, rasterInside: img > 0, shapes: paths, pages: L._pages};
   L.colors = null;
+  try { L.cmykSrc = await pdfCmykColors(bytes); } catch (e) { console.warn('cmyk', e); L.cmykSrc = null; }
   if (img > 0 && paths < 4){ // eigenlijk een plaatje in een PDF
     return {kind:'raster', name, raster:{url:L.preview, w:cw, h:ch}, aspect:L.aspect, note:'Deze PDF bevat alleen een afbeelding, geen echte vectoren.'};
   }
@@ -996,7 +1123,7 @@ function newItem(type){
     text:{value:'', font:prev ? prev.text.font : 'montserrat', color:prev ? prev.text.color : '#111111'},
     qr:{value:'', color:'#111111', bg:true},
     where: type === 'logo' && !doorTaken ? 'LR' : 'B', linked:true, place:{},
-    soort: prev ? prev.soort : (type === 'qr' ? 'print' : 'snij'), foil:{}, shares:null, sharesEstimated:false, thin:null};
+    soort: prev ? prev.soort : (type === 'qr' ? 'print' : 'snij'), finish: prev ? prev.finish : 'glans', foil:{}, cmyk:{}, shares:null, sharesEstimated:false, thin:null};
 }
 function addItem(type){
   const it = newItem(type), first = !S.items.some(i => i.type === type); S.items.push(it); S.active = it.id; ensurePlaces(it, true);
@@ -1500,6 +1627,7 @@ async function recolor(it, map){
     const foilOrig = L.foilOrig || {...it.foil}, foil = {};
     for (const [k, v] of Object.entries(it.foil)){ const nk = map['*'] || map[k] || k; if (!(nk in foil)) foil[nk] = v; }
     it.foil = foil;
+    for (const k of Object.keys(it.cmyk || {})) if (map['*'] || map[k]) delete it.cmyk[k];
     setItemL(it, {...L, ...n, svgOrig:L.svgOrig || L.svg, foilOrig});
   } catch (e) { console.error(e); toast('Kleur aanpassen mislukt'); }
 }
@@ -1528,7 +1656,7 @@ async function makeEditable(it){
     if (!L.flags.text){
       const r = await pdfToSvgText(L), full = await normalizeSvg(r.svg, {vb:r.vb});
       if (Math.abs(full.aspect - L.aspect) / L.aspect < 0.03 && await sameShape(L, full.svg)){
-        const n = await normalizeSvg(r.svg, {dropBg:true, vb:r.vb}), nl = {kind:'svg', name:L.name, ...n, origin:'pdf'};
+        const n = await normalizeSvg(r.svg, {dropBg:true, vb:r.vb}), nl = {kind:'svg', name:L.name, ...n, origin:'pdf', cmykSrc:L.cmykSrc || null};
         if (n.flags.bgRemoved){ nl.srcText = r.svg; nl.srcVb = r.vb; }
         setItemL(it, nl); toast('Omgezet naar SVG: je kunt de kleuren nu aanpassen'); return;
       }
@@ -1689,7 +1817,7 @@ function renderItems(){
     box.append(h('button', {type:'button', class:'item', 'aria-current':String(it.id === S.active), onclick:() => selectItem(it.id)},
       thumbOf(it),
       h('span', {class:'tx'}, h('span', {class:'t1'}, h('span', {class:'nr'}, itemNo(it) + '.'), TYPES[it.type], h('span', {class:'muted', style:'font-weight:600'}, ' · ' + itemLabel(it))),
-        h('span', {class:'t2'}, [size, it.L ? placeSummary(it) : WHERE_SHORT[it.where].toLowerCase(), it.soort === 'snij' ? 'folie' : 'print'].filter(Boolean).join(' · '))),
+        h('span', {class:'t2'}, [size, it.L ? placeSummary(it) : WHERE_SHORT[it.where].toLowerCase(), (it.soort === 'snij' ? 'folie' : 'print') + ', ' + finTxt(it)].filter(Boolean).join(' · '))),
       h('span', {class:'st ' + st, title:{ok:'In orde', warn:'Let op', bad:'Probleem', info:'Nog niet af'}[st]}, {ok:'✓', warn:'!', bad:'✕', info:'…'}[st])));
   }
 }
@@ -1698,7 +1826,7 @@ function renderEditor(){
   ed.classList.toggle('hidden', !it); if (!it) return;
   $('#ed-title').textContent = `Sticker ${itemNo(it)} · ${TYPES[it.type]}`;
   for (const t of ['logo','tekst','qr']) $('#ed-' + t).classList.toggle('hidden', it.type !== t);
-  segSet('#s-where', it.where); segSet('#s-soort', it.soort);
+  segSet('#s-where', it.where); segSet('#s-soort', it.soort); segSet('#s-finish', it.finish || 'glans'); finishTip(it);
   if (it.type === 'logo') renderLogoInfo(it);
   if (it.type === 'tekst'){
     const ta = $('#tx-val'); if (document.activeElement !== ta) ta.value = it.text.value;
@@ -1752,6 +1880,24 @@ function endRecolor(it, key, val){
   if (key !== '*' && val === key){ renderAll(); return; }
   recolor(it, {[key]:val});
 }
+// CMYK-regel onder een kleur: waarde (aan te passen) en waar die vandaan komt.
+const CMYK_SRC = {file:'uit het logobestand', calc:'omgerekend (laat het stickerbedrijf checken)', user:'zelf ingevuld'};
+function cmykRow(it, hex){
+  const cm = cmykOf(it, hex), src = h('span', {class:'src'}, (cm.name ? cm.name + ' · ' : '') + CMYK_SRC[cm.src]);
+  const inp = h('input', {type:'text', value:cmykStr(cm.v), title:'CMYK in procenten: C/M/Y/K', 'aria-label':'CMYK voor ' + hex, inputmode:'numeric',
+    oninput:e => { const v = parseCmyk(e.target.value); if (!it.cmyk) it.cmyk = {}; delete it.cmyk[hex]; const auto = cmykOf(it, hex); if (v && cmykStr(v) !== cmykStr(auto.v)) it.cmyk[hex] = v; const now = cmykOf(it, hex); src.textContent = (now.name ? now.name + ' · ' : '') + CMYK_SRC[now.src]; renderExport(); save(); },
+    onblur:e => { if (!parseCmyk(e.target.value)) e.target.value = cmykStr(cmykOf(it, hex).v); }});
+  return h('div', {class:'crow2'}, h('span', null, 'CMYK'), inp, src);
+}
+const FINISH = {glans:'glans', mat:'mat', metallic:'metallic'};
+const finTxt = it => FINISH[it.finish] || 'glans';
+function finishTip(it){
+  const el = $('#finish-tip'); let t = '';
+  const metal = it.shares && it.shares.some(c => ['goud', 'zilver', 'brons'].includes(colorName(c.hex)));
+  if (it.finish === 'metallic' && it.soort === 'print') t = 'Metallic bij een geprinte sticker kan niet overal: vraag het het stickerbedrijf.';
+  else if (metal && it.finish !== 'metallic') t = 'Goud, zilver en brons zijn er ook als metallic folie.';
+  el.textContent = t; el.classList.toggle('hidden', !t);
+}
 function renderColors(it){
   const box = $('#ed-colors');
   if (liveC && liveC.it === it) return; // niet opnieuw opbouwen terwijl er gesleept wordt
@@ -1767,6 +1913,7 @@ function renderColors(it){
     cl.append(h('div', {class:'crow'}, sq, hx, inp,
       h('span', {class:'pc'}, (c.pct * 100).toFixed(c.pct < 0.01 ? 1 : 0).replace('.', ',') + '%'),
       it.type === 'logo' && it.L.kind === 'svg' && it.shares.length > 1 ? h('button', {type:'button', title:'Deze kleur niet plakken', onclick:() => dropColor(c.hex)}, 'Weglaten') : null));
+    cl.append(cmykRow(it, c.hex));
   }
   if (it.shares.length > 10) cl.append(h('div', {class:'small muted'}, `+ ${it.shares.length - 10} kleuren meer: dit lijkt een foto of illustratie, kies dan "Geprinte sticker".`));
   if (it.type !== 'logo') return;
@@ -1854,7 +2001,7 @@ function unitFile(it, u, ext){
   return exportName(ext, `${itemNo(it)}-${slug(TYPES[it.type]).toLowerCase()}_${Math.round(s.w)}x${Math.round(s.h)}mm` + (many ? '_' + (u.sides[0] === 'L' ? 'links' : 'rechts') : ''));
 }
 const canPdf = it => !(it.L.kind === 'raster' && it.soort === 'snij');
-function foilTxt(it){ if (!it.shares) return ''; return it.shares.slice(0, 8).map(c => (it.foil[c.hex] || colorName(c.hex)) + ` (${c.hex})`).join(', '); }
+function foilTxt(it){ if (!it.shares) return ''; return it.shares.slice(0, 8).map(c => { const cm = cmykOf(it, c.hex); return (it.foil[c.hex] || colorName(c.hex)) + ` (${cm.name ? cm.name + ', ' : ''}CMYK ${cmykStr(cm.v)})`; }).join(', '); }
 const soortTxt = it => it.soort === 'snij' ? 'gesneden folie' : 'geprinte sticker, contour gesneden en gelamineerd';
 function posText(it, v, p){
   const r = rectOf(it, v, p);
@@ -1877,7 +2024,7 @@ function renderExport(){
     const pos = posDiff ? `links: ${posText(it, 'L', placeOf(it, 'L'))}; rechts: ${posText(it, 'R', placeOf(it, 'R'))}` : posText(it, sides[0], p);
     box.append(h('div', {class:'unit'},
       h('div', {class:'u1'}, h('b', null, `${itemNo(it)}. ${itemTitle(it)}`), h('span', null, `${mm(s.w)} × ${mm(s.h)} mm`), h('span', {class:'muted'}, `${sides.length}× · ${unitWhere(it, u)}`)),
-      h('div', {class:'u2'}, cap(soortTxt(it)) + (it.shares ? ' · ' + foilTxt(it) : '')),
+      h('div', {class:'u2'}, cap(soortTxt(it)) + ', ' + finTxt(it) + (it.shares ? ' · ' + foilTxt(it) : '')),
       h('div', {class:'u2'}, cap(pos)),
       h('div', {class:'ub'},
         h('button', {class:'btn sec sm', type:'button', disabled:!canPdf(it), onclick:() => dlOne(it, u, 'pdf')}, 'PDF'),
@@ -1891,10 +2038,11 @@ function mailText(){
   for (const {it, sides, p} of allUnits()){
     const s = sizeOf(it, p), extra = it.type === 'qr' ? ` (link: ${it.qr.value.trim()})` : '';
     lines.push(`${itemNo(it)}. ${sides.length}× ${itemTitle(it)}${extra}, ${mm(s.w)} × ${mm(s.h)} mm (breedte × hoogte), op de ${unitWhere(it, {sides, p})}`);
-    lines.push(`   ${cap(soortTxt(it))}${it.shares ? '; kleuren: ' + foilTxt(it) : ''}`);
+    lines.push(`   ${cap(soortTxt(it))}; afwerking: ${finTxt(it)}${it.shares ? '; kleuren: ' + foilTxt(it) : ''}`);
   }
   if (S.job.opm) lines.push('', `Opmerking: ${S.job.opm}`);
-  lines.push('', 'In de bijlage de stickerbestanden op ware grootte (1:1) en de werktekening met de plaats op de auto.', '', 'Groet,', 'Spéciale45');
+  const vec = allUnits().every(u => u.it.L && u.it.L.kind !== 'raster');
+  lines.push('', vec ? 'In de bijlage de stickerbestanden als vectorbestand op ware grootte (1:1, PDF met CMYK-kleuren) en de werktekening met de maten en de plaats op de auto.' : 'In de bijlage de stickerbestanden op ware grootte (1:1) en de werktekening met de maten en de plaats op de auto.', '', 'Groet,', 'Spéciale45');
   return lines.join('\n');
 }
 async function itemPNG(it, longPx){ const L = it.L, pw = L.aspect >= 1 ? longPx : Math.round(longPx * L.aspect), ph = L.aspect >= 1 ? Math.round(longPx / L.aspect) : longPx; const c = await logoCanvas(L, pw, ph, 0); return c.toDataURL('image/png'); }
@@ -1908,7 +2056,7 @@ async function stickerPDF(it, u){
     const pw = w * 72 / 25.4, ph = hh * 72 / 25.4, page = out.addPage([pw, ph]);
     page.drawPage(emb, {x:0, y:0, width:pw, height:ph});
     out.setTitle(title); out.setCreator('Spéciale45 belettering'); out.setProducer('Spéciale45');
-    return new Blob([await out.save()], {type:'application/pdf'});
+    return new Blob([await cmykPdf(await out.save(), it)], {type:'application/pdf'});
   }
   const jsPDF = await getJsPDF();
   const doc = new jsPDF({orientation: w >= hh ? 'landscape' : 'portrait', unit:'mm', format:[w, hh], compress:true});
@@ -1918,12 +2066,42 @@ async function stickerPDF(it, u){
     try { await doc.svg(holder.firstElementChild, {x:0, y:0, width:w, height:hh}); } finally { holder.remove(); }
   } else doc.addImage(L.raster.url, 'PNG', 0, 0, w, hh, undefined, 'NONE');
   doc.setProperties({title, creator:'Spéciale45 belettering'});
-  return doc.output('blob');
+  return new Blob([await cmykPdf(doc.output('arraybuffer'), it)], {type:'application/pdf'});
+}
+// RGB-kleuren in een stickerbestand omzetten naar CMYK (het stickerbedrijf werkt met CMYK): elke rg/RG/g/G in de
+// pagina en in de vormen wordt k/K met de CMYK-waarde van die kleur (uit het bestand, zelf ingevuld of omgerekend).
+async function cmykPdf(bytes, it){
+  try {
+    const P = await getPdfLib(), {PDFDocument, PDFName, PDFArray, PDFRawStream, decodePDFRawStream} = P;
+    const doc = await PDFDocument.load(bytes, {ignoreEncryption:true, updateMetadata:false}), ctx = doc.context;
+    const nameOf = o => o instanceof PDFName ? String(o).slice(1) : '', memo = new Map();
+    // de kleur in het bestand is afgerond: terugzoeken bij welke stickerkleur hij hoort (voor zelf ingevulde CMYK)
+    const own = hx => { if (!it.shares) return hx; const l = hexLab(hx); let best = hx, bd = 4; for (const c of it.shares){ const d = dE(l, hexLab(c.hex)); if (d < bd){ bd = d; best = c.hex; } } return best; };
+    const conv = (r, g, b) => { const hx = rgbHex([r, g, b].map(v => Math.max(0, Math.min(1, v)) * 255)); if (!memo.has(hx)) memo.set(hx, cmykOf(it, own(hx)).v.map(x => +(x / 100).toFixed(4)).join(' ')); return memo.get(hx); };
+    const N = '([-+]?(?:\\d+\\.?\\d*|\\.\\d+))', S = '(^|[\\s\\]>)}])', E = '(?=[\\s\\[\\/(<]|$)';
+    const reRGB = new RegExp(S + N + '\\s+' + N + '\\s+' + N + '\\s+(rg|RG)' + E, 'g'), reG = new RegExp(S + N + '\\s+(g|G)' + E, 'g');
+    const refs = new Set();
+    for (const page of doc.getPages()){ const c = page.node.get(PDFName.of('Contents')); if (c instanceof PDFArray) c.asArray().forEach(r => refs.add(r)); else if (c) refs.add(c); }
+    for (const [ref, obj] of ctx.enumerateIndirectObjects()) if (obj instanceof PDFRawStream && nameOf(obj.dict.get(PDFName.of('Subtype'))) === 'Form') refs.add(ref);
+    let n = 0;
+    for (const ref of refs){
+      const obj = ctx.lookup(ref); if (!(obj instanceof PDFRawStream)) continue;
+      let txt; try { txt = bin2str(decodePDFRawStream(obj).decode()); } catch (e) { continue; }
+      const nt = txt.replace(reRGB, (m, s, r, g, b, op) => { n++; return `${s}${conv(+r, +g, +b)} ${op === 'rg' ? 'k' : 'K'}`; })
+                    .replace(reG, (m, s, v, op) => { n++; return `${s}${conv(+v, +v, +v)} ${op === 'g' ? 'k' : 'K'}`; });
+      if (nt === txt) continue;
+      const u8 = new Uint8Array(nt.length); for (let i = 0; i < nt.length; i++) u8[i] = nt.charCodeAt(i) & 255;
+      const dict = {}; for (const [k, v] of obj.dict.entries()){ const kn = String(k).slice(1); if (!['Filter', 'DecodeParms', 'Length'].includes(kn)) dict[kn] = v; }
+      ctx.assign(ref, ctx.flateStream(u8, dict));
+    }
+    return n ? await doc.save() : new Uint8Array(bytes);
+  } catch (e) { console.warn('cmyk-pdf', e); return new Uint8Array(bytes); }
 }
 function stickerSVG(it, u){
   const {w, h:hh} = sizeOf(it, u.p), doc = new DOMParser().parseFromString(it.L.svg, 'image/svg+xml'), r = doc.documentElement;
   r.setAttribute('width', w + 'mm'); r.setAttribute('height', hh + 'mm');
-  return new Blob(['<?xml version="1.0" encoding="UTF-8"?>\n' + new XMLSerializer().serializeToString(r)], {type:'image/svg+xml'});
+  const note = it.shares ? `<!-- ${Math.round(w)} x ${Math.round(hh)} mm (1:1). Kleuren in CMYK: ${it.shares.slice(0, 8).map(c => { const cm = cmykOf(it, c.hex); return `${c.hex} = ${cm.name ? cm.name + ' ' : ''}CMYK ${cmykStr(cm.v)}`; }).join('; ')} -->\n` : '';
+  return new Blob(['<?xml version="1.0" encoding="UTF-8"?>\n' + note + new XMLSerializer().serializeToString(r)], {type:'image/svg+xml'});
 }
 async function dlOne(it, u, ext){
   try { download(ext === 'pdf' ? await stickerPDF(it, u) : stickerSVG(it, u), unitFile(it, u, ext)); }
@@ -1982,11 +2160,12 @@ function pdfItemBlock(doc, it, v, count, cx, cy){
   const rowT = (k, val) => { doc.setFontSize(8.2); doc.setTextColor(110); doc.text(k, cx, cy); doc.setTextColor(20); const lines = doc.splitTextToSize(val, 74); doc.text(lines, cx + 20, cy); cy += 3.7 * lines.length + 1.1; };
   rowT('Aantal', `${count}× (${isDoor(v) ? (count === 2 ? 'linker- en rechterdeur' : sideTxt([v])) : whereTxt(it, v, p)})`);
   rowT('Soort', cap(soortTxt(it)));
+  rowT('Afwerking', cap(finTxt(it)));
   if (it.type === 'qr') rowT('Inhoud', it.qr.value.trim());
   rowT('Positie', posText(it, v, p));
   if (it.shares){
     doc.setFontSize(8.2); doc.setTextColor(110); doc.text('Kleuren', cx, cy);
-    for (const c of it.shares.slice(0, 4)){ const rgb = parseColor(c.hex); doc.setFillColor(rgb[0], rgb[1], rgb[2]); doc.setDrawColor(120); doc.setLineWidth(0.15); doc.rect(cx + 20, cy - 2.8, 3.2, 3.2, 'FD'); doc.setTextColor(20); doc.text(`${it.foil[c.hex] || colorName(c.hex)}  ${c.hex}`, cx + 25, cy); cy += 4.4; }
+    for (const c of it.shares.slice(0, 4)){ const rgb = parseColor(c.hex); doc.setFillColor(rgb[0], rgb[1], rgb[2]); doc.setDrawColor(120); doc.setLineWidth(0.15); doc.rect(cx + 20, cy - 2.8, 3.2, 3.2, 'FD'); doc.setTextColor(20); const cm = cmykOf(it, c.hex); doc.text(`${it.foil[c.hex] || colorName(c.hex)}  CMYK ${cmykStr(cm.v)}  ${cm.name || c.hex}`, cx + 25, cy); cy += 4.4; }
     if (it.shares.length > 4){ doc.setTextColor(110); doc.text(`+ ${it.shares.length - 4} kleuren`, cx + 20, cy); cy += 4.4; }
     cy += 0.6;
   }
@@ -2142,7 +2321,7 @@ async function exportVoorbeeld(){ download(await voorbeeldBlob(), exportName('jp
 
 /* ============================== opslaan ============================== */
 function serL(L){
-  const l = {kind:L.kind, name:L.name, aspect:L.aspect, flags:L.flags, colors:L.colors, origin:L.origin, note:L.note, missing:L.missing, lines:L.lines, qrN:L.qrN, qrQuiet:L.qrQuiet, foilOrig:L.foilOrig, srcVb:L.srcVb};
+  const l = {kind:L.kind, name:L.name, aspect:L.aspect, flags:L.flags, colors:L.colors, origin:L.origin, note:L.note, missing:L.missing, lines:L.lines, qrN:L.qrN, qrQuiet:L.qrQuiet, foilOrig:L.foilOrig, srcVb:L.srcVb, cmykSrc:L.cmykSrc || null};
   if (L.kind === 'svg'){ l.svg = L.svg; if (L.svgOrig) l.svgOrig = L.svgOrig; if (L.srcText) l.srcText = L.srcText; if (L.traceSrc && L.traceSrc.length < 1.5e6) l.traceSrc = L.traceSrc; }
   if (L.kind === 'pdf'){ l.pdf = {b64:b64(L.pdf.bytes), crop:L.pdf.crop}; l.preview = L.preview; }
   if (L.kind === 'raster'){ l.raster = {url:L.raster.url, w:L.raster.w, h:L.raster.h}; if (L.raster.src && L.raster.src.length < 1.5e6) l.raster.src = L.raster.src; }
@@ -2153,7 +2332,7 @@ let saveT;
 function save(){ clearTimeout(saveT); saveT = setTimeout(() => {
   try {
     const o = {v:2, job:S.job, active:S.active, view:S.view, zoom:S.zoom, model:MID, per:S.per, car:S.car, roof:S.roof, dims:S.dims, dimsVer:DIMS_VERSION,
-      items:S.items.map(it => ({id:it.id, type:it.type, text:it.text, qr:it.qr, where:it.where, linked:it.linked, place:it.place, soort:it.soort, foil:it.foil, L:it.L ? serL(it.L) : null}))};
+      items:S.items.map(it => ({id:it.id, type:it.type, text:it.text, qr:it.qr, where:it.where, linked:it.linked, place:it.place, soort:it.soort, finish:it.finish, foil:it.foil, cmyk:it.cmyk, L:it.L ? serL(it.L) : null}))};
     let s = JSON.stringify(o);
     if (s.length > 4.5e6){ for (const x of o.items) if (x.L){ delete x.L.srcText; delete x.L.traceSrc; delete x.L.svgOrig; if (x.L.raster) delete x.L.raster.src; } s = JSON.stringify(o); }
     if (s.length > 4.5e6){ for (const x of o.items) if (x.type === 'logo') x.L = null; s = JSON.stringify(o); }
@@ -2172,7 +2351,7 @@ function load(){
     const j = o.job || {}; S.job = {klant:j.klant || '', order:j.order || '', kenteken:j.kenteken || '', opm:j.opm || ''};
     applyModel(o.model || 'topolino'); S.model = MID; S.per = o.per || {};
     S.zoom = o.zoom || 'deur'; S.car = o.car || CARS[0][1]; S.roof = 'roof' in o ? (o.roof || null) : MODELS[MID].roof; S.dims = o.dimsVer === DIMS_VERSION ? {...DEF, ...(o.dims || {})} : {...DEF};
-    S.items = (o.items || []).map(x => { const it = newItem(x.type || 'logo'); Object.assign(it, {id:x.id || it.id, where:x.where || it.where, linked:x.linked !== false, place:x.place || {}, soort:x.soort || it.soort, foil:x.foil || {}});
+    S.items = (o.items || []).map(x => { const it = newItem(x.type || 'logo'); Object.assign(it, {id:x.id || it.id, where:x.where || it.where, linked:x.linked !== false, place:x.place || {}, soort:x.soort || it.soort, finish:x.finish || 'glans', foil:x.foil || {}, cmyk:x.cmyk || {}});
       if (x.text) it.text = {...it.text, ...x.text}; if (x.qr) it.qr = {...it.qr, ...x.qr}; it.L = deL(x.L); for (const k of Object.keys(it.place)) if (!it.place[k]) delete it.place[k]; return it; });
     for (const it of S.items){ if (it.where === 'LR' && it.linked && it.place.L) it.place.R = mirrorP(it.place.L); ensurePlaces(it, false); }
     S.active = S.items.some(i => i.id === o.active) ? o.active : (S.items[0] ? S.items[0].id : null);
@@ -2191,6 +2370,7 @@ function bind(){
   $('#s-where').addEventListener('click', e => { const b = e.target.closest('button'), it = cur(); if (!b || !it || it.where === b.dataset.v) return;
     it.where = b.dataset.v; ensurePlaces(it, false); if (!onView(it, S.view)) S.view = viewsOf(it)[0]; it.thin = null; renderAll(); scheduleThin(it); save(); });
   $('#s-soort').addEventListener('click', e => { const b = e.target.closest('button'), it = cur(); if (!b || !it) return; it.soort = b.dataset.v; it.thin = null; renderAll(); scheduleThin(it); save(); });
+  $('#s-finish').addEventListener('click', e => { const b = e.target.closest('button'), it = cur(); if (!b || !it) return; it.finish = b.dataset.v; renderAll(); save(); });
   const fs = $('#tx-font'); for (const f of FONTS) fs.append(h('option', {value:f.id}, f.name));
   $('#tx-val').addEventListener('input', e => { const it = cur(); if (!it || it.type !== 'tekst') return; it.text.value = e.target.value; renderItems(); regen(it); save(); });
   fs.addEventListener('change', e => { const it = cur(); if (!it || it.type !== 'tekst') return; it.text.font = e.target.value; regen(it, 0); save(); });
@@ -2290,7 +2470,7 @@ function renderAll(){ renderJob(); renderItems(); renderEditor(); renderStage();
 load(); bind(); loadZone('F'); loadZone('B');
 if (!S.items.length) addItem('logo'); else renderAll();
 for (const it of S.items){ if (it.L){ computeShares(it); scheduleThin(it); } else if (it.type !== 'logo') regen(it, 0); }
-window.__S = S; // voor testen
+window.__S = S; window.__T = {rgb2cmyk, cmyk2rgb, cmykOf, cmykStr, rgbHex}; // voor testen
 })();
 </script>
 </body>
