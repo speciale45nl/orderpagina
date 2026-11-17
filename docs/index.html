@@ -308,7 +308,7 @@
 <script>
 (function(){
   'use strict';
-  const BUILD='2026-11-17T13:11';
+  const BUILD='2026-11-17T13:41';
   let laatsteCheck=0;
   async function checkVersie(){ // als app op het beginscherm blijft de oude pagina anders hangen
     const nu=Date.now(); if(nu-laatsteCheck<90000) return; laatsteCheck=nu;
@@ -705,7 +705,10 @@
     const kan=!!S.db&&!S.readOnly&&S.canWrite!==false;
     return `<section class="card voorraad"><div class="hd"><h2>${isS45()?'Onderdelen bij 1stop':'Voorraad bij jou'}</h2><span class="hint">${isS45()?'Geteld door 1stop':'Klopt het aantal niet meer? Pas het hier aan.'}</span></div>
       <table>${PARTS.map(pt=>{ const v=S.voorraad[pt.id]||{}; const n=(typeof v.aantal==='number')?v.aantal:null; const laag=n!==null&&n<=pt.min;
-        return `<tr><td><div class="naam">${esc(pt.naam)}</div><div class="sub">${n===null?'nog niet geteld':'geteld '+esc(fmt(v.at))+(v.by?' · '+esc(v.by):'')}</div>${laag?`<div class="laag">⚠ Bijna op${isS45()?' — bestellen':''}</div>`:''}</td>
+        // nog in te bouwen voor lopende orders (niet afgevinkt, niet afgeleverd) → wat écht vrij is
+        let res=0, resPauze=0; S.orders.forEach(o=>{ if(o._st&&o._st.afgeleverd) return; const c=o._checks||{}; (o.stappen||[]).forEach(st=>(st.items||[]).forEach(i=>{ if((i.telt||[]).includes(pt.id)&&!(c[i.id]&&c[i.id].done)){ if(o.pauze) resPauze++; else res++; } })); });
+        const vrij=n===null?null:n-res; const vrijTxt=n===null?'':`<div class="sub"><b>${vrij<0?'tekort '+(-vrij):'vrij '+vrij}</b> · ${res} nog in te bouwen voor lopende orders${resPauze?` (+${resPauze} geparkeerd)`:''}</div>`;
+        return `<tr><td><div class="naam">${esc(pt.naam)}</div><div class="sub">${n===null?'nog niet geteld':'geteld '+esc(fmt(v.at))+(v.by?' · '+esc(v.by):'')}</div>${vrijTxt}${laag?`<div class="laag">⚠ Bijna op${isS45()?' — bestellen':''}</div>`:''}</td>
           <td style="text-align:right">${kan?`<div class="tel" style="justify-content:flex-end"><button type="button" data-tel-min="${pt.id}" aria-label="Eén minder">−</button><input type="number" inputmode="numeric" min="0" data-tel="${pt.id}" value="${n===null?'':n}" placeholder="?"><button type="button" data-tel-plus="${pt.id}" aria-label="Eén meer">+</button></div>`:`<div class="naam">${n===null?'?':n}</div>`}</td></tr>`; }).join('')}</table></section>`;
   }
   async function zetVoorraad(id,aantal){
