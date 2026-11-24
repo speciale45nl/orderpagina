@@ -18,7 +18,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging-compat.js"></script>
 <script src="firebase-config.js"></script>
-<script src="werkbon.js" defer></script>
+<script src="werkbon.js?v=2" defer></script>
 <style>
   /* Layout: wie-ben-je als eerste scherm, daarna één kolom: kop met voortgang, opdracht, de eigen stappen, opmerkingen. */
   :root{
@@ -310,7 +310,7 @@
 <script>
 (function(){
   'use strict';
-  const BUILD='2026-11-24T14:09';
+  const BUILD='2026-11-24T14:14';
   let laatsteCheck=0;
   async function checkVersie(){ // als app op het beginscherm blijft de oude pagina anders hangen
     const nu=Date.now(); if(nu-laatsteCheck<90000) return; laatsteCheck=nu;
