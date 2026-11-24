@@ -67,12 +67,14 @@
     const regels=((o.opdracht||{}).interieur||[]);
     return regels.length?regels:['(geen omschrijving)'];
   }
+  // Foto's verkleinen vóór ze in de PDF gaan (max 900 px, JPEG) — anders wordt de PDF megabytes groot
+  function verklein(dataUrl,max){ return new Promise(res=>{ const im=new Image(); im.onload=()=>{ try{ const s=Math.min(1,(max||900)/Math.max(im.naturalWidth,im.naturalHeight)); if(s>=1&&/^data:image\/jpe?g/i.test(dataUrl)) return res(dataUrl); const c=document.createElement('canvas'); c.width=Math.round(im.naturalWidth*s); c.height=Math.round(im.naturalHeight*s); c.getContext('2d').drawImage(im,0,0,c.width,c.height); res(c.toDataURL('image/jpeg',0.8)); }catch(e){ res(dataUrl); } }; im.onerror=()=>res(null); im.src=dataUrl; }); }
   async function laadPlaatje(f){
     try{
-      if(f.data&&/^data:image/.test(f.data)) return f.data;
-      const src=f.url||f.data; if(!src) return null;
-      const r=await fetch(src); const b=await r.blob();
-      return await new Promise(res=>{ const fr=new FileReader(); fr.onload=()=>res(fr.result); fr.onerror=()=>res(null); fr.readAsDataURL(b); });
+      let d=null;
+      if(f.data&&/^data:image/.test(f.data)) d=f.data;
+      else { const src=f.url||f.data; if(!src) return null; const r=await fetch(src); const b=await r.blob(); d=await new Promise(res=>{ const fr=new FileReader(); fr.onload=()=>res(fr.result); fr.onerror=()=>res(null); fr.readAsDataURL(b); }); }
+      return d?await verklein(d,900):null;
     }catch(e){ return null; }
   }
   function afmeting(dataUrl){ return new Promise(res=>{ const im=new Image(); im.onload=()=>res({w:im.naturalWidth,h:im.naturalHeight}); im.onerror=()=>res(null); im.src=dataUrl; }); }
