@@ -181,7 +181,7 @@
   .vz .binnenkort li{list-style:none;display:flex;gap:10px;font-size:14px;padding:4px 0;border-top:1px solid var(--line)} .vz .binnenkort li:first-child{border-top:0}
   .vz .binnenkort .w{min-width:64px;font-weight:700} .vz .binnenkort .w.urgent{color:var(--bad)} .vz .binnenkort .s{color:var(--muted);margin-left:auto;white-space:nowrap}
   .aflever{margin:10px 0 4px;padding:10px 12px;border:1px solid var(--line-strong);border-radius:10px;background:var(--paper);font-size:15px;line-height:1.5} .aflever b{display:block;font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:2px}
-  .factblok{margin:12px 0;padding:12px 14px;border-radius:12px;background:#eef6ee;border:1px solid #bfdcbf;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+  .factblok{margin:12px 0;padding:12px 14px;border-radius:12px;background:rgba(94,170,110,.14);border:1px solid rgba(94,170,110,.5);color:var(--ink);display:flex;flex-wrap:wrap;gap:8px;align-items:center}
   .vz details.archief{margin-top:18px} .vz details.archief summary{cursor:pointer;font-weight:700;padding:10px 0;color:var(--muted)}
   .vz .arch{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-top:1px solid var(--line);font-size:14px;flex-wrap:wrap} .vz .arch .k{color:var(--muted)}
   .pill.st-voorraad{background:var(--ok-bg);color:var(--ok)} .pill.st-inplannen{background:var(--warn-bg);color:var(--warn)} .pill.st-klaar{background:var(--ok-bg);color:var(--ok)} .pill.st-betaal{background:var(--bad-bg);color:var(--bad)} .pill.st-default{background:var(--accent-soft);color:var(--ink)}
@@ -310,7 +310,7 @@
 <script>
 (function(){
   'use strict';
-  const BUILD='2026-11-24T14:14';
+  const BUILD='2026-11-24T14:15';
   let laatsteCheck=0;
   async function checkVersie(){ // als app op het beginscherm blijft de oude pagina anders hangen
     const nu=Date.now(); if(nu-laatsteCheck<90000) return; laatsteCheck=nu;
