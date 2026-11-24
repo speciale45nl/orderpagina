@@ -132,14 +132,76 @@
     return doc;
   }
 
-  // Delen (telefoon: deelmenu → WhatsApp/AirDrop) of downloaden
-  window.werkbonInterieur = async function(o, photos, opties){
-    if(!window.jspdf||!window.jspdf.jsPDF) throw new Error('PDF-bibliotheek niet geladen');
-    const doc=await maak(o,photos,opties||{});
-    const naam=`Werkbon_${o.nummer}_${String(o.klant||'').replace(/[^A-Za-z0-9]+/g,'_').replace(/^_|_$/g,'')}.pdf`;
+  async function deelOfDownload(doc,naam){
     const blob=doc.output('blob');
     try{ const file=new File([blob],naam,{type:'application/pdf'}); if(navigator.canShare&&navigator.canShare({files:[file]})){ await navigator.share({files:[file],title:naam}); return 'gedeeld'; } }catch(e){ if(e&&e.name==='AbortError') return 'geannuleerd'; }
     const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=naam; a.target='_blank'; a.rel='noopener'; document.body.appendChild(a); a.click(); setTimeout(()=>{ a.remove(); URL.revokeObjectURL(url); },30000);
     return 'gedownload';
+  }
+  const bestandsnaam=(pre,o)=>`${pre}_${o.nummer}_${String(o.klant||'').replace(/[^A-Za-z0-9]+/g,'_').replace(/^_|_$/g,'')}.pdf`;
+
+  // Delen (telefoon: deelmenu → WhatsApp/AirDrop) of downloaden
+  window.werkbonInterieur = async function(o, photos, opties){
+    if(!window.jspdf||!window.jspdf.jsPDF) throw new Error('PDF-bibliotheek niet geladen');
+    const doc=await maak(o,photos,opties||{});
+    return deelOfDownload(doc,bestandsnaam('Werkbon',o));
+  };
+
+  // ── Orderbon voor 1stop: alles van de order op één A4 om te bewaren (factureren, administratie) ──
+  async function maak1stop(o, photos, checks, opties){
+    const { jsPDF } = window.jspdf; const doc=new jsPDF({unit:'mm',format:'a4'});
+    const W=210, L=14, R=196, BR=R-L; let y=16; checks=checks||{};
+    const nieuwBlad=(nodig)=>{ if(y+nodig>282){ doc.addPage(); y=16; } };
+    const kop=(t,size)=>{ doc.setFont('helvetica','bold'); doc.setFontSize(size||12); nieuwBlad(10); doc.text(asc(t),L,y); y+=size?size*0.5:6; };
+    const tekst=(t,size,indent)=>{ doc.setFont('helvetica','normal'); doc.setFontSize(size||10); const lines=doc.splitTextToSize(asc(t),BR-(indent||0)); lines.forEach(ln=>{ nieuwBlad(5); doc.text(ln,L+(indent||0),y); y+=4.6; }); };
+    const lijn=()=>{ nieuwBlad(4); doc.setDrawColor(180); doc.line(L,y,R,y); y+=4; };
+    const fmtT=opties.fmt||(x=>String(x||''));
+    const los=o.type==='los';
+    // Kop
+    doc.setFillColor(17,17,17); doc.rect(0,0,W,22,'F'); doc.setTextColor(255);
+    doc.setFont('helvetica','bold'); doc.setFontSize(15); doc.text(los?'ORDERBON LOSSE KLUS':'ORDERBON',L,10);
+    doc.setFontSize(10); doc.setFont('helvetica','normal'); doc.text(asc(`Spéciale45 → 1stop  ·  order ${o.nummer}  ·  ${opties.datum}`),L,16.5);
+    doc.setTextColor(0); y=30;
+    doc.setFont('helvetica','bold'); doc.setFontSize(14); doc.text(asc(o.kenteken||(o.meldcode?'Meldcode '+o.meldcode:(o.klant||''))),L,y); y+=7;
+    const meta=[]; if(o.klant) meta.push('Klant: '+o.klant); if(o.model&&!/losse/i.test(o.model)) meta.push(o.model); if(o.meldcode&&o.kenteken) meta.push('meldcode '+o.meldcode); if(o.deadline) meta.push('klaar vóór '+fmtD(o.deadline));
+    const afl=(o.stappen||[]).find(s=>s.id==='afleveren'); const aflDone=afl&&(afl.items||[]).length&&afl.items.every(i=>checks[i.id]&&checks[i.id].done); if(aflDone){ const c=checks[afl.items[0].id]; meta.push('afgeleverd '+fmtT(c.at)); }
+    if(meta.length) tekst(meta.join('   ·   '),10.5);
+    y+=2; lijn();
+    // Aflevering
+    kop('Aflevering');
+    const wijze=o.afleverWijze==='ophalen'?'Klant haalt de auto op bij 1stop':(o.afleverWijze==='bezorgen'?'Bezorgen door 1stop bij de klant':'');
+    if(wijze) tekst('• '+wijze,10.5,2);
+    if(o.afleverAdres) tekst('• Adres: '+o.afleverAdres,10.5,2);
+    if(o.afleverNotitie) tekst('• '+o.afleverNotitie,10.5,2);
+    if(!wijze&&!o.afleverAdres) tekst('• (nog niet ingevuld door Spéciale45)',10.5,2);
+    // Opdracht
+    const spec=o.opdracht||{};
+    [['spuitwerk','Spuitwerk'],['montage','Montage']].forEach(([k,t])=>{ if(spec[k]&&spec[k].length){ y+=1; kop(t); spec[k].forEach(r=>tekst('• '+r,10.5,2)); } });
+    if(o.letop){ y+=1; doc.setFillColor(250,232,211); nieuwBlad(12); const lines=doc.splitTextToSize(asc('LET OP: '+o.letop),BR-4); doc.rect(L,y-4,BR,lines.length*4.6+4,'F'); doc.setFont('helvetica','bold'); doc.setFontSize(10); lines.forEach(ln=>{ doc.text(ln,L+2,y); y+=4.6; }); y+=2; }
+    if(o.referentie){ tekst('Referentie: '+o.referentie,10,0); }
+    const wijz=(o.wijzigingen||[]).filter(w=>!w.voor||w.voor.includes('1stop'));
+    if(wijz.length){ y+=1; kop('Wijzigingen',11); wijz.forEach(w=>tekst('• '+w.tekst,10,2)); }
+    // Afgevinkt
+    const stappen=(o.stappen||[]).filter(s=>s.wie==='1stop');
+    if(stappen.length){ y+=2; lijn(); kop('Uitgevoerd (afvinklijst uit de app)');
+      stappen.forEach(st=>{ y+=1; nieuwBlad(8); doc.setFont('helvetica','bold'); doc.setFontSize(10.5); doc.text(asc(st.titel),L,y); y+=5;
+        (st.items||[]).forEach(i=>{ const c=checks[i.id], d=!!(c&&c.done); nieuwBlad(6); doc.setDrawColor(60); doc.rect(L+1,y-3.4,3.6,3.6); if(d){ doc.setFont('helvetica','bold'); doc.text('v',L+1.6,y-0.4); } doc.setFont('helvetica','normal'); doc.setFontSize(10); const lines=doc.splitTextToSize(asc(i.tekst+(d?'   ('+(c.by||'')+' · '+fmtT(c.at)+')':'')),BR-8); lines.forEach((ln,k)=>{ if(k) nieuwBlad(5); doc.text(ln,L+7,y); y+=4.6; }); }); });
+    }
+    // Foto's: referentie voor 1stop + eigen werkfoto's
+    const fotos=(photos||[]).filter(f=>f.stap==='ref'?(!f.voor||f.voor==='alle'||f.voor==='1stop'):['spuitwerk','montage','afleveren','klus'].includes(f.stap));
+    if(fotos.length){ y+=3; lijn(); kop("Foto's"); let x=L; const bw=42, gap=4; let rijH=0;
+      for(const f of fotos){ const d=await laadPlaatje(f); if(!d) continue; const dim=await afmeting(d); if(!dim) continue; const h=Math.min(bw*dim.h/dim.w,56); const w=h*dim.w/dim.h;
+        if(x+w>R){ x=L; y+=rijH+9; rijH=0; } nieuwBlad(h+10); if(y+h>282){ doc.addPage(); y=16; x=L; rijH=0; }
+        try{ doc.addImage(d,/png/i.test(d.slice(0,30))?'PNG':'JPEG',x,y,w,h); }catch(e){ continue; }
+        doc.setFont('helvetica','normal'); doc.setFontSize(8); const cap=doc.splitTextToSize(asc(f.stap==='ref'?('referentie: '+(f.omschrijving||'')):(f.stap+' · '+fmtT(f.at))),w); cap.slice(0,2).forEach((ln,k)=>doc.text(ln,x,y+h+3.5+k*3.4));
+        rijH=Math.max(rijH,h+7); x+=w+gap; }
+      y+=rijH+6; }
+    const pages=doc.getNumberOfPages(); for(let p=1;p<=pages;p++){ doc.setPage(p); doc.setFontSize(8); doc.setTextColor(120); doc.text(asc(`Order ${o.nummer} · ${o.kenteken||o.klant||''} · blad ${p}/${pages}`),L,292); doc.setTextColor(0); }
+    return doc;
+  }
+  window.orderbon1stop = async function(o, photos, checks, opties){
+    if(!window.jspdf||!window.jspdf.jsPDF) throw new Error('PDF-bibliotheek niet geladen');
+    const doc=await maak1stop(o,photos,checks,opties||{});
+    return deelOfDownload(doc,bestandsnaam('Order',o));
   };
 })();
