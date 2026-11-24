@@ -29,10 +29,10 @@ function autoTekst(o, rol) {
   const auto = o.kenteken || (o.meldcode ? 'meldcode ' + o.meldcode : '');
   return [auto, o.model, o.klant].filter(Boolean).join(' · ') || ('order ' + (o.nummer || ''));
 }
-// Datum waar deze rol op werkt: de interieurset moet 3 dagen vóór de klaar-vóór-datum van 1stop binnen zijn
+// Datum waar deze rol op werkt: de interieurset moet een week (7 dagen) vóór de klaar-vóór-datum van 1stop binnen zijn
 function deadlineTekst(o, rol) {
   if (!o.deadline) return '';
-  if (rol === 'Interieurspecialist') { const d = o.type === 'los' ? o.deadline : minDagen(o.deadline, 3); return d ? 'bij 1stop vóór ' + fmtD(d) : ''; }
+  if (rol === 'Interieurspecialist') { const d = o.type === 'los' ? o.deadline : o.interieurDeadline || minDagen(o.deadline, 7); return d ? 'bij 1stop vóór ' + fmtD(d) : ''; }
   return 'klaar vóór ' + fmtD(o.deadline);
 }
 const rollenMetWerk = o => [...new Set((o.stappen || []).map(s => s.wie).filter(r => ROLLEN.includes(r)))];
