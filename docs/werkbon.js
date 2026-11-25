@@ -47,7 +47,7 @@
       'Klaarleggen met 2x zwarte clip.' ] },
   };
   const PAKKET = { '1': ['zitting','matten','deurpanelen','trekbanden'], '2': ['zitting','matten','deurpanelen','trekbanden','deurschot'], '3': ['zitting','matten','deurpanelen','trekbanden','deurschot','hoofdkussens','voorkap'] };
-  const ZOEK = [ [/speakerband/i,'speakerbandjes'], [/hoofdkussen|hoofdsteun/i,'hoofdkussens'], [/voorkap/i,'voorkap'], [/trekband|trektouw/i,'trekbanden'], [/vloermat|tapijt/i,'matten'], [/zijpane|zijkant|deurschot/i,'deurschot'], [/deurpane|netje|netten/i,'deurpanelen'], [/zitting|stoel/i,'zitting'] ];
+  const ZOEK = [ [/speakerband/i,'speakerbandjes'], [/hoofdkussen|hoofdsteun/i,'hoofdkussens'], [/voorkap/i,'voorkap'], [/trekband|trektouw/i,'trekbanden'], [/vloermat|tapijt/i,'matten'], [/zijpane|zijkant|deurschot/i,'deurschot'], [/deurplank|deurpane|netje|netten/i,'deurpanelen'], [/zitting|stoel/i,'zitting'] ];
 
   const MND=['jan','feb','mrt','apr','mei','jun','jul','aug','sept','okt','nov','dec'];
   const fmtD=iso=>{ const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(iso||''); return m?`${+m[3]} ${MND[+m[2]-1]} ${m[1]}`:''; };
